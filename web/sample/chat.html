@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 페르소나 챗봇</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        .light { background: #f8f9fa; color: #333; }
+        .dark { background: #1a1a1a; color: #fff; }
+        
+        .header {
+            position: sticky;
+            top: 0;
+            padding: 1rem;
+            border-bottom: 1px solid;
+            backdrop-filter: blur(10px);
+            z-index: 50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .light .header { background: rgba(255,255,255,0.9); border-color: #e0e0e0; }
+        .dark .header { background: rgba(26,26,26,0.9); border-color: #333; }
+        
+        .btn {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 0.25rem;
+        }
+        
+        .light .btn { background: #f0f0f0; color: #333; }
+        .dark .btn { background: #333; color: #fff; }
+        .btn:hover { transform: scale(1.1); }
+        
+        .personas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
+        
+        .persona-card {
+            padding: 1rem;
+            border-radius: 1rem;
+            border: 2px solid;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .light .persona-card { background: #fff; border-color: #e0e0e0; }
+        .dark .persona-card { background: #2a2a2a; border-color: #444; }
+        .persona-card:hover { transform: scale(1.05); border-color: #8b5cf6; }
+        
+        .chat-container {
+            height: calc(100vh - 140px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        
+        .message {
+            margin: 1rem 0;
+            display: flex;
+        }
+        
+        .message.user { justify-content: flex-end; }
+        .message.bot { justify-content: flex-start; }
+        
+        .message-content {
+            max-width: 80%;
+            padding: 0.75rem;
+            border-radius: 1rem;
+            word-wrap: break-word;
+        }
+        
+        .message.user .message-content { background: #8b5cf6; color: white; }
+        .light .message.bot .message-content { background: #f0f0f0; color: #333; }
+        .dark .message.bot .message-content { background: #333; color: #fff; }
+        
+        .input-area {
+            padding: 1rem;
+            border-top: 1px solid;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .light .input-area { background: #fff; border-color: #e0e0e0; }
+        .dark .input-area { background: #1a1a1a; border-color: #333; }
+        
+        .message-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid;
+            border-radius: 2rem;
+            outline: none;
+        }
+        
+        .light .message-input { background: #fff; border-color: #ccc; color: #333; }
+        .dark .message-input { background: #2a2a2a; border-color: #555; color: #fff; }
+        
+        .send-btn {
+            padding: 0.75rem;
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .modal-content {
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 90%;
+            width: 400px;
+        }
+        
+        .light .modal-content { background: #fff; }
+        .dark .modal-content { background: #2a2a2a; }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border: 1px solid;
+            border-radius: 0.5rem;
+            outline: none;
+        }
+        
+        .light .form-input { background: #fff; border-color: #ccc; color: #333; }
+        .dark .form-input { background: #1a1a1a; border-color: #555; color: #fff; }
+        
+        .hidden { display: none; }
+        .loading { opacity: 0.7; }
+        
+        .typing {
+            display: flex;
+            gap: 4px;
+            padding: 1rem;
+        }
+        
+        .typing div {
+            width: 8px;
+            height: 8px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing div:nth-child(2) { animation-delay: 0.2s; }
+        .typing div:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        
+        .recording { 
+            background: #ef4444 !important; 
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="light">
+    <header class="header">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button id="backBtn" class="btn hidden">←</button>
+            <h1 id="title">AI 페르소나</h1>
+        </div>
+        <div style="display: flex; align-items: center;">
+            <button id="ttsBtn" class="btn hidden">🔊</button>
+            <button id="qrBtn" class="btn hidden">📱</button>
+            <button id="profileBtn" class="btn">👤</button>
+            <button id="themeBtn" class="btn">🌙</button>
+        </div>
+    </header>
+
+    <div id="personasView">
+        <div style="padding: 1rem;">
+            <h2>나만의 AI 친구를 선택하세요</h2>
+            <p style="color: #666; margin: 0.5rem 0;">50명의 다양한 페르소나와 대화를 시작해보세요</p>
+        </div>
+        <div id="personasGrid" class="personas-grid"></div>
+    </div>
+
+    <div id="chatView" class="hidden">
+        <div class="chat-container">
+            <div id="messages" class="messages"></div>
+            <div class="input-area">
+                <button id="micBtn" class="btn">🎤</button>
+                <input id="messageInput" class="message-input" placeholder="메시지를 입력하세요..." />
+                <button id="sendBtn" class="send-btn">📤</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="profileModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>프로필 설정</h3>
+            <input id="nameInput" class="form-input" placeholder="이름" />
+            <input id="ageInput" class="form-input" type="number" placeholder="나이" />
+            <select id="genderInput" class="form-input">
+                <option value="">성별 선택</option>
+                <option value="남성">남성</option>
+                <option value="여성">여성</option>
+            </select>
+            <textarea id="interestsInput" class="form-input" placeholder="관심사" rows="3"></textarea>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button id="cancelProfile" class="btn" style="flex: 1; border-radius: 0.5rem;">취소</button>
+                <button id="saveProfile" class="btn" style="flex: 1; border-radius: 0.5rem; background: #8b5cf6; color: white;">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="qrModal" class="modal hidden">
+        <div class="modal-content" style="text-align: center;">
+            <h3 id="qrTitle">페르소나 공유하기</h3>
+            <img id="qrImage" style="margin: 1rem 0; border: 2px solid #ccc; border-radius: 0.5rem;" />
+            <p style="color: #666; margin-bottom: 1rem;">QR 코드를 스캔하여 대화해보세요!</p>
+            <button id="closeQR" class="btn" style="width: 100%; border-radius: 0.5rem; background: #8b5cf6; color: white;">닫기</button>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.7/marked.min.js" integrity="sha512-rPuOZPx/WHMHNx2RoALKwiCDiDrCo4ekUctyTYKzBo8NGA79NcTW2gfrbcCL2RYL7RdjX2v9zR0fKyI4U4kPew==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        var currentView = 'personas';
+        var selectedPersona = null;
+        var messages = [];
+        const history = [];
+        var isDarkTheme = false;
+        var isTTSEnabled = true;
+        var isRecording = false;
+        var userProfile = { name: '', age: '', gender: '', interests: '' };
+        var recognition = null;
+        let audio = 0
+
+        const persona = {
+            male: [
+              { id: 'm1', name: '김도현', job: '의사', age: 32, personality: '따뜻하고 신중한', avatar: '👨‍⚕️', desc: '환자를 최우선으로 생각하는 내과 전문의' },
+              { id: 'm2', name: '박준호', job: '개발자', age: 28, personality: '창의적이고 논리적인', avatar: '👨‍💻', desc: '혁신적인 솔루션을 만드는 풀스택 개발자' },
+              { id: 'm3', name: '이승민', job: '변호사', age: 35, personality: '정의롭고 카리스마 있는', avatar: '👨‍💼', desc: '정의를 위해 싸우는 형사전문 변호사' },
+              { id: 'm4', name: '최현우', job: '요리사', age: 30, personality: '열정적이고 섬세한', avatar: '👨‍🍳', desc: '미슐랭 스타 레스토랑의 수석 셰프' },
+              { id: 'm5', name: '강태윤', job: '소방관', age: 29, personality: '용감하고 책임감 강한', avatar: '👨‍🚒', desc: '시민의 안전을 지키는 베테랑 소방관' },
+              { id: 'm6', name: '윤서준', job: '교사', age: 31, personality: '인내심 많고 친근한', avatar: '👨‍🏫', desc: '학생들을 사랑하는 고등학교 국어교사' },
+              { id: 'm7', name: '정민재', job: '경찰관', age: 33, personality: '정직하고 의리 있는', avatar: '👮‍♂️', desc: '시민을 보호하는 강력계 형사' },
+              { id: 'm8', name: '한지훈', job: '파일럿', age: 34, personality: '침착하고 신뢰할 수 있는', avatar: '👨‍✈️', desc: '15년 경력의 국제선 기장' },
+              { id: 'm9', name: '송민호', job: '건축가', age: 36, personality: '예술적이고 완벽주의적인', avatar: '👷‍♂️', desc: '혁신적인 디자인으로 유명한 건축가' },
+              { id: 'm10', name: '김현성', job: '운동선수', age: 26, personality: '활발하고 긍정적인', avatar: '⚽', desc: '국가대표 축구선수' },
+              { id: 'm11', name: '이동혁', job: '음악가', age: 27, personality: '감성적이고 로맨틱한', avatar: '🎸', desc: '인디밴드의 보컬 겸 기타리스트' },
+              { id: 'm12', name: '박성호', job: '사업가', age: 38, personality: '야심찬이고 리더십 있는', avatar: '💼', desc: 'IT 스타트업 CEO' },
+              { id: 'm13', name: '최원준', job: '수의사', age: 30, personality: '동물을 사랑하는 온화한', avatar: '👨‍⚕️', desc: '동물병원 원장' },
+              { id: 'm14', name: '강민수', job: '사진작가', age: 29, personality: '예술적이고 자유로운', avatar: '📸', desc: '여행 전문 사진작가' },
+              { id: 'm15', name: '윤준영', job: '기자', age: 32, personality: '호기심 많고 정직한', avatar: '📰', desc: '탐사보도 전문 기자' },
+              { id: 'm16', name: '정재훈', job: '디자이너', age: 28, personality: '창의적이고 트렌디한', avatar: '🎨', desc: 'UI/UX 디자이너' },
+              { id: 'm17', name: '한상민', job: '금융전문가', age: 35, personality: '분석적이고 신중한', avatar: '💰', desc: '투자은행 애널리스트' },
+              { id: 'm18', name: '송지원', job: '과학자', age: 33, personality: '논리적이고 탐구적인', avatar: '🔬', desc: '생명공학 연구원' },
+              { id: 'm19', name: '김태현', job: '군인', age: 31, personality: '강인하고 충성스러운', avatar: '🪖', desc: '특수부대 중령' },
+              { id: 'm20', name: '이현준', job: '심리상담사', age: 34, personality: '공감능력이 뛰어난', avatar: '🧠', desc: '임상심리전문가' },
+              { id: 'm21', name: '박도윤', job: '마케터', age: 29, personality: '외향적이고 창의적인', avatar: '📊', desc: '디지털 마케팅 전문가' },
+              { id: 'm22', name: '최승우', job: '약사', age: 32, personality: '꼼꼼하고 친절한', avatar: '💊', desc: '병원 약사' },
+              { id: 'm23', name: '강현민', job: '배우', age: 27, personality: '매력적이고 표현력 풍부한', avatar: '🎭', desc: '연극배우 겸 영화배우' },
+              { id: 'm24', name: '윤성진', job: '컨설턴트', age: 36, personality: '전략적이고 논리적인', avatar: '📋', desc: '경영컨설턴트' },
+              { id: 'm25', name: '정우석', job: '게임개발자', age: 30, personality: '상상력 풍부하고 열정적인', avatar: '🎮', desc: '인디게임 개발자' }
+            ],
+            female: [
+              { id: 'f1', name: '김수연', job: '의사', age: 30, personality: '따뜻하고 전문적인', avatar: '👩‍⚕️', desc: '소아과 전문의' },
+              { id: 'f2', name: '박지민', job: '개발자', age: 27, personality: '똑똑하고 창의적인', avatar: '👩‍💻', desc: 'AI 연구원' },
+              { id: 'f3', name: '이서윤', job: '변호사', age: 33, personality: '당당하고 지적인', avatar: '👩‍💼', desc: '국제법 전문 변호사' },
+              { id: 'f4', name: '최예은', job: '요리사', age: 28, personality: '창의적이고 따뜻한', avatar: '👩‍🍳', desc: '파티시에' },
+              { id: 'f5', name: '강하늘', job: '간호사', age: 26, personality: '친절하고 세심한', avatar: '👩‍⚕️', desc: '중환자실 간호사' },
+              { id: 'f6', name: '윤채영', job: '교사', age: 29, personality: '인내심 많고 다정한', avatar: '👩‍🏫', desc: '초등학교 선생님' },
+              { id: 'f7', name: '정민아', job: '경찰관', age: 31, personality: '정의롭고 용감한', avatar: '👮‍♀️', desc: '사이버수사대 경위' },
+              { id: 'f8', name: '한소희', job: '승무원', age: 28, personality: '우아하고 친근한', avatar: '👩‍✈️', desc: '국제선 승무원' },
+              { id: 'f9', name: '송유진', job: '건축가', age: 32, personality: '예술적이고 섬세한', avatar: '👷‍♀️', desc: '인테리어 디자이너' },
+              { id: 'f10', name: '김나영', job: '운동선수', age: 24, personality: '활발하고 도전적인', avatar: '🏃‍♀️', desc: '마라톤 선수' },
+              { id: 'f11', name: '이다은', job: '음악가', age: 25, personality: '감성적이고 예술적인', avatar: '🎤', desc: '싱어송라이터' },
+              { id: 'f12', name: '박소영', job: '사업가', age: 34, personality: '리더십 있고 혁신적인', avatar: '💼', desc: '패션 브랜드 CEO' },
+              { id: 'f13', name: '최미래', job: '수의사', age: 29, personality: '동물을 사랑하는 따뜻한', avatar: '👩‍⚕️', desc: '야생동물 수의사' },
+              { id: 'f14', name: '강예린', job: '사진작가', age: 27, personality: '예술적이고 감성적인', avatar: '📸', desc: '웨딩 사진작가' },
+              { id: 'f15', name: '윤지수', job: '기자', age: 30, personality: '똑똑하고 정의로운', avatar: '📰', desc: '방송국 앵커' },
+              { id: 'f16', name: '정하윤', job: '디자이너', age: 26, personality: '트렌디하고 창의적인', avatar: '🎨', desc: '패션 디자이너' },
+              { id: 'f17', name: '한유리', job: '금융전문가', age: 32, personality: '분석적이고 똑똑한', avatar: '💰', desc: '펀드매니저' },
+              { id: 'f18', name: '송아름', job: '과학자', age: 31, personality: '탐구적이고 논리적인', avatar: '🔬', desc: '환경과학자' },
+              { id: 'f19', name: '김서현', job: '항공관제사', age: 28, personality: '침착하고 정확한', avatar: '🛩️', desc: '공항 관제탑 근무' },
+              { id: 'f20', name: '이채린', job: '심리상담사', age: 33, personality: '공감능력이 뛰어난', avatar: '🧠', desc: '청소년 상담사' },
+              { id: 'f21', name: '박혜진', job: '마케터', age: 28, personality: '외향적이고 활발한', avatar: '📊', desc: '브랜드 마케터' },
+              { id: 'f22', name: '최윤서', job: '약사', age: 30, personality: '꼼꼼하고 신뢰할 수 있는', avatar: '💊', desc: '한의원 약사' },
+              { id: 'f23', name: '강민정', job: '배우', age: 26, personality: '매력적이고 감성적인', avatar: '🎭', desc: '뮤지컬 배우' },
+              { id: 'f24', name: '윤서아', job: '컨설턴트', age: 35, personality: '전략적이고 카리스마 있는', avatar: '📋', desc: 'HR 컨설턴트' },
+              { id: 'f25', name: '정예나', job: '콘텐츠 크리에이터', age: 25, personality: '창의적이고 트렌디한', avatar: '📱', desc: '유튜버 겸 인플루언서' }
+            ]
+          };
+
+          // 모든 페르소나를 하나의 배열로 합치기
+          const personas = [...persona.male, ...persona.female];
+
+        function init() {
+            setupEventListeners();
+            setupSpeechRecognition();
+            renderPersonas();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('backBtn').onclick = function() { showView('personas'); };
+            document.getElementById('themeBtn').onclick = toggleTheme;
+            document.getElementById('ttsBtn').onclick = toggleTTS;
+            document.getElementById('qrBtn').onclick = showQRCode;
+            document.getElementById('profileBtn').onclick = function() { showModal('profileModal'); };
+            document.getElementById('sendBtn').onclick = function() { sendMessage(document.getElementById('messageInput').value); };
+            document.getElementById('micBtn').onclick = toggleRecording;
+            document.getElementById('messageInput').onkeypress = function(e) { 
+                if (e.key === 'Enter') sendMessage(document.getElementById('messageInput').value); 
+            };
+            
+            document.getElementById('cancelProfile').onclick = function() { hideModal('profileModal'); };
+            document.getElementById('saveProfile').onclick = saveProfile;
+            document.getElementById('closeQR').onclick = function() { hideModal('qrModal'); };
+        }
+
+        function setupSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.lang = 'ko-KR';
+                recognition.onresult = function(e) {
+                    document.getElementById('messageInput').value = e.results[0][0].transcript;
+                    setRecording(false);
+                };
+                recognition.onerror = function() { setRecording(false); };
+            }
+        }
+
+        function renderPersonas() {
+            var html = '';
+            for (var i = 0; i < personas.length; i++) {
+                var p = personas[i];
+                html += '<div class="persona-card" onclick="selectPersona(\'' + p.id + '\')">';
+                html += '<div style="font-size: 2rem; margin-bottom: 0.5rem;">' + p.avatar + '</div>';
+                html += '<h3>' + p.name + '</h3>';
+                html += '<p style="color: #8b5cf6; font-size: 0.9rem;">' + p.job + ' • ' + p.age + '세</p>';
+                html += '<p style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.8;">' + p.desc + '</p>';
+                html += '</div>';
+            }
+            document.getElementById('personasGrid').innerHTML = html;
+        }
+
+        function selectPersona(id) {
+            
+
+            for (var i = 0; i < personas.length; i++) {
+                if (personas[i].id === id) {
+                    selectedPersona = personas[i];
+                    break;
+                }
+            }
+            messages = [{
+                type: 'bot',
+                content: '안녕하세요! 저는 ' + selectedPersona.name + '이에요. ' + selectedPersona.desc + '입니다. 반가워요! 😊',
+                timestamp: new Date()
+            }];
+            showView('chat');
+            renderMessages();
+            speakText(messages[0].content, id);
+        }
+
+        function showView(view) {
+            currentView = view;
+            if (view === 'personas') {
+                document.getElementById('profileBtn').classList.remove('hidden');
+                document.getElementById('personasView').classList.remove('hidden');
+                document.getElementById('chatView').classList.add('hidden');
+                document.getElementById('backBtn').classList.add('hidden');
+                document.getElementById('ttsBtn').classList.add('hidden');
+                document.getElementById('qrBtn').classList.add('hidden');
+                document.getElementById('title').textContent = 'AI 페르소나';
+            } else {
+                document.getElementById('profileBtn').classList.add('hidden');
+                document.getElementById('personasView').classList.add('hidden');
+                document.getElementById('chatView').classList.remove('hidden');
+                document.getElementById('backBtn').classList.remove('hidden');
+                document.getElementById('ttsBtn').classList.remove('hidden');
+                document.getElementById('qrBtn').classList.remove('hidden');
+                document.getElementById('title').textContent = selectedPersona.avatar + " " + selectedPersona.name;
+            }
+        }
+
+        function sendMessage(text) {
+            if (!text.trim() || !selectedPersona) return;
+            
+            var userMessage = { type: 'user', content: text, timestamp: new Date() };
+            messages.push(userMessage);
+            document.getElementById('messageInput').value = '';
+            renderMessages();
+            showTyping();
+
+            console.log(prompt,history.slice(-10))
+
+            fetch('http://192.168.3.73:59531/v2/txt2chat?isThink=0', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: text,
+                    history : history.slice(-4),
+                    lang: "auto",
+                    type: '당신은 ' + selectedPersona.name + '이라는 ' + selectedPersona.age + '살 ' + selectedPersona.job + '입니다. ' + selectedPersona.desc + '입니다. 사용자는 ' + (userProfile.name || '친구') + '라는 ' + (userProfile.age || '20대') + ' ' + (userProfile.gender || '사람') + '이고, ' + (userProfile.interests || '다양한 것들') + '에 관심이 있습니다. 자연스럽고 감정적인 대화를 나누며, 이모티콘도 적절히 사용해주세요.',
+                    //temp: 0.6, top_p: 0.95, top_k: 20, max: 32768
+                })
+            }).then(function(response) {
+                return response.body.getReader();
+            }).then(function(reader) {
+                var decoder = new TextDecoder();
+                var botResponse = '';
+                
+                hideTyping();
+                var botMessage = { type: 'bot', content: '', timestamp: new Date() };
+                messages.push(botMessage);
+
+                function readStream() {
+                    return reader.read().then(function(result) {
+                        if (result.done) {
+                            history.push({ role: 'user', content: text })
+                            history.push({ role: 'assistant', content: botResponse })
+                            speakText(botResponse);
+                            return;
+                        }
+                        botResponse += decoder.decode(result.value);
+                        messages[messages.length - 1].content = botResponse;
+                        renderMessages();
+                        return readStream();
+                    });
+                }
+                return readStream();
+            }).catch(function(error) {
+                hideTyping();
+                messages.push({ type: 'bot', content: '죄송해요, 오류가 발생했어요. 😅', timestamp: new Date() });
+                renderMessages();
+            });
+        }
+
+        function renderMessages() {
+            var html = '';
+            for (var i = 0; i < messages.length; i++) {
+                var m = messages[i];
+                html += '<div class="message ' + m.type + '">';
+                html += '<div class="message-content">';
+                html += marked.parse(m.content.replace(/\n/gi, "</br>"));
+                html += '<div style="font-size: 0.7rem; opacity: 0.7; margin-top: 0.25rem;">';
+                html += m.timestamp.toLocaleTimeString();
+                html += '</div></div></div>';
+            }
+            document.getElementById('messages').innerHTML = html;
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        }
+
+        function showTyping() {
+            var typing = document.createElement('div');
+            typing.id = 'typing';
+            typing.className = 'message bot';
+            typing.innerHTML = '<div class="message-content"><div class="typing"><div></div><div></div><div></div></div></div>';
+            document.getElementById('messages').appendChild(typing);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        }
+
+        function hideTyping() {
+            var typing = document.getElementById('typing');
+            if (typing) typing.remove();
+        }
+
+        let userId = 0
+
+        function speakText(text, id=0) {
+            if(id) 
+                userId = id
+            
+
+            if (!isTTSEnabled) return;
+            //var utterance = new SpeechSynthesisUtterance(text.replace(/[.!?]/g, ''));
+            //utterance.lang = 'ko-KR';
+            //speechSynthesis.speak(utterance);
+
+            let voice = 0 
+
+            if(userId.startsWith('m'))
+                voice = userId.replace('m','man')
+            else if(userId.startsWith('f')) 
+                voice = userId.replace('f','woman')
+            
+            if(audio && !audio.paused) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+
+            audio = new Audio(`https://oe-sapi.circul.us/tts?text=${encodeURIComponent(text.replace(/[.!?]/g, ''))}&lang=ko&voice=${voice}`);
+            audio.play().catch(function(error) {
+                console.error('TTS 오류:', error);
+            });
+        }
+
+        function toggleTTS() {
+            isTTSEnabled = !isTTSEnabled;
+            document.getElementById('ttsBtn').textContent = isTTSEnabled ? '🔊' : '🔇';
+        }
+
+        function toggleRecording() {
+            if (!recognition) return;
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+            setRecording(!isRecording);
+        }
+
+        function setRecording(recording) {
+            isRecording = recording;
+            document.getElementById('micBtn').className = recording ? 'btn recording' : 'btn';
+            document.getElementById('micBtn').textContent = recording ? '🛑' : '🎤';
+        }
+
+        function toggleTheme() {
+            isDarkTheme = !isDarkTheme;
+            document.body.className = isDarkTheme ? 'dark' : 'light';
+            document.getElementById('themeBtn').textContent = isDarkTheme ? '☀️' : '🌙';
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function saveProfile() {
+            userProfile = {
+                name: document.getElementById('nameInput').value,
+                age: document.getElementById('ageInput').value,
+                gender: document.getElementById('genderInput').value,
+                interests: document.getElementById('interestsInput').value
+            };
+            hideModal('profileModal');
+        }
+
+        function showQRCode() {
+            if (!selectedPersona) return;
+            var url = window.location.origin + '?persona=' + selectedPersona.id;
+            document.getElementById('qrTitle').textContent = selectedPersona.name + ' 공유하기';
+            document.getElementById('qrImage').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+            showModal('qrModal');
+        }
+
+        init();
+    </script>
+</body>
+</html>
