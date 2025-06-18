@@ -91,7 +91,6 @@ body {
     padding: 20px;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
 }
 
 .tutor-message {
@@ -102,55 +101,69 @@ body {
     border-left: 4px solid #3b82f6;
     font-size: 16px;
     line-height: 1.5;
-    min-height: 100px;
+    min-height: 120px;
     display: flex;
     align-items: center;
 }
 
-/* 토글 섹션 */
-.toggle-section {
+/* 저장 상태 표시 */
+.save-status {
+    background: #f0fdf4;
+    border: 2px solid #22c55e;
+    border-radius: 12px;
+    padding: 12px;
     margin-bottom: 15px;
+    text-align: center;
+    font-size: 14px;
+    color: #15803d;
+}
+
+.save-status.error {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #dc2626;
+}
+
+/* 토글 섹션들 */
+.toggle-section {
+    background: #f8fafc;
+    border-radius: 15px;
+    margin-bottom: 15px;
+    border: 2px solid #e2e8f0;
+    overflow: hidden;
 }
 
 .toggle-header {
-    background: #f1f5f9;
-    padding: 12px;
-    border-radius: 10px;
+    background: #e2e8f0;
+    padding: 12px 15px;
     cursor: pointer;
-    border: 2px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-size: 14px;
     font-weight: bold;
     color: #374151;
-    transition: all 0.3s ease;
-    font-size: 14px;
+    transition: background 0.3s ease;
 }
 
 .toggle-header:hover {
-    background: #e2e8f0;
+    background: #cbd5e1;
 }
 
 .toggle-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-    background: #f8fafc;
-    border-radius: 0 0 10px 10px;
-    border: 2px solid #e2e8f0;
-    border-top: none;
+    padding: 15px;
+    display: none;
 }
 
 .toggle-content.active {
-    max-height: 300px;
-    padding: 15px;
+    display: block;
 }
 
 .toggle-arrow {
     transition: transform 0.3s ease;
 }
 
-.toggle-arrow.active {
+.toggle-arrow.rotated {
     transform: rotate(180deg);
 }
 
@@ -162,12 +175,12 @@ body {
 }
 
 .level-btn {
-    padding: 10px;
+    padding: 12px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     background: white;
     border: 2px solid #d1d5db;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -190,7 +203,7 @@ body {
 }
 
 .setting-label {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: bold;
     color: #374151;
     margin-bottom: 6px;
@@ -206,48 +219,55 @@ body {
 .repeat-counter {
     background: white;
     border: 2px solid #d1d5db;
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 14px;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 16px;
     font-weight: bold;
-    min-width: 40px;
+    min-width: 50px;
     text-align: center;
 }
 
 .adjust-btn {
-    width: 30px;
-    height: 30px;
+    width: 35px;
+    height: 35px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     background: #3b82f6;
     color: white;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: bold;
     cursor: pointer;
 }
 
-/* 진행 상태 */
-.progress-stats {
+/* 진행상태 */
+.progress-section {
     background: white;
     border-radius: 10px;
-    padding: 12px;
+    padding: 15px;
     border: 2px solid #e2e8f0;
 }
 
-.stat-item {
+.progress-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: 8px;
     font-size: 12px;
 }
 
-.stat-label {
-    color: #6b7280;
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0;
 }
 
-.stat-value {
-    font-weight: bold;
-    color: #374151;
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    transition: width 0.5s ease;
 }
 
 .tutor-controls {
@@ -258,12 +278,12 @@ body {
 
 .tutor-btn {
     flex: 1;
-    padding: 10px;
+    padding: 12px;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     background: #3b82f6;
     color: white;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -271,9 +291,10 @@ body {
 
 .tutor-btn:active {
     transform: scale(0.95);
+    background: #2563eb;
 }
 
-.tutor-btn.danger {
+.tutor-btn.reset {
     background: #ef4444;
 }
 

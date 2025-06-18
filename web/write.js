@@ -592,9 +592,9 @@ function updateLearningData() {
     const avgTime = learningStats.responseTimes.length > 0 ?
         Math.round(learningStats.responseTimes.reduce((a, b) => a + b, 0) / learningStats.responseTimes.length / 1000) : 0;
     
-    document.getElementById('accuracyRate').textContent = accuracyRate + '%';
-    document.getElementById('totalProblems').textContent = learningStats.totalProblems;
-    document.getElementById('correctProblems').textContent = learningStats.correctProblems;
+    document.getElementById('accuracy').textContent = accuracyRate + '%';
+    document.getElementById('currentProgress').textContent = learningStats.totalProblems;
+    document.getElementById('repeatProgress').textContent = learningStats.correctProblems;
     document.getElementById('avgTime').textContent = avgTime + '초';
 }
 

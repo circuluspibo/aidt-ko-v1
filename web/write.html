@@ -16,47 +16,38 @@
                 <div class="tutor-status">함께 써봐요!</div>
             </div>
             <div class="tutor-body">
+                <div class="save-status" id="saveStatus">
+                    💾 자동 저장됨
+                </div>
+
                 <div class="tutor-message" id="tutorMessage">
                     안녕하세요! 오늘은 한글 쓰기를 연습해봐요. 
                     캔버스에 직접 써보고, 문제도 풀어보세요! ✏️✨
                 </div>
                 
-                <!-- 저장/불러오기 제어 -->
-                <div class="save-section">
-                    <div class="save-header">
-                        💾 진행상황 저장
-                    </div>
-                    <div class="save-controls">
-                        <button class="save-btn save" onclick="saveProgress()">저장</button>
-                        <button class="save-btn load" onclick="loadProgress()">불러오기</button>
-                        <button class="save-btn reset" onclick="resetProgress()">초기화</button>
-                    </div>
-                    <div class="save-status" id="saveStatus">저장된 진행상황이 없습니다</div>
-                </div>
-                
-                <!-- 학습 단계 선택 (토글) -->
+                 <!-- 학습 단계 선택 (토글) -->
                 <div class="toggle-section">
-                    <div class="toggle-header" onclick="toggleSection('levelSection')">
-                        <span>📚 학습 단계 선택</span>
+                    <div class="toggle-header" onclick="toggleSection('level')">
+                        📚 학습 단계 선택
                         <span class="toggle-arrow" id="levelArrow">▼</span>
                     </div>
-                    <div class="toggle-content" id="levelSection">
+                    <div class="toggle-content" id="levelContent">
                         <div class="level-buttons">
-                            <button class="level-btn active" onclick="selectLevel('consonant')">1단계: 자음 쓰기</button>
-                            <button class="level-btn" onclick="selectLevel('vowel')">2단계: 모음 쓰기</button>
-                            <button class="level-btn" onclick="selectLevel('combination')">3단계: 글자 쓰기</button>
-                            <button class="level-btn" onclick="selectLevel('word')">4단계: 단어 쓰기</button>
+                            <button class="level-btn active" onclick="selectLevel('consonant')">1단계: 자음 듣기</button>
+                            <button class="level-btn" onclick="selectLevel('vowel')">2단계: 모음 듣기</button>
+                            <button class="level-btn" onclick="selectLevel('combination')">3단계: 글자 듣기</button>
+                            <button class="level-btn" onclick="selectLevel('word')">4단계: 단어 듣기</button>
                         </div>
                     </div>
                 </div>
                 
                 <!-- 반복 설정 (토글) -->
                 <div class="toggle-section">
-                    <div class="toggle-header" onclick="toggleSection('repeatSection')">
-                        <span>🔄 반복 설정</span>
-                        <span class="toggle-arrow" id="repeatArrow">▼</span>
+                    <div class="toggle-header" onclick="toggleSection('settings')">
+                        ⚙️ 반복 설정
+                        <span class="toggle-arrow" id="settingsArrow">▼</span>
                     </div>
-                    <div class="toggle-content" id="repeatSection">
+                    <div class="toggle-content" id="settingsContent">
                         <div class="setting-group">
                             <label class="setting-label">맞췄을 때 반복</label>
                             <div class="setting-controls">
@@ -75,28 +66,31 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- 학습 데이터 표시 (토글) -->
+                
+                <!-- 진행상태 (토글) -->
                 <div class="toggle-section">
-                    <div class="toggle-header" onclick="toggleSection('dataSection')">
-                        <span>📊 학습 데이터</span>
-                        <span class="toggle-arrow" id="dataArrow">▼</span>
+                    <div class="toggle-header" onclick="toggleSection('progress')">
+                        📊 진행상태
+                        <span class="toggle-arrow" id="progressArrow">▼</span>
                     </div>
-                    <div class="toggle-content" id="dataSection">
-                        <div class="data-display" id="learningData">
-                            <div class="data-row">
+                    <div class="toggle-content active" id="progressContent">
+                        <div class="progress-section">
+                            <div class="progress-item">
+                                <span>현재 학습:</span>
+                                <span id="currentProgress">자음 1/10</span>
+                            </div>
+                            <div class="progress-item">
+                                <span>반복 진행:</span>
+                                <span id="repeatProgress">1/3</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 10%"></div>
+                            </div>
+                            <div class="progress-item">
                                 <span>정답률:</span>
-                                <span id="accuracyRate">0%</span>
+                                <span id="accuracy">0%</span>
                             </div>
-                            <div class="data-row">
-                                <span>총 문제:</span>
-                                <span id="totalProblems">0</span>
-                            </div>
-                            <div class="data-row">
-                                <span>맞춘 문제:</span>
-                                <span id="correctProblems">0</span>
-                            </div>
-                            <div class="data-row">
+                            <div class="progress-item">
                                 <span>평균 시간:</span>
                                 <span id="avgTime">0초</span>
                             </div>
@@ -106,10 +100,12 @@
                 
                 <div class="tutor-controls">
                     <button class="tutor-btn" onclick="getTutorHelp()">💡 도움말</button>
-                    <button class="tutor-btn" onclick="clearCanvas()">🗑️ 지우기</button>
+                    <button class="tutor-btn" onclick="playCurrentSound()">🔊 다시듣기</button>
+                    <button class="tutor-btn reset" onclick="showResetConfirm()">🔄 초기화</button>
                 </div>
             </div>
         </div>
+
 
         <!-- 메인 학습 영역 -->
         <div class="main-learning-area">
@@ -148,7 +144,7 @@
                         </div>
                     </div>
                     <div class="canvas-container">
-                        <canvas id="writingCanvas" width="600" height="300"></canvas>
+                        <canvas id="writingCanvas" width="1000" height="300"></canvas>
                         <div class="guide-overlay" id="guideOverlay" style="display: none;">ㄱ</div>
                     </div>
                 </div>

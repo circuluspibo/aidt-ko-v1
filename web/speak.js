@@ -37,122 +37,134 @@ const STORAGE_KEYS = {
 
 
 
-// localStorage 관련 함수들
-function saveProgress() {
+// =================
+// localStorage 관리 함수들
+// =================
+
+// 현재 상태 저장
+function saveCurrentState() {
     try {
-        const progressData = {
+        const currentState = {
             currentLevel,
             currentItemIndex,
             currentRepeat,
-            maxRepeat,
-            lastSaved: new Date().toISOString()
+            timestamp: new Date().toISOString()
         };
         
-        localStorage.setItem(STORAGE_KEYS.PROGRESS, JSON.stringify(progressData));
-        localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(repeatSettings));
-        localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(learningStats));
+        localStorage.setItem(STORAGE_KEYS.CURRENT_STATE, JSON.stringify(currentState));
+        localStorage.setItem(STORAGE_KEYS.LAST_SAVE, new Date().toISOString());
         
-        updateTutorMessage('💾 저장 완료!', '학습 진행 상황이 성공적으로 저장되었습니다! 언제든지 이어서 학습할 수 있어요! ✨');
-        
-        // 시각적 피드백
-        const saveBtn = document.querySelector('.data-btn.save');
-        const originalText = saveBtn.textContent;
-        saveBtn.textContent = '✅ 완료';
-        saveBtn.style.background = '#22c55e';
-        
-        setTimeout(() => {
-            saveBtn.textContent = originalText;
-            saveBtn.style.background = '#10b981';
-        }, 2000);
-        
+        updateSaveStatus('success', '💾 자동 저장됨');
+        return true;
     } catch (error) {
-        console.error('저장 중 오류 발생:', error);
-        updateTutorMessage('❌ 저장 실패', '저장 중 오류가 발생했습니다. 다시 시도해주세요.');
+        console.error('저장 실패:', error);
+        updateSaveStatus('error', '❌ 저장 실패');
+        return false;
     }
 }
 
-function loadProgress() {
+// 학습 데이터 저장
+function savelearningStats() {
     try {
-        const progressData = localStorage.getItem(STORAGE_KEYS.PROGRESS);
-        const settingsData = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-        const statsData = localStorage.getItem(STORAGE_KEYS.STATS);
-        
-        if (progressData) {
-            const progress = JSON.parse(progressData);
-            const lastSaved = new Date(progress.lastSaved);
+        localStorage.setItem(STORAGE_KEYS.LEARNING_DATA, JSON.stringify(learningStats));
+        return true;
+    } catch (error) {
+        console.error('학습 데이터 저장 실패:', error);
+        return false;
+    }
+}
+
+// 설정 저장
+function saveSettings() {
+    try {
+        const settings = {
+            repeatSettings,
+            timestamp: new Date().toISOString()
+        };
+        localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+        return true;
+    } catch (error) {
+        console.error('설정 저장 실패:', error);
+        return false;
+    }
+}
+
+// 모든 데이터 저장
+function saveAllData() {
+    const success = saveCurrentState() && savelearningStats() && saveSettings();
+    if (!success) {
+        updateSaveStatus('error', '❌ 일부 저장 실패');
+    }
+    return success;
+}
+
+// 저장된 상태 불러오기
+function loadSavedState() {
+    try {
+        const savedState = localStorage.getItem(STORAGE_KEYS.CURRENT_STATE);
+        const savedData = localStorage.getItem(STORAGE_KEYS.LEARNING_DATA);
+        const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+
+        if (savedState) {
+            const state = JSON.parse(savedState);
+            const saveDate = new Date(state.timestamp);
             const now = new Date();
-            const timeDiff = (now - lastSaved) / (1000 * 60 * 60); // 시간 단위
-            
-            // 24시간 이내의 데이터만 복원 제안
-            if (timeDiff < 24) {
-                showRestoreNotification(progress, settingsData, statsData);
-                return true;
+            const daysDiff = Math.floor((now - saveDate) / (1000 * 60 * 60 * 24));
+
+            // 7일 이내의 데이터만 복원 제안
+            if (daysDiff <= 7) {
+                return {
+                    state: state,
+                    data: savedData ? JSON.parse(savedData) : null,
+                    settings: savedSettings ? JSON.parse(savedSettings) : null,
+                    isValid: true
+                };
             }
         }
-        
-        return false;
+        return null;
     } catch (error) {
-        console.error('진행 상황 로드 중 오류:', error);
-        return false;
+        console.error('저장된 데이터 불러오기 실패:', error);
+        return null;
     }
 }
 
-function showRestoreNotification(progressData, settingsData, statsData) {
-    const notification = document.getElementById('restoreNotification');
-    const lastSaved = new Date(progressData.lastSaved);
-    const timeAgo = getTimeAgo(lastSaved);
-    
-    notification.querySelector('div:first-child').textContent = 
-        `💾 ${timeAgo} 학습 기록을 발견했어요!`;
-    
-    notification.style.display = 'block';
-    
-    // 임시로 데이터 저장 (복원 시 사용)
-    window.tempRestoreData = { progressData, settingsData, statsData };
-}
-
+// 진행상황 복원
 function restoreProgress() {
-    try {
-        const { progressData, settingsData, statsData } = window.tempRestoreData;
+    const savedData = loadSavedState();
+    if (savedData && savedData.isValid) {
+        const { state, data, settings } = savedData;
         
-        // 진행 상황 복원
-        currentLevel = progressData.currentLevel || 'consonant';
-        currentItemIndex = progressData.currentItemIndex || 0;
-        currentRepeat = progressData.currentRepeat || 1;
-        maxRepeat = progressData.maxRepeat || 3;
+        // 상태 복원
+        currentLevel = state.currentLevel;
+        currentItemIndex = state.currentItemIndex;
+        currentRepeat = state.currentRepeat;
+        
+        // 학습 데이터 복원
+        if (data) {
+            learningStats = { ...learningStats, ...data };
+        }
         
         // 설정 복원
-        if (settingsData) {
-            const settings = JSON.parse(settingsData);
-            repeatSettings = { ...repeatSettings, ...settings };
+        if (settings && settings.repeatSettings) {
+            repeatSettings = settings.repeatSettings;
             document.getElementById('correctRepeat').textContent = repeatSettings.correct;
             document.getElementById('incorrectRepeat').textContent = repeatSettings.incorrect;
         }
         
-        // 통계 복원
-        if (statsData) {
-            const stats = JSON.parse(statsData);
-            learningStats = { ...learningStats, ...stats };
-            learningStats.sessionStart = new Date(); // 새 세션 시작
-        }
-        
         // UI 업데이트
-        updateLevelButtons();
+        selectLevelButton(currentLevel);
         updateContent();
-        updateProgressDisplay();
-        updateStatsDisplay();
-        updateSessionInfo();
+        updateUI();
         
-        hideRestoreNotification();
+        updateTutorMessage('📚 복원 완료', 
+            `이전 학습이 복원되었어요! ${getLevelKoreanName(currentLevel)} ${currentItemIndex + 1}번째 문제부터 이어서 진행해요! 🎯`);
         
-        updateTutorMessage('🎉 복원 완료!', 
-            `이전 학습을 성공적으로 불러왔습니다! ${getLevelName(currentLevel)} ${currentItemIndex + 1}번 문제부터 이어서 진행해보세요! 💪`);
-            
-    } catch (error) {
-        console.error('복원 중 오류 발생:', error);
-        startFresh();
-        updateTutorMessage('❌ 복원 실패', '복원 중 오류가 발생하여 새로운 세션으로 시작합니다.');
+        hideRestoreModal();
+        updateSaveStatus('success', '📚 진행상황 복원됨');
+        
+        return true;
     }
+    return false;
 }
 
 function startFresh() {
@@ -180,17 +192,16 @@ function startFresh() {
     updateContent();
     updateProgressDisplay();
     updateStatsDisplay();
-    updateSessionInfo();
+    //updateSessionInfo();
     
-    hideRestoreNotification();
+    hideRestoreModal();
     
     updateTutorMessage('🆕 새로운 시작!', 
         '새로운 학습 세션을 시작합니다! 한글 발음 연습을 차근차근 해보아요! 🎤');
 }
 
-function hideRestoreNotification() {
-    document.getElementById('restoreNotification').style.display = 'none';
-    delete window.tempRestoreData;
+function hideRestoreModal() {
+    document.getElementById('restoreModal').style.display = 'none';
 }
 
 function resetProgress() {
@@ -544,8 +555,8 @@ function updateStatsDisplay() {
     const accuracy = totalAttempts > 0 ? (stats.totalCorrect / totalAttempts * 100) : 100;
     const avgTime = totalAttempts > 0 ? (stats.totalTime / totalAttempts) : 0;
     
-    document.getElementById('correctCount').textContent = stats.totalCorrect;
-    document.getElementById('incorrectCount').textContent = stats.totalIncorrect;
+    document.getElementById('currentProgress').textContent = stats.totalCorrect;
+    document.getElementById('repeatProgress').textContent = stats.totalIncorrect;
     document.getElementById('accuracy').textContent = accuracy.toFixed(1) + '%';
     document.getElementById('avgTime').textContent = avgTime.toFixed(1) + 's';
 }
@@ -671,7 +682,7 @@ function updateRecognizedText(text) {
 }
 
 function updateRepeatDisplay() {
-    document.getElementById('currentRepeat').textContent = `${currentRepeat}/${maxRepeat}`;
+    document.getElementById('currentProgress').textContent = `${currentRepeat}/${maxRepeat}`;
 }
 
 function updateProgressDisplay() {
@@ -686,7 +697,7 @@ function updateProgressDisplay() {
     const currentItem = getCurrentItem();
     const targetText = getTargetText(currentItem);
     
-    document.getElementById('itemProgress').textContent = 
+    document.getElementById('currentProgress').textContent = 
         `${levelNames[currentLevel]} '${targetText}' (${currentItemIndex + 1}/${total})`;
 }
 
@@ -743,7 +754,7 @@ function updateContent() {
     }
     
     // 첫 번째 힌트로 설정
-    const firstHint = currentItem.hints[0];
+    const firstHint = currentItem.example;
     document.getElementById('hintImage').textContent = firstHint.image;
     document.getElementById('hintExample').textContent = firstHint.example;
     document.getElementById('hintDescription').textContent = firstHint.description;
@@ -756,6 +767,8 @@ function updateLevelMessage() {
     const currentItem = getCurrentItem();
     const targetText = getTargetText(currentItem);
     
+    console.log(currentItem)
+
     const messages = {
         consonant: {
             title: '🗣️ 자음 발음 연습',
@@ -775,7 +788,7 @@ function updateLevelMessage() {
         word: {
             title: '🗣️ 단어 발음 연습',
             subtitle: `'${targetText}' 소리내어 읽기`,
-            message: `단어 '${targetText}'를 정확하게 발음해보세요! ${currentItem.syllables.join('과 ')}을 이어서 말해보세요! 🏆`
+            message: `단어 '${targetText}'를 정확하게 발음해보세요! ${currentItem.letter}을 이어서 말해보세요! 🏆`
         }
     };
     
@@ -1000,7 +1013,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // 이전 진행 상황 확인 및 복원 제안
-    const hasProgress = loadProgress();
+    const hasProgress = loadSavedState();
     
     if (!hasProgress) {
         // 새 세션 시작
@@ -1008,7 +1021,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // 세션 정보 업데이트
-    updateSessionInfo();
+    ///updateSessionInfo();
     
     // 자동 저장 설정
     setupAutoSave();
@@ -1017,7 +1030,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupKeyboardShortcuts();
     
     // 세션 업데이터 설정
-    setupSessionUpdater();
+    //setupSessionUpdater();
     
     // 환영 메시지 (복원 알림이 없는 경우만)
     if (!hasProgress) {

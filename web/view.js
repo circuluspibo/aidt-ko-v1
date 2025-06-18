@@ -202,7 +202,7 @@ function updateLastSaveTime() {
         if (savedState) {
             const state = JSON.parse(savedState);
             if (state.lastSaveTime) {
-                document.getElementById('lastSaveTime').textContent = state.lastSaveTime;
+                //document.getElementById('lastSaveTime').textContent = state.lastSaveTime;
             }
         }
     } catch (error) {
@@ -543,16 +543,16 @@ function updateStats(isCorrect, responseTime, selectedChoice, correctAnswer) {
 
 // 통계 표시 업데이트
 function updateStatsDisplay() {
-    document.getElementById('totalQuestions').textContent = learningStats.totalQuestions;
-    document.getElementById('correctAnswers').textContent = learningStats.correctAnswers;
+    document.getElementById('currentProgress').textContent = learningStats.totalQuestions;
+    document.getElementById('repeatProgress').textContent = learningStats.correctAnswers;
     
     const accuracy = learningStats.totalQuestions > 0 ? 
         Math.round((learningStats.correctAnswers / learningStats.totalQuestions) * 100) : 0;
-    document.getElementById('accuracyRate').textContent = accuracy + '%';
+    document.getElementById('accuracy').textContent = accuracy + '%';
     
     const avgTime = learningStats.totalQuestions > 0 ? 
         Math.round(learningStats.totalResponseTime / learningStats.totalQuestions) : 0;
-    document.getElementById('avgResponseTime').textContent = avgTime + '초';
+    document.getElementById('avgTime').textContent = avgTime + '초';
 }
 
 // 선택지 리셋

@@ -23,7 +23,7 @@
                     글자를 천천히 보고 특징을 기억하세요! 📚✨
                 </div>
                 
-                <!-- 학습 단계 선택 토글 -->
+                 <!-- 학습 단계 선택 (토글) -->
                 <div class="toggle-section">
                     <div class="toggle-header" onclick="toggleSection('level')">
                         📚 학습 단계 선택
@@ -31,21 +31,21 @@
                     </div>
                     <div class="toggle-content" id="levelContent">
                         <div class="level-buttons">
-                            <button data-level="consonant" class="level-btn active" onclick="selectLevel('consonant')">1단계: 자음 보기</button>
-                            <button data-level="vowel" class="level-btn" onclick="selectLevel('vowel')">2단계: 모음 보기</button>
-                            <button data-level="combination" class="level-btn" onclick="selectLevel('combination')">3단계: 글자 보기</button>
-                            <button data-level="word" class="level-btn" onclick="selectLevel('word')">4단계: 단어 보기</button>
+                            <button class="level-btn active" onclick="selectLevel('consonant')">1단계: 자음 듣기</button>
+                            <button class="level-btn" onclick="selectLevel('vowel')">2단계: 모음 듣기</button>
+                            <button class="level-btn" onclick="selectLevel('combination')">3단계: 글자 듣기</button>
+                            <button class="level-btn" onclick="selectLevel('word')">4단계: 단어 듣기</button>
                         </div>
                     </div>
                 </div>
                 
-                <!-- 반복 설정 토글 -->
+                <!-- 반복 설정 (토글) -->
                 <div class="toggle-section">
-                    <div class="toggle-header" onclick="toggleSection('repeat')">
-                        🔄 반복 설정
-                        <span class="toggle-arrow" id="repeatArrow">▼</span>
+                    <div class="toggle-header" onclick="toggleSection('settings')">
+                        ⚙️ 반복 설정
+                        <span class="toggle-arrow" id="settingsArrow">▼</span>
                     </div>
-                    <div class="toggle-content" id="repeatContent">
+                    <div class="toggle-content" id="settingsContent">
                         <div class="setting-group">
                             <label class="setting-label">맞췄을 때 반복</label>
                             <div class="setting-controls">
@@ -64,38 +64,33 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- 진행 상태 토글 -->
+                
+                <!-- 진행상태 (토글) -->
                 <div class="toggle-section">
                     <div class="toggle-header" onclick="toggleSection('progress')">
-                        📊 학습 통계
+                        📊 진행상태
                         <span class="toggle-arrow" id="progressArrow">▼</span>
                     </div>
-                    <div class="toggle-content" id="progressContent">
-                        <div class="progress-stats">
-                            <div class="stat-item">
-                                <span class="stat-label">총 문제 수:</span>
-                                <span class="stat-value" id="totalQuestions">0</span>
+                    <div class="toggle-content active" id="progressContent">
+                        <div class="progress-section">
+                            <div class="progress-item">
+                                <span>현재 학습:</span>
+                                <span id="currentProgress">자음 1/10</span>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">정답 수:</span>
-                                <span class="stat-value" id="correctAnswers">0</span>
+                            <div class="progress-item">
+                                <span>반복 진행:</span>
+                                <span id="repeatProgress">1/3</span>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">정답률:</span>
-                                <span class="stat-value" id="accuracyRate">0%</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 10%"></div>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">평균 응답시간:</span>
-                                <span class="stat-value" id="avgResponseTime">0초</span>
+                            <div class="progress-item">
+                                <span>정답률:</span>
+                                <span id="accuracy">0%</span>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">현재 항목:</span>
-                                <span class="stat-value" id="currentProgress">1/10</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">최근 저장:</span>
-                                <span class="stat-value" id="lastSaveTime">-</span>
+                            <div class="progress-item">
+                                <span>평균 시간:</span>
+                                <span id="avgTime">0초</span>
                             </div>
                         </div>
                     </div>
@@ -103,11 +98,12 @@
                 
                 <div class="tutor-controls">
                     <button class="tutor-btn" onclick="getTutorHelp()">💡 도움말</button>
-                    <button class="tutor-btn" onclick="resetStats()">📊 통계초기화</button>
-                    <button class="tutor-btn danger" onclick="resetAllData()">🗑️ 전체초기화</button>
+                    <button class="tutor-btn" onclick="playCurrentSound()">🔊 다시듣기</button>
+                    <button class="tutor-btn reset" onclick="showResetConfirm()">🔄 초기화</button>
                 </div>
             </div>
         </div>
+
 
         <!-- 메인 학습 영역 -->
         <div class="main-learning-area">
