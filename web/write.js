@@ -333,17 +333,19 @@ function toggleGuide() {
     }
 }
 
-// 토글 섹션 제어
-function toggleSection(sectionId) {
-    const section = document.getElementById(sectionId);
-    const arrow = document.getElementById(sectionId.replace('Section', 'Arrow'));
+// 토글 기능
+function toggleSection(sectionName) {
+    const content = document.getElementById(sectionName + 'Content');
+    const arrow = document.getElementById(sectionName + 'Arrow');
     
-    if (section.classList.contains('show')) {
-        section.classList.remove('show');
-        arrow.classList.remove('rotate');
+    if (content.classList.contains('active')) {
+        content.classList.remove('active');
+        arrow.classList.remove('rotated');
+        arrow.textContent = '▼';
     } else {
-        section.classList.add('show');
-        arrow.classList.add('rotate');
+        content.classList.add('active');
+        arrow.classList.add('rotated');
+        arrow.textContent = '▲';
     }
 }
 
@@ -372,7 +374,7 @@ function selectLevel(level) {
     
     updateContent();
     updateLevelMessage();
-    generateRandomChoices();
+    //generateRandomChoices();
     clearCanvas();
 }
 
@@ -431,8 +433,8 @@ function updateContent() {
             break;
     }
     
-    document.getElementById('targetLetter').textContent = targetText;
-    document.getElementById('targetChoice').textContent = targetText;
+    //document.getElementById('targetLetter').textContent = targetText;
+    //document.getElementById('targetChoice').textContent = targetText;
     document.getElementById('hintText').textContent = hintText;
     document.getElementById('hintImage').textContent = currentData.image;
     
@@ -502,6 +504,113 @@ function generateRandomChoices() {
     
     // 문제 시작 시간 기록
     startTime = Date.now();
+}
+
+
+function calc(){
+    const currentData = learningData[currentLevel][currentItemIndex];
+
+    canvas.toBlob(blob => {
+        // 3. FormData 생성
+        const formData = new FormData();
+        formData.append("uploadFile", blob, "test.png");
+
+        // 4. fetch로 전송
+        fetch("https://o-vapi.circul.us/code/ocr?lang=all", {
+        method: "POST",
+        headers: {
+            "Accept": "application/json"
+            // ❗ Content-Type은 자동 설정됨 (multipart/form-data)
+        },
+        body: formData
+        })
+        .then(res => res.json())
+        .then(data => console.log("응답:", data))
+        .catch(err => console.error("에러:", err));
+    }, "image/png");
+
+    /*
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // 3. ArrayBuffer로 변환
+    const buffer = imageData.data.buffer;
+
+    // 4. fetch로 서버에 전송
+    fetch("https://o-vapi.circul.us/code/ocr?lang=all", {
+        method: "POST",
+        headers: {
+        "Content-Type": "application/octet-stream"
+        },
+        body: buffer
+    })
+    .then(res => res.text())
+    .then(data => console.log("서버 응답:", data))
+    .catch(err => console.error("에러 발생:", err));
+*/
+
+    /*
+    if (currentLevel === 'combination') {
+        guideOverlay.textContent = currentData.result;
+    } else if (currentLevel === 'word') {
+        guideOverlay.textContent = currentData.word;
+    } else {
+        guideOverlay.textContent = currentData.letter;
+    }
+    */
+
+    //ctx
+
+    /*
+    const isCorrect = selectedChoice === correctAnswer;
+    const responseTime = Date.now() - startTime;
+    const buttons = document.querySelectorAll('.choice-btn');
+    
+    // 모든 버튼 비활성화
+    buttons.forEach(btn => {
+        btn.style.pointerEvents = 'none';
+        btn.classList.remove('correct', 'incorrect');
+    });
+    
+    // 선택된 버튼에 피드백 적용
+    const selectedButton = Array.from(buttons).find(btn => 
+        btn.textContent === selectedChoice
+    );
+    
+
+    
+    // 학습 데이터 기록
+    learningStats.totalProblems++;
+    if (isCorrect) {
+        learningStats.correctProblems++;
+    }
+    learningStats.responseTimes.push(responseTime);
+    learningStats.problemLog.push({
+        level: currentLevel,
+        item: currentItemIndex,
+        question: correctAnswer,
+        answer: selectedChoice,
+        isCorrect: isCorrect,
+        responseTime: responseTime,
+        timestamp: new Date().toISOString()
+    });
+    
+    updateLearningData();
+    
+    if (isCorrect) {
+        updateTutorMessage('🎉 정답이에요!', 
+            `"${selectedChoice}"를 정확히 찾았네요! 정말 잘했어요! 👏`);
+        setTimeout(() => {
+            markActivity(true);
+            //resetChoices();
+        }, 1500);
+    } else {
+        updateTutorMessage('😊 다시 생각해보세요!', 
+            `조금 다른 것 같아요. 정답은 "${correctAnswer}"이에요! 💡`);
+        setTimeout(() => {
+            //resetChoices();
+        }, 2000);
+    }   
+        */
 }
 
 // 선택 처리

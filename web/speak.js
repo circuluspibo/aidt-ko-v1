@@ -121,10 +121,10 @@ function loadSavedState() {
                 };
             }
         }
-        return null;
+        return true;
     } catch (error) {
         console.error('저장된 데이터 불러오기 실패:', error);
-        return null;
+        return false;
     }
 }
 
@@ -152,7 +152,7 @@ function restoreProgress() {
         }
         
         // UI 업데이트
-        selectLevelButton(currentLevel);
+        selectLevel(currentLevel);
         updateContent();
         updateUI();
         
@@ -291,7 +291,7 @@ function importLearningData(event) {
                 learningStats.sessionStart = new Date(); // 새 세션으로 시작
                 
                 // localStorage에 저장
-                saveProgress();
+                saveAllData();
                 
                 // UI 업데이트
                 updateLevelButtons();
@@ -617,16 +617,32 @@ function getTargetText(item) {
 
 // 랜덤 힌트 생성
 function generateRandomHint() {
-    const currentItem = getCurrentItem();
+    const currentItem = getCurrentItem()
     const hints = currentItem.example;
     const randomHint = hints;
     
-    document.getElementById('hintImage').textContent = randomHint.image;
-    document.getElementById('hintExample').textContent = randomHint.example;
-    document.getElementById('hintDescription').textContent = randomHint.description;
+    switch(currentLevel) {
+        case 'consonant':
+        case 'vowel':
+            document.getElementById('hintImage').textContent = currentItem.image;
+            document.getElementById('hintExample').textContent = currentItem.example;
+            document.getElementById('hintDescription').textContent = `이번에는 "${currentItem.example}"를 생각하며 발음해보세요!`;
+            break;
+        case 'combination':
+            document.getElementById('hintImage').textContent = currentItem.image;
+            document.getElementById('hintExample').textContent = currentItem.meaning;
+            document.getElementById('hintDescription').textContent = `이번에는 "${currentItem.meaning}"를 생각하며 발음해보세요!`;
+            break;
+        case 'word':
+            document.getElementById('hintImage').textContent = currentItem.image;
+            document.getElementById('hintExample').textContent = currentItem.meaning;
+            document.getElementById('hintDescription').textContent = `이번에는 "${currentItem.meaning}"를 생각하며 발음해보세요!`;
+            break;
+    }
+
     
     updateTutorMessage('🎯 새로운 힌트!', 
-        `이번에는 "${randomHint.example}"를 생각하며 발음해보세요! ${randomHint.description} 🎪`);
+        `이번에는 "${currentItem.example}"를 생각하며 발음해보세요! ${currentItem.description} 🎪`);
 }
 
 // UI 업데이트 함수들
@@ -715,7 +731,7 @@ function selectLevel(level) {
     updateProgressDisplay();
     
     // 자동 저장
-    saveProgress();
+    saveAllData();
 }
 
 // 항목 상태 리셋
@@ -731,6 +747,7 @@ function resetItemState() {
 function updateContent() {
     const currentItem = getCurrentItem();
     const targetText = getTargetText(currentItem);
+    generateRandomHint()
     
     // 기본 정보 업데이트
     document.getElementById('targetLetter').textContent = targetText;
@@ -754,10 +771,10 @@ function updateContent() {
     }
     
     // 첫 번째 힌트로 설정
-    const firstHint = currentItem.example;
-    document.getElementById('hintImage').textContent = firstHint.image;
-    document.getElementById('hintExample').textContent = firstHint.example;
-    document.getElementById('hintDescription').textContent = firstHint.description;
+    //const firstHint = currentItem.example;
+    //document.getElementById('hintImage').textContent = firstHint.image;
+    //document.getElementById('hintExample').textContent = firstHint.example;
+    //document.getElementById('hintDescription').textContent = firstHint.description;
     
     updateLevelMessage();
 }
@@ -799,6 +816,23 @@ function updateLevelMessage() {
 }
 
 // 설정 토글
+// 토글 기능
+function toggleSection(sectionName) {
+    const content = document.getElementById(sectionName + 'Content');
+    const arrow = document.getElementById(sectionName + 'Arrow');
+    
+    if (content.classList.contains('active')) {
+        content.classList.remove('active');
+        arrow.classList.remove('rotated');
+        arrow.textContent = '▼';
+    } else {
+        content.classList.add('active');
+        arrow.classList.add('rotated');
+        arrow.textContent = '▲';
+    }
+}
+
+
 function toggleSettings() {
     const panel = document.getElementById('settingsPanel');
     panel.classList.toggle('expanded');
@@ -815,7 +849,7 @@ function adjustRepeat(type, delta) {
             `${type === 'correct' ? '성공시' : '실패시'} 반복 횟수가 ${newValue}회로 설정되었습니다! 👍`);
         
         // 자동 저장
-        saveProgress();
+        saveAllData();
     }
 }
 
@@ -872,7 +906,7 @@ function nextItem() {
         generateRandomHint();
         
         // 자동 저장
-        saveProgress();
+        saveAllData();
     } else {
         showLevelComplete();
     }
@@ -893,7 +927,7 @@ function showLevelComplete() {
     showFeedback(true, true, '단계 완료!');
     
     // 완료 시 자동 저장
-    saveProgress();
+    saveAllData();
 }
 
 // 피드백 표시
@@ -990,7 +1024,7 @@ function setupKeyboardShortcuts() {
             case 'KeyS':
                 if (event.ctrlKey) {
                     event.preventDefault();
-                    saveProgress();
+                    saveAllData();
                 }
                 break;
         }
@@ -1017,12 +1051,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!hasProgress) {
         // 새 세션 시작
+        selectLevel('consonant');
         startFresh();
     }
     
     // 세션 정보 업데이트
     ///updateSessionInfo();
     
+
     // 자동 저장 설정
     setupAutoSave();
     
@@ -1055,7 +1091,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // 페이지 언로드 시 최종 저장
 window.addEventListener('beforeunload', function() {
     try {
-        saveProgress();
+        saveAllData();
     } catch (error) {
         console.warn('최종 저장 실패:', error);
     }
@@ -1065,7 +1101,7 @@ window.addEventListener('beforeunload', function() {
 document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
         try {
-            saveProgress();
+            saveAllData();
         } catch (error) {
             console.warn('가시성 변경 시 저장 실패:', error);
         }

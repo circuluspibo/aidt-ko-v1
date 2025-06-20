@@ -11,7 +11,7 @@
         <!-- AI 튜터 사이드바 -->
         <div class="ai-tutor-sidebar">
             <div class="tutor-header">
-                <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
+                <!--<button class="settings-toggle" onclick="toggleSettings()">⚙️</button>-->
                 <div class="tutor-avatar">🤖</div>
                 <div class="tutor-name">AI 말하기 선생님</div>
                 <div class="tutor-status">발음 연습해요!</div>
@@ -19,9 +19,6 @@
             <div class="tutor-body">
                 <video id="videoFeed" autoplay playsinline  class="hidden"></video>
                 <canvas id="canvas" class="hidden"></canvas> <!-- For capturing frames -->
-                <div class="save-status" id="saveStatus">
-                    💾 자동 저장됨
-                </div>
 
                 <div class="tutor-message" id="tutorMessage">
                     안녕하세요! 오늘은 한글 발음을 연습하는 시간이에요. 
@@ -121,6 +118,13 @@
                 <div class="speaking-status">
                     <div class="mic-status" id="micStatus">🎤</div>
                 </div>
+                <div class="progress-info">
+                    <div class="save-status" id="saveStatus">
+                        💾 자동저장됨
+                    </div>
+                    <div class="repeat-status" id="repeatStatus">반복: 1/3</div>
+                    <div class="progress-circle" id="progressCircle">1/10</div>
+                </div>                
             </div>
 
             <!-- 학습 콘텐츠 영역 -->
@@ -128,23 +132,23 @@
                 <div class="speaking-area">
                     <!-- 학습 대상 표시 -->
                     <div class="target-display-section">
-                    <div class="target-display">
-                        <div class="target-letter" id="targetLetter">ㄱ</div>
-                        <div class="target-info" id="targetInfo">기역</div>
-                        <div class="pronunciation-guide" id="pronunciationGuide">[ㄱ]</div>
-                    </div>
+                        <div class="target-display">
+                            <div class="target-letter" id="targetLetter">ㄱ</div>
+                            <div class="target-info" id="targetInfo">기역</div>
+                            <div class="pronunciation-guide" id="pronunciationGuide">[ㄱ]</div>
+                        </div>
 
-                    <!-- 시각적 힌트 -->
-                    <div class="visual-hint">
-                        <div class="hint-title">🖼️ 기억하는 힌트</div>
-                        <div class="hint-content">
-                            <div class="hint-image" id="hintImage">🐱</div>
-                            <div class="hint-text">
-                                <div class="hint-example" id="hintExample">고양이의 'ㄱ'</div>
-                                <div class="hint-description" id="hintDescription">고양이가 울 때 나는 소리를 생각해보세요</div>
+                        <!-- 시각적 힌트 -->
+                        <div class="visual-hint">
+                            <div class="hint-title">🖼️ 기억하는 힌트</div>
+                            <div class="hint-content">
+                                <div class="hint-image" id="hintImage">🐱</div>
+                                <div class="hint-text">
+                                    <div class="hint-example" id="hintExample">고양이의 'ㄱ'</div>
+                                    <div class="hint-description" id="hintDescription">고양이가 울 때 나는 소리를 생각해보세요</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
                     </div>
 
                     <!-- 음성 인식 영역 -->

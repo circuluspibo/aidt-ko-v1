@@ -349,7 +349,7 @@ function updateContent() {
     document.getElementById('lessonSubtitle').textContent = subtitle;
     
     // 힌트 업데이트 (랜덤하게 선택)
-    //updateHint();
+    updateHint();
     
     // 선택지 생성
     generateChoices();
@@ -370,7 +370,8 @@ function updateHint() {
     const currentData = learningData[currentLevel];
     const currentItem = currentData[currentItemIndex];
     // 키워드에서 랜덤하게 하나 선택
-    const randomKeyword = currentItem.keywords[Math.floor(Math.random() * currentItem.keywords.length)];
+    console.log(currentItem)
+    //const randomKeyword = currentItem.keywords[Math.floor(Math.random() * currentItem.keywords.length)];
     
     // 이미지와 설명 업데이트
     document.getElementById('hintImage').textContent = currentItem.image;
@@ -379,13 +380,13 @@ function updateHint() {
     switch(currentLevel) {
         case 'consonant':
         case 'vowel':
-            description = `${randomKeyword}의 '${currentItem.letter}' 소리에요`;
+            description = `${currentItem.example}' 소리에요`;
             break;
         case 'combination':
-            description = `${randomKeyword}의 '${currentItem.result}' 소리에요`;
+            description = `${currentItem.meaning}' 소리에요`;
             break;
         case 'word':
-            description = `${currentItem.meaning} - ${randomKeyword}와 관련있어요`;
+            description = `${currentItem.meaning} 와 관련있어요`;
             break;
     }
     
@@ -420,7 +421,8 @@ function generateChoices() {
     // 랜덤하게 섞기
     const shuffledItems = otherItems.sort(() => Math.random() - 0.5);
     
-    for (let i = 0; i < Math.min(4, shuffledItems.length); i++) {
+    // 오답 선택지 최대 2개 생성
+    for (let i = 0; i < Math.min(2, shuffledItems.length); i++) {
         switch(currentLevel) {
             case 'consonant':
             case 'vowel':

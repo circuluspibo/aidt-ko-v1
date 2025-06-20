@@ -23,7 +23,7 @@ let repeatSettings = {
 let learningStats = {
     totalQuestions: 0,
     correctAnswers: 0,
-    totalResponseTime: 0,
+    totalTime: 0,
     responses: [], // 각 응답 세부 정보
     sessionStartTime: Date.now()
 };
@@ -39,11 +39,11 @@ function saveLearningState() {
     
     try {
         localStorage.setItem(STORAGE_KEYS.LEARNING_STATE, JSON.stringify(state));
-        updateSaveIndicator('💾 저장완료');
+        updateSaveStatus('💾 저장완료');
         updateLastSaveTime();
     } catch (error) {
         console.error('저장 실패:', error);
-        updateSaveIndicator('❌ 저장실패');
+        updateSaveStatus('❌ 저장실패');
     }
 }
 
@@ -148,7 +148,7 @@ function resetAllData() {
             learningStats = {
                 totalQuestions: 0,
                 correctAnswers: 0,
-                totalResponseTime: 0,
+                totalTime: 0,
                 responses: [],
                 sessionStartTime: Date.now()
             };
@@ -165,7 +165,7 @@ function resetAllData() {
             updateTutorMessage('🗑️ 초기화 완료', 
                 '모든 데이터가 삭제되었어요! 새로운 마음으로 한글 학습을 시작해봐요! 🌟');
                 
-            updateSaveIndicator('🆕 새로시작');
+            updateSaveStatus('🆕 새로시작');
         } catch (error) {
             console.error('초기화 실패:', error);
             alert('초기화 중 오류가 발생했습니다.');
@@ -185,14 +185,19 @@ function getCurrentLevelName() {
 }
 
 // 저장 표시기 업데이트
-function updateSaveIndicator(text) {
-    const indicator = document.getElementById('saveIndicator');
-    indicator.textContent = text;
+// 저장 상태 표시 업데이트
+function updateSaveStatus(type, message) {
+    const saveStatus = document.getElementById('saveStatus');
+    saveStatus.textContent = message;
+    saveStatus.className = type === 'error' ? 'save-status error' : 'save-status';
     
-    // 2초 후 기본 상태로 복원
+    // 3초 후 기본 메시지로 복원
     setTimeout(() => {
-        indicator.textContent = '💾 자동저장됨';
-    }, 2000);
+        if (type !== 'error') {
+            saveStatus.textContent = '💾 자동 저장됨';
+            saveStatus.className = 'save-status';
+        }
+    }, 3000);
 }
 
 // 마지막 저장 시간 업데이트
@@ -435,19 +440,19 @@ function generateRandomChoices() {
         wrongAnswers = learningData.word
             .filter((_, index) => index !== currentItemIndex)
             .sort(() => Math.random() - 0.5)
-            .slice(0, 4)
+            .slice(0, 2)
             .map(item => item.word);
     } else if (currentLevel === 'combination') {
         wrongAnswers = learningData.combination
             .filter((_, index) => index !== currentItemIndex)
             .sort(() => Math.random() - 0.5)
-            .slice(0, 4)
+            .slice(0, 2)
             .map(item => item.result);
     } else {
         wrongAnswers = currentData
             .filter((_, index) => index !== currentItemIndex)
             .sort(() => Math.random() - 0.5)
-            .slice(0, 4)
+            .slice(0, 2)
             .map(item => item.letter);
     }
     
@@ -519,7 +524,7 @@ function selectChoice(selectedChoice, correctAnswer) {
 // 통계 업데이트
 function updateStats(isCorrect, responseTime, selectedChoice, correctAnswer) {
     learningStats.totalQuestions++;
-    learningStats.totalResponseTime += responseTime;
+    learningStats.totalTime += responseTime;
     
     if (isCorrect) {
         learningStats.correctAnswers++;
@@ -551,7 +556,7 @@ function updateStatsDisplay() {
     document.getElementById('accuracy').textContent = accuracy + '%';
     
     const avgTime = learningStats.totalQuestions > 0 ? 
-        Math.round(learningStats.totalResponseTime / learningStats.totalQuestions) : 0;
+        Math.round(learningStats.totalTime / learningStats.totalQuestions) : 0;
     document.getElementById('avgTime').textContent = avgTime + '초';
 }
 
@@ -665,7 +670,7 @@ function resetStats() {
         learningStats = {
             totalQuestions: 0,
             correctAnswers: 0,
-            totalResponseTime: 0,
+            totalTime: 0,
             responses: [],
             sessionStartTime: Date.now()
         };
@@ -719,11 +724,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateLevelMessage();
     }
 
+    startTimer();
+    updateLastSaveTime();
+
     await initCamera();
     handleStart()    
     
-    startTimer();
-    updateLastSaveTime();
 });
 
 // 페이지 이동/새로고침 시 자동 저장

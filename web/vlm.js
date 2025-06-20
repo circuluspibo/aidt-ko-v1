@@ -74,11 +74,105 @@ async function sendChatCompletionRequest(instruction, imageBase64URL) {
     return data.choices[0].message.content;
 }
 
+const gazeLog = [];
+const MAX_LOG_LENGTH = 90; // 3초 기준 (30fps 가정)
+
+function isLookingAtCenter(leftIris, rightIris, leftEye, rightEye) {
+    const irisCenterX = (leftIris.x + rightIris.x) / 2;
+    const eyeCenterX = (leftEye.x + rightEye.x) / 2;
+
+    const dx = irisCenterX - eyeCenterX;
+
+    // 시선이 화면 중앙을 벗어나는지 간단한 기준 (-0.015 ~ 0.015는 정면)
+    return Math.abs(dx) < 0.015;
+}
+
+function onResults(results) {
+    const canvas = document.getElementById('canvas')
+    const ctx = canvas.getContext('2d')
+     let lookingAtCenter = false; // 기본값
+
+  if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+    const lm = results.multiFaceLandmarks[0];
+
+    const leftEye = lm[33];
+    const rightEye = lm[263];
+    const leftIris = lm[468];
+    const rightIris = lm[473];
+
+    lookingAtCenter = isLookingAtCenter(leftIris, rightIris, leftEye, rightEye);
+
+    // 시각화 (눈 중심 표시)
+    const eyeX = (leftEye.x + rightEye.x) / 2 * canvas.width;
+    const eyeY = (leftEye.y + rightEye.y) / 2 * canvas.height;
+
+    ctx.beginPath();
+    ctx.arc(eyeX, eyeY, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = lookingAtCenter ? 'green' : 'red';
+    ctx.fill();
+  } else {
+    // 사람이 없는 경우 표시 (optional)
+    ctx.font = '20px Arial';
+    ctx.fillStyle = 'gray';
+    ctx.fillText('얼굴 미검출', 20, 30);
+  }
+
+  // 시선 로그 업데이트
+  if (gazeLog.length >= MAX_LOG_LENGTH) gazeLog.shift();
+  gazeLog.push(lookingAtCenter);
+}
+
+// 2. Initialize camera and start processingㅣ
+
+
+let feedTime= 0
+
+  // 3초마다 로그 출력 (원한다면 서버 전송 or 파일 저장 가능)
+  setInterval(() => {
+    //console.log('3초 시선 로그:', gazeLog);
+    // 예: true 비율이 70% 이상이면 집중 중이라 판단
+    const focusRate = gazeLog.filter(x => x).length / gazeLog.length;
+    console.log(focusRate,`집중도: ${(focusRate * 100).toFixed(1)}%`);
+
+
+    if(focusRate < 0.5) {
+        feedTime = Date.now()
+        console.log('집중도 낮음, 튜터 호출');
+        isFocused = false
+        tutor('집중도가 낮아 학생에게 주의를 줘야 할 것 같아');
+    }
+
+  }, 3000)
+
 // 1. Ask for camera permission on load
 async function initCamera() {
     try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        video.srcObject = stream;
+        const faceMesh = new FaceMesh({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
+        });
+
+        faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: true,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+        });
+
+        faceMesh.onResults(onResults);
+
+
+        const camera = new Camera(video, {
+        onFrame: async () => {
+            await faceMesh.send({image: video});
+        },
+        width: 640,
+        height: 480
+        });
+        camera.start();
+
+
+        //stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        //video.srcObject = stream;
         //responseText.value = "Camera access granted. Ready to start.";
     } catch (err) {
         console.error("Error accessing camera:", err);
@@ -149,10 +243,10 @@ function handleStart() {
     const intervalMs = parseInt(1000, 10);
     
     // Initial immediate call
-    sendData(); 
+    //sendData(); 
     
     // Then set interval
-    intervalId = setInterval(sendData, intervalMs);
+    //intervalId = setInterval(sendData, intervalMs);
 }
 
 function handleStop() {
@@ -180,6 +274,7 @@ let lastTime = 0
 
 function tutor(message){
     if(Date.now() - lastTime < 10000) {
+        console.log('너무 자주 호출됨')
         return
     }
 
