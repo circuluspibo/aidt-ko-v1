@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 캔버스 설정
     ctx.strokeStyle = '#2563eb';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 10;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     
@@ -148,7 +148,7 @@ function loadProgress() {
         updateLevelButtonsUI();
         updateContent();
         updateLevelMessage();
-        generateRandomChoices();
+        //generateRandomChoices();
         updateLearningData();
         clearCanvas();
         
@@ -369,6 +369,7 @@ function selectLevel(level) {
         */
 
     currentLevel = level;
+
     currentItemIndex = 0;
     currentRepeat = 1;
     
@@ -410,12 +411,14 @@ function updateLevelMessage() {
     updateTutorMessage(levelInfo.title, levelInfo.message);
 }
 
+let targetText, hintText;
+
 // 콘텐츠 업데이트
 function updateContent() {
     const currentData = learningData[currentLevel][currentItemIndex];
     
     // 타겟 글자 업데이트
-    let targetText, hintText;
+    
     
     switch(currentLevel) {
         case 'consonant':
@@ -433,7 +436,7 @@ function updateContent() {
             break;
     }
     
-    //document.getElementById('targetLetter').textContent = targetText;
+    document.getElementById('targetLetter').textContent = targetText;
     //document.getElementById('targetChoice').textContent = targetText;
     document.getElementById('hintText').textContent = hintText;
     document.getElementById('hintImage').textContent = currentData.image;
@@ -507,61 +510,56 @@ function generateRandomChoices() {
 }
 
 
-function calc(){
+function toBlob(){
+    return new Promise((resolve) => {
+        canvas.toBlob(blob => {
+            resolve(blob);
+        }, 'image/png');
+    });
+}
+
+
+async function calc(){
     const currentData = learningData[currentLevel][currentItemIndex];
 
-    canvas.toBlob(blob => {
-        // 3. FormData 생성
-        const formData = new FormData();
-        formData.append("uploadFile", blob, "test.png");
+    // 3. FormData 생성
+    const formData = new FormData();
+    formData.append("uploadFile", await toBlob(), "test.png");
 
-        // 4. fetch로 전송
-        fetch("https://o-vapi.circul.us/code/ocr?lang=all", {
+    let hint = ''
+
+    console.log('Target lv:', currentLevel);
+
+    switch(currentLevel) {
+        case 'consonant':
+            hint = '한글 자음(ㄱ~ㅎ) 중에서 방향도 고려해서 가장 근접한 것을 알려줘.';
+            break;
+        case 'vowel':
+            hint = '한글 모음(ㅏ~ㅣ) 중에서 방향도 고려해서 가장 근접한 것을 알려줘.';
+            break;
+        case 'combination':
+        case 'word':
+            hint = '한글 단어 중에서 가장 근접한 것을 알려줘.';
+            break;
+    }
+
+    console.log('Hint:', hint);
+
+    // 4. fetch로 전송
+    const resp = await fetch(`https://o-vapi.circul.us/vlm/vlm_inference_e?prompt=다음이미지를 한글 OCR 판독해서 결과만 알려줘. 결과는 ${hint}`, {
         method: "POST",
         headers: {
             "Accept": "application/json"
             // ❗ Content-Type은 자동 설정됨 (multipart/form-data)
         },
         body: formData
-        })
-        .then(res => res.json())
-        .then(data => console.log("응답:", data))
-        .catch(err => console.error("에러:", err));
-    }, "image/png");
-
-    /*
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    // 3. ArrayBuffer로 변환
-    const buffer = imageData.data.buffer;
-
-    // 4. fetch로 서버에 전송
-    fetch("https://o-vapi.circul.us/code/ocr?lang=all", {
-        method: "POST",
-        headers: {
-        "Content-Type": "application/octet-stream"
-        },
-        body: buffer
     })
-    .then(res => res.text())
-    .then(data => console.log("서버 응답:", data))
-    .catch(err => console.error("에러 발생:", err));
-*/
+    const data = await resp.json()
 
-    /*
-    if (currentLevel === 'combination') {
-        guideOverlay.textContent = currentData.result;
-    } else if (currentLevel === 'word') {
-        guideOverlay.textContent = currentData.word;
-    } else {
-        guideOverlay.textContent = currentData.letter;
-    }
-    */
+    console.log(targetText, data.data.answer);
+    const selectedChoice = data.data.answer;
 
-    //ctx
-
-    /*
-    const isCorrect = selectedChoice === correctAnswer;
+    const isCorrect = selectedChoice === targetText;
     const responseTime = Date.now() - startTime;
     const buttons = document.querySelectorAll('.choice-btn');
     
@@ -587,7 +585,7 @@ function calc(){
     learningStats.problemLog.push({
         level: currentLevel,
         item: currentItemIndex,
-        question: correctAnswer,
+        question: targetText,
         answer: selectedChoice,
         isCorrect: isCorrect,
         responseTime: responseTime,
@@ -605,12 +603,13 @@ function calc(){
         }, 1500);
     } else {
         updateTutorMessage('😊 다시 생각해보세요!', 
-            `조금 다른 것 같아요. 정답은 "${correctAnswer}"이에요! 💡`);
+            `조금 다른 것 같아요. 정답은 "${targetText}"이에요! 💡`);
         setTimeout(() => {
+            clearCanvas()
             //resetChoices();
         }, 2000);
     }   
-        */
+    
 }
 
 // 선택 처리
@@ -677,7 +676,7 @@ function resetChoices() {
     });
     
     // 새로운 랜덤 선택지 생성
-    generateRandomChoices();
+    //generateRandomChoices();
 }
 
 // 진행률 업데이트
@@ -734,6 +733,9 @@ function markActivity(isCorrect) {
             showFeedback(true, true);
             setTimeout(() => nextItem(), 2000);
         }
+
+        clearCanvas()
+        
     } else {
         currentRepeat = Math.min(currentRepeat + 1, repeatSettings.incorrect);
         updateRepeatStatus();
@@ -750,7 +752,7 @@ function nextItem() {
         currentRepeat = 1;
         updateContent();
         updateLevelMessage();
-        generateRandomChoices();
+        //generateRandomChoices();
         clearCanvas();
     } else {
         showLevelComplete();
@@ -788,6 +790,7 @@ function showFeedback(isCorrect, isComplete) {
         icon.textContent = '💪';
         text.textContent = '괜찮아요! 다시 도전해봐요!';
     }
+
     
     overlay.style.display = 'flex';
     setTimeout(() => closeFeedback(), 2000);
@@ -943,7 +946,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 캔버스 설정
     ctx.strokeStyle = '#2563eb';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 10;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     
@@ -964,7 +967,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 자동 복원된 경우 현재 상태로 UI 업데이트
         updateContent();
         updateLevelMessage();
-        generateRandomChoices();
+        //generateRandomChoices();
     }
     
     updateLearningData();
