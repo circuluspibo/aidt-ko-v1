@@ -18,7 +18,7 @@ f.get('/test', function handler (request, reply) {
 })
 
 // Run the server!
-f.listen({ ip: '0.0.0.0', port: 9999 }, function (err, address) {
+f.listen({ host: '0.0.0.0', port: 9999 }, function (err, address) {
   if (err) {
     fastify.log.error(err)
     process.exit(1)
