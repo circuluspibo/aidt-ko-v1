@@ -90,7 +90,7 @@ function Target() {
                 onClick={() => onCardClick(item.name)}
               >
                 <div className="flex flex-grow gap-2 justify-center items-center self-stretch p-2">
-                  <div className="flex flex-col flex-grow gap-4 justify-center items-center self-stretch py-2 md:px-4 md:py-6">
+                  <div className="flex flex-col flex-grow gap-4 justify-center items-center self-stretch py-2 md:py-6">
                     <div className="flex justify-center items-center w-full">
                       <div className="w-24 h-24 tl6:w-28 tl6:h-28 aspect-square">
                         {item.icon}
