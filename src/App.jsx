@@ -19,7 +19,18 @@ function App() {
             <Route path="/:character/:target/:method" element={<Learn />} />
           </Routes>
         </div>
-        <Toaster />
+        <Toaster
+          toastOptions={{
+            style: {
+              background: "transparent",
+              width: "calc(100vw - 3rem)",
+              height: "100vh",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            },
+          }}
+        />
       </div>
     </BrowserRouter>
   );

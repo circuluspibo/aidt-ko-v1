@@ -3,7 +3,7 @@ export const COLORS = {
   consonant: "rose",
   syllable: "blue",
   word: "slate",
-  read: "orange",
+  read: "amber",
   listen: "teal",
   speak: "blue",
   write: "rose",
@@ -12,7 +12,7 @@ export const COLORS = {
 export const TARGETS = {
   vowel: "모음",
   consonant: "자음",
-  syllable: "음절",
+  syllable: "글자",
   word: "단어",
 };
 

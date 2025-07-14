@@ -35,13 +35,8 @@ a {
 
 a {
   font-weight: 500;
-  color: #646cff;
   text-decoration: inherit;
 }
-a:hover {
-  color: #535bf2;
-}
-
 *:focus-visible {
   outline: none !important;
   outline-offset: 0px !important;
@@ -123,13 +118,6 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
 
 @media (prefers-color-scheme: light) {
   :root {
@@ -174,20 +162,20 @@ button:focus-visible {
     --radius: 0.5rem;
 
     /* 새로운 색상 변수들 추가 - HSL 형식 */
-    --color-info: 220 70% 50%;
-    --color-info-content: 220 1% 98%;
-    --color-success: 140 65% 45%;
-    --color-success-content: 140 1% 98%;
-    --color-warning: 80 80% 55%;
-    --color-warning-content: 80 5% 20%;
-    --color-error: 30 80% 55%;
-    --color-error-content: 30 1% 98%;
+    --color-info: 199 100% 52%;
+    --color-info-content: 204 100% 97%;
+    --color-success: 147 39% 47%;
+    --color-success-content: 137 33% 96%;
+    --color-warning: 45 99% 52%;
+    --color-warning-content: 44 100% 97%;
+    --color-error: 360 99% 70%;
+    --color-error-content: 5 100% 98%;
 
     /* 학습 카테고리 색상들 추가 - HSL 형식 */
-    --color-consonant: 208 45% 88%;
-    --color-vowel: 321 65% 86%;
-    --color-syllable: 290 45% 79%;
-    --color-word: 282 60% 59%;
+    --color-consonant: #90e9f7;
+    --color-vowel: #f3bcfc;
+    --color-syllable: #b9b1f1;
+    --color-word: #6f5ff8;
   }
   .dark {
     --background: 224 71.4% 4.1%;

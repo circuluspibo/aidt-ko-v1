@@ -6,6 +6,16 @@ export default {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      keyframes: {
+        focus: {
+          "0%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.05)" },
+          "100%": { transform: "scale(1)" },
+        },
+      },
+      animation: {
+        focus: "focus 1s ease-in-out infinite",
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -75,10 +85,10 @@ export default {
           content: "hsl(var(--color-error-content))",
         },
         // 학습 카테고리 색상들 추가
-        consonant: "hsl(var(--color-consonant))",
-        vowel: "hsl(var(--color-vowel))",
-        syllable: "hsl(var(--color-syllable))",
-        word: "hsl(var(--color-word))",
+        consonant: "#71cfff",
+        vowel: "#ffa6ea",
+        syllable: "#cbadff",
+        word: "#6f5ff8",
       },
       screens: {
         tl5: {
@@ -109,10 +119,11 @@ export default {
   safelist: [
     {
       pattern:
-        /^(bg|border|from|to|text)-(rose|purple|blue|teal|lime|orange|slate|yellow)-(50|100|200|300|400|500|600|700|800|900)$/,
+        /^(bg|border|from|to|text)-(amber|rose|purple|blue|teal|lime|orange|slate|yellow)-(50|100|200|300|400|500|600|700|800|900)$/,
     },
     {
-      pattern: /^(bg|border|from|to|text)-(consonant|vowel|syllable|word).*$/,
+      pattern:
+        /^(bg|border|from|to|text)-(consonant|vowel|syllable|word|info|success|warning|error).*$/,
     },
   ],
 };
