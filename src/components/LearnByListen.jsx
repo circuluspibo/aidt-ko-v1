@@ -78,7 +78,7 @@ const LearnByListen = ({
   return (
     <div className="grid grid-cols-12 gap-4 h-full">
       {/* 힌트 영역 */}
-      <div className="col-span-5 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
+      <div className="col-span-4 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
         <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
           {item.image[currentRepeat - 1]}
         </div>
@@ -94,7 +94,7 @@ const LearnByListen = ({
         )}
       </div>
       {/* 문제-보기 영역 */}
-      <div className="col-span-7 grid grid-cols-[1fr_auto] gap-4">
+      <div className="col-span-8 grid grid-cols-[1fr_auto] gap-4">
         {/* 문제 영역 */}
         <div className="col-span-1 grid grid-rows-[auto_1fr] gap-4">
           <div className="p-2 w-full text-2xl font-bold text-center bg-teal-300 rounded-lg border shadow-sm">
@@ -105,7 +105,11 @@ const LearnByListen = ({
               onClick={playSound}
               disabled={isPlaying}
               size="lg"
-              className="flex flex-col gap-10 justify-center pt-12 pb-6 text-2xl font-bold bg-teal-500 animate-focus hover:bg-teal-600 h-fit"
+              className={`flex flex-col gap-10 justify-center pt-12 pb-6 text-2xl font-bold ${
+                isPlaying
+                  ? "text-teal-600 bg-teal-100"
+                  : "bg-teal-500 animate-focus hover:bg-teal-600"
+              } h-fit`}
             >
               <p className="text-9xl">🔊</p>
               {isPlaying ? "소리 듣는 중..." : "소리 듣기"}

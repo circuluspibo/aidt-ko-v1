@@ -23,10 +23,10 @@ function App() {
           </div>
           <Toaster
             toastOptions={{
+              duration: 1500,
               style: {
                 background: "transparent",
-                width: "calc(100vw - 3rem)",
-                height: "100vh",
+                marginTop: "calc(90vh/2)",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",

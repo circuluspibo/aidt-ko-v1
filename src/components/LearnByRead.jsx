@@ -16,15 +16,17 @@ const LearnByRead = ({
   const [options, setOptions] = useState([]);
 
   const generateChoices = () => {
-    const correct = item.letter;
-    const pool = data.map((i) => i.letter);
-    const choices = [correct];
-    while (choices.length < 3) {
-      const random = pool[Math.floor(Math.random() * pool.length)];
-      if (!choices.includes(random)) choices.push(random);
+    if (item) {
+      const correct = item.letter;
+      const pool = data.map((i) => i.letter);
+      const choices = [correct];
+      while (choices.length < 3) {
+        const random = pool[Math.floor(Math.random() * pool.length)];
+        if (!choices.includes(random)) choices.push(random);
+      }
+      const newOne = choices.sort(() => Math.random() - 0.5);
+      setOptions(newOne);
     }
-    const newOne = choices.sort(() => Math.random() - 0.5);
-    setOptions(newOne);
   };
 
   const handleSelect = (choice) => {
@@ -39,7 +41,7 @@ const LearnByRead = ({
   return (
     <div className="grid grid-cols-12 gap-4 h-full">
       {/* 힌트 영역 */}
-      <div className="col-span-5 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
+      <div className="col-span-4 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
         <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
           {item.image[currentRepeat - 1]}
         </div>
@@ -79,7 +81,7 @@ const LearnByRead = ({
         )}
       </div>
       {/* 문제-보기 영역 */}
-      <div className="col-span-7 grid grid-cols-[1fr_auto] gap-4">
+      <div className="col-span-8 grid grid-cols-[1fr_auto] gap-4">
         {/* 문제 영역 */}
         <div className="col-span-1 grid grid-rows-[auto_1fr] gap-4">
           <div className="p-2 w-full text-2xl font-bold text-center bg-amber-300 rounded-lg border shadow-sm">
@@ -91,12 +93,12 @@ const LearnByRead = ({
             </div>
           )}
           {target === "word" && (
-            <div className="flex gap-1 justify-center items-center p-4 w-full text-9xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+            <div className="flex overflow-auto gap-1 justify-center items-center p-4 w-full text-9xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
               {item.components.map((c, i) => (
                 <LetterSyllable
                   letter={c}
                   key={`${c}-${i}`}
-                  className="col-span-1 p-2 text-9xl font-extrabold"
+                  className="col-span-1 p-2 text-8xl font-extrabold"
                 />
               ))}
             </div>

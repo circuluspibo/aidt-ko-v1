@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import LetterConsonant from "./LetterConsonant";
 import LetterVowel from "./LetterVowel";
 import { Button } from "./ui/button";
@@ -15,18 +15,19 @@ const LearnBySpeak = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [recognizedText, setRecognizedText] = useState("");
+  const recognitionRef = useRef(null); // recognition 인스턴스 저장
 
   // 목표 발음 재생 - 문제가 전환되면 자동 실행?
-  // const playTargetSound = () => {
-  //   const utterance = new SpeechSynthesisUtterance(
-  //     item.sound.replace(/\[|\]/g, "")
-  //   );
-  //   utterance.lang = "ko-KR";
-  //   utterance.rate = 0.7;
-  //   utterance.pitch = 1.2;
-  //   window.speechSynthesis.cancel();
-  //   window.speechSynthesis.speak(utterance);
-  // };
+  const playTargetSound = () => {
+    setTimeout(() => {
+      const utterance = new SpeechSynthesisUtterance(item.name);
+      utterance.lang = "ko-KR";
+      utterance.rate = 0.6;
+      utterance.pitch = 1.2;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    }, 500);
+  };
 
   const startListening = () => {
     if (
@@ -80,8 +81,27 @@ const LearnBySpeak = ({
       setErrorMessage(msg);
       console.log(msg);
     };
-    recognition.onend = () => setIsListening(false);
+    recognitionRef.current = recognition; // ref에 저장
     recognition.start();
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    setIsListening(false);
+    setErrorMessage("");
+    setRecognizedText("");
+    setTutorMessage("말하기");
+  };
+
+  const handleMicButton = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
   };
 
   const checkPronunciation = (transcript) => {
@@ -92,13 +112,18 @@ const LearnBySpeak = ({
   };
 
   useEffect(() => {
+    setIsListening(false);
+    setErrorMessage("");
+    setRecognizedText("");
+    setTutorMessage("말하기");
+    playTargetSound();
     document.dispatchEvent(new Event("stop-sound"));
   }, [currentItemIndex, target]);
 
   return (
     <div className="grid grid-cols-12 gap-4 h-full">
       {/* 힌트 영역 */}
-      <div className="col-span-5 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
+      <div className="col-span-4 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
         <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
           {item.image[currentRepeat - 1]}
         </div>
@@ -128,7 +153,7 @@ const LearnBySpeak = ({
         )}
       </div>
       {/* 문제-보기 영역 */}
-      <div className="col-span-7 grid grid-cols-[1fr_auto] gap-4">
+      <div className="col-span-8 grid grid-cols-[1fr_auto] gap-4">
         {/* 문제 영역 */}
         <div className="col-span-1 grid grid-rows-[auto_1fr] gap-4">
           <div className="p-2 w-full text-2xl font-bold text-center bg-blue-300 rounded-lg border shadow-sm">
@@ -173,16 +198,19 @@ const LearnBySpeak = ({
         {/* 보기 영역 */}
         <div className="flex flex-col col-span-1 gap-10 justify-center items-center p-8 w-full text-center bg-white rounded-lg border shadow-sm">
           <Button
-            onClick={startListening}
-            disabled={isListening}
+            onClick={handleMicButton}
             size="lg"
-            className="flex flex-col gap-10 justify-center pt-12 pb-6 text-2xl font-bold bg-blue-500 animate-focus hover:bg-blue-600 h-fit max-w-48"
+            className={`flex flex-col gap-10 justify-center pt-12 pb-6 text-2xl font-bold ${
+              isListening
+                ? "text-blue-500 bg-blue-100"
+                : "bg-blue-500 animate-focus"
+            } h-fit max-w-48`}
           >
             <p className="text-9xl">🎙️</p>
             <p className="max-w-fit text-wrap">{tutorMessage}</p>
           </Button>
           {errorMessage && (
-            <span className="text-red-500 max-w-48 text-start text-wrap">
+            <span className="text-red-500 max-w-48 text-start text-bold text-wrap">
               {errorMessage}
             </span>
           )}

@@ -25,11 +25,11 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
       switch (target) {
         case "consonant":
           prompt +=
-            "한글 자음(ㄱ~ㅎ) 중에서 방향도 고려해서 가장 근접한 것을 알려줘.";
+            "한글 자음(ㄱ,ㄴ,ㄷ,ㄹ,ㅁ,ㅂ,ㅅ,ㅇ,ㅈ,ㅊ,ㅋ,ㅌ,ㅍ,ㅎ,ㄲ,ㄸ,ㅃ,ㅆ,ㅉ) 중에서 방향도 고려해서 가장 근접한 것을 알려줘.";
           break;
         case "vowel":
           prompt +=
-            "한글 모음(ㅏ~ㅣ) 중에서 방향도 고려해서 가장 근접한 것을 알려줘.";
+            "한글 모음(ㅏ,ㅑ,ㅓ,ㅕ,ㅗ,ㅛ,ㅜ,ㅠ,ㅡ,ㅣ,ㅐ,ㅒ,ㅔ,ㅖ,ㅘ,ㅙ,ㅚ,ㅝ,ㅞ,ㅟ,ㅢ) 중에서 방향도 고려해서 가장 근접한 것을 알려줘.";
           break;
         case "syllable":
         case "word":
@@ -58,7 +58,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
     onSuccess: (data) => {
       onAnswer(data, () => {
         clearCanvas();
-        setHint(false);
+        setHint(true);
       });
     },
     onError: (error) => {
@@ -133,7 +133,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
   return (
     <div className="grid grid-cols-12 gap-4 h-full">
       {/* 힌트 영역 */}
-      <div className="col-span-5 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
+      <div className="col-span-4 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
         <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
           {item.image[index]}
         </div>
@@ -152,7 +152,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
         )}
       </div>
       {/* 문제-보기 영역 */}
-      <div className="col-span-7 grid grid-rows-[auto_1fr] gap-4">
+      <div className="col-span-8 grid grid-rows-[auto_1fr] gap-4">
         <div className="col-span-1 p-2 w-full text-2xl font-bold text-center bg-rose-300 rounded-lg border shadow-sm">
           {`"${item.name}"을 직접 써보세요.`}
         </div>

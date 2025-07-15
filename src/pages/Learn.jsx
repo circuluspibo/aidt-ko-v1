@@ -1,5 +1,4 @@
-import { Link, useParams } from "react-router-dom";
-import LearnByListen from "@/components/LearnByListen";
+import { Link } from "react-router-dom";
 import LearnByRead from "@/components/LearnByRead";
 import LearnBySpeak from "@/components/LearnBySpeak";
 import LearnByWrite from "@/components/LearnByWrite";
@@ -17,12 +16,19 @@ import Stepper from "@/components/ui/stepper";
 import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
 import colors from "tailwindcss/colors";
 import { BlurFade } from "@/components/magicui/blur-fade";
+import LearnByListen from "@/components/LearnByListen";
 
 const Learn = () => {
-  const { character, target, method } = useParams();
-  const { loading, onAnswer, currentRepeat, currentItemIndex } =
-    useLearningSession(target);
-  console.log(target, currentItemIndex, currentRepeat);
+  const {
+    character,
+    target,
+    method,
+    loading,
+    onAnswer,
+    currentRepeat,
+    currentItemIndex,
+    videoRef,
+  } = useLearningSession();
   const item = learningData[target][currentItemIndex];
 
   return (
@@ -54,11 +60,13 @@ const Learn = () => {
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild className="font-extrabold text-black">
-                <p>{`"${item.letter}" 학습`}</p>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
+            {item && (
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild className="font-extrabold text-black">
+                  <p>{`"${item.letter}" 학습`}</p>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+            )}
           </BreadcrumbList>
         </Breadcrumb>
         <div className="flex gap-8 items-center">
@@ -143,6 +151,15 @@ const Learn = () => {
           <div className="w-full h-full rounded-3xl backdrop-blur-sm bg-white/95" />
         </BlurFade>
       )}
+      <audio id="correct-audio" src="/sounds/correct.mp3" preload="auto" />
+      <audio id="wrong-audio" src="/sounds/wrong.mp3" preload="auto" />
+      <audio id="complete-audio" src="/sounds/completed.mp3" preload="auto" />
+      <video
+        ref={videoRef}
+        muted
+        playsInline
+        className="hidden w-full h-full"
+      />
     </div>
   );
 };

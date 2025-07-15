@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import StepDialog from "@/components/StepDialog";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { Card } from "@/components/ui/card";
-import StepDialog from "@/components/StepDialog";
 
 const Character = () => {
   const navigate = useNavigate();
