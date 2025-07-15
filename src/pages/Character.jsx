@@ -26,7 +26,7 @@ const Character = () => {
 
   return (
     <>
-      <div className="grid grid-rows-[auto_auto_1fr] md:gap-4 px-4 py-6 w-full h-full">
+      <div className="grid grid-rows-[auto_auto_1fr] md:gap-4 px-6 py-4 w-full h-full">
         <header className="col-span-full text-2xl font-extrabold md:text-5xl text-start">
           👦🏻👧🏻 나는 누구일까요?
         </header>

@@ -1,27 +1,149 @@
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import LearnByListen from "@/components/LearnByListen";
 import LearnByRead from "@/components/LearnByRead";
 import LearnBySpeak from "@/components/LearnBySpeak";
 import LearnByWrite from "@/components/LearnByWrite";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { TARGETS, METHODS, COLORS } from "@/utils/globals";
+import learningData from "@/data/learningData.converted.json";
+import useLearningSession from "@/hook/useLearningSession";
+import Stepper from "@/components/ui/stepper";
+import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
+import colors from "tailwindcss/colors";
+import { BlurFade } from "@/components/magicui/blur-fade";
 
 const Learn = () => {
   const { character, target, method } = useParams();
+  const { loading, onAnswer, currentRepeat, currentItemIndex } =
+    useLearningSession(target);
+  console.log(target, currentItemIndex, currentRepeat);
+  const item = learningData[target][currentItemIndex];
 
   return (
-    <>
+    <div className="grid grid-rows-[auto_1fr] md:gap-4 px-6 py-4 w-full h-full">
+      <div className="flex justify-between items-center">
+        <Breadcrumb>
+          <BreadcrumbList className="font-bold text-[2.5rem]">
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/">홈</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                asChild
+                className={`font-extrabold text-${target}`}
+              >
+                <Link to={`/${character}`}>{TARGETS[target]}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                asChild
+                className={`font-extrabold text-${COLORS[method]}-500`}
+              >
+                <Link to={`/${character}/${target}`}>{METHODS[method]}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild className="font-extrabold text-black">
+                <p>{`"${item.letter}" 학습`}</p>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <div className="flex gap-8 items-center">
+          <div className="flex gap-2 items-center">
+            <span className="text-sm font-bold">반복</span>
+            <Stepper
+              currentStep={currentRepeat}
+              totalSteps={3}
+              activeColor={`bg-${COLORS[method]}-500`}
+              className="min-w-32"
+            />
+          </div>
+          <div className="flex gap-2 items-center">
+            <span className="text-sm font-bold">진행</span>
+            <AnimatedCircularProgressBar
+              className="w-12 h-12"
+              max={learningData[target].length}
+              min={1}
+              value={currentItemIndex + 1}
+              gaugePrimaryColor={
+                COLORS[method] ? colors[COLORS[method]][500] : "#f59e42"
+              }
+              gaugeSecondaryColor={colors.gray["200"]}
+            />
+          </div>
+        </div>
+      </div>
       {method === "read" && (
-        <LearnByRead character={character} target={target} />
+        <LearnByRead
+          {...{
+            item,
+            target,
+            onAnswer,
+            currentRepeat,
+            currentItemIndex,
+            data: learningData[target],
+          }}
+        />
       )}
       {method === "listen" && (
-        <LearnByListen character={character} target={target} />
+        <LearnByListen
+          {...{
+            item,
+            target,
+            onAnswer,
+            currentRepeat,
+            currentItemIndex,
+            data: learningData[target],
+          }}
+        />
       )}
       {method === "speak" && (
-        <LearnBySpeak character={character} target={target} />
+        <LearnBySpeak
+          {...{
+            item,
+            target,
+            onAnswer,
+            currentRepeat,
+            currentItemIndex,
+            data: learningData[target],
+          }}
+        />
       )}
       {method === "write" && (
-        <LearnByWrite character={character} target={target} />
+        <LearnByWrite
+          {...{
+            item,
+            target,
+            onAnswer,
+            currentRepeat,
+            currentItemIndex,
+            data: learningData[target],
+          }}
+        />
       )}
-    </>
+      {loading && (
+        <BlurFade
+          delay={0.15}
+          inView
+          className="fixed inset-0 z-50 w-full h-full"
+        >
+          <div className="w-full h-full rounded-3xl backdrop-blur-sm bg-white/95" />
+        </BlurFade>
+      )}
+    </div>
   );
 };
 

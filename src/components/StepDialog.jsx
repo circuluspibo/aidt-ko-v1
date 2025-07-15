@@ -31,7 +31,7 @@ const StepDialog = ({ open, setOpen, title, onCancel, onConfirm }) => {
           </Button>
           <Button
             type="button"
-            className="flex gap-2 justify-center items-center w-40 h-24 text-3xl font-bold rounded-2xl bg-success text-success-content"
+            className="flex gap-2 justify-center items-center w-40 h-24 text-3xl font-bold rounded-2xl"
             onClick={onConfirm}
             autoFocus
           >

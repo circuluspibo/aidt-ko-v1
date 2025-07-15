@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import learningData from "../data/learningData.json";
-import { toast } from "sonner";
 import { FaceMesh } from "@mediapipe/face_mesh";
 import { Camera } from "@mediapipe/camera_utils";
+import { toast } from "sonner";
+import { Toast } from "@/components/Toast";
 
 const useLearningSession = (target) => {
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
@@ -14,6 +15,7 @@ const useLearningSession = (target) => {
   const [timer, setTimer] = useState(0);
   const [tutorMessage, setTutorMessage] = useState("학습을 시작해 주세요.");
   const [progress, setProgress] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [learningStats, setLearningStats] = useState(
     () =>
       JSON.parse(localStorage.getItem("learningStats")) || {
@@ -48,6 +50,7 @@ const useLearningSession = (target) => {
   };
 
   const handleAnswer = (isCorrect, refreshOptions) => {
+    setLoading(true);
     const updatedStats = {
       ...learningStats,
       totalQuestions: learningStats.totalQuestions + 1,
@@ -57,32 +60,49 @@ const useLearningSession = (target) => {
     localStorage.setItem("learningStats", JSON.stringify(updatedStats));
     playFeedbackSound(isCorrect);
     if (isCorrect) {
-      toast.success("정답입니다!", {
-        description: "잘했어요.",
-        position: "bottom-center",
-        onAutoClose: () => {
-          if (currentRepeat < repeatSettings.correct) {
-            setCurrentRepeat((prev) => prev + 1);
-          } else {
-            setCurrentRepeat(1);
-            setCurrentItemIndex((prev) => prev + 1);
-          }
-          refreshOptions?.();
-        },
-      });
+      toast.custom(
+        () => (
+          <Toast title="정답입니다!" description="잘했어요." type="success" />
+        ),
+        {
+          position: "top-left",
+          duration: 1500,
+          onAutoClose: () => {
+            setLoading(false);
+            if (currentRepeat < repeatSettings.correct) {
+              setCurrentRepeat((prev) => prev + 1);
+            } else {
+              setCurrentRepeat(1);
+              setCurrentItemIndex((prev) => prev + 1);
+            }
+            refreshOptions?.();
+          },
+        }
+      );
     } else {
-      toast.error("틀렸어요.", {
-        description: "다시 시도해 보세요.",
-        position: "bottom-center",
-        onAutoClose: () => {
-          if (currentRepeat < repeatSettings.incorrect) {
-            setCurrentRepeat((prev) => prev + 1);
-          } else {
-            setCurrentRepeat(1);
-          }
-          refreshOptions();
-        },
-      });
+      toast.custom(
+        () => (
+          <Toast
+            title="틀렸어요."
+            description="다시 시도해 보세요."
+            type="error"
+          />
+        ),
+        {
+          position: "top-left",
+          duration: 1500,
+          onAutoClose: () => {
+            setLoading(false);
+
+            if (currentRepeat < repeatSettings.incorrect) {
+              setCurrentRepeat((prev) => prev + 1);
+            } else {
+              setCurrentRepeat(1);
+            }
+            refreshOptions();
+          },
+        }
+      );
     }
   };
 
@@ -152,6 +172,7 @@ const useLearningSession = (target) => {
     timer,
     tutorMessage,
     progress,
+    loading,
     item,
     onAnswer: handleAnswer,
     setTutorMessage,

@@ -16,6 +16,7 @@
     "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/react-slot": "^1.2.3",
     "@rollup/plugin-alias": "^5.1.1",
+    "@tanstack/react-query": "^5.83.0",
     "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

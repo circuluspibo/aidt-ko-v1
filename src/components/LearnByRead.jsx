@@ -1,61 +1,23 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
-import learningData from "../data/learningData.json";
-import ConsonantView from "@/features/ConsonantView";
-import VowelView from "@/features/VowelView";
-import SyllableView from "@/features/SyllableView";
-import WordView from "@/features/WordView";
-import ChoicesGrid from "@/features/ChoicesGrid";
-import useLearningSession from "@/hook/useLearningSession";
-import { TARGETS, COLORS } from "@/utils/globals";
+import Options from "@/features/Options";
+import LetterConsonant from "./LetterConsonant";
+import LetterVowel from "./LetterVowel";
+import LetterSyllable from "./LetterSyllable";
 
-const LearnByRead = ({ target }) => {
-  const {
-    onAnswer,
-    progress,
-    timer,
-    currentItemIndex,
-    currentRepeat,
-    repeatSettings,
-  } = useLearningSession(target);
-
+const LearnByRead = ({
+  data,
+  item,
+  target,
+  onAnswer,
+  currentRepeat,
+  currentItemIndex,
+}) => {
   const [options, setOptions] = useState([]);
-  const item = learningData[target][currentItemIndex];
-
-  /*
-  const speechSynthesisRef = useRef(window.speechSynthesis);
-  const [tutorMessage, setTutorMessage] = useState(
-    "한글 학습에 오신 것을 환영합니다! 글자를 보고 선택해 주세요."
-  );
-  useEffect(() => {
-    speak(tutorMessage);
-  }, [tutorMessage]);
-
-  const speak = (text) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "ko-KR";
-    speechSynthesisRef.current.cancel();
-    speechSynthesisRef.current.speak(utterance);
-  };
-   */
-
-  useEffect(() => {
-    generateChoices();
-  }, [currentItemIndex, target]);
 
   const generateChoices = () => {
-    let correct;
-    let pool;
-    if (target === target || target === "vowel") {
-      correct = item.letter;
-      pool = learningData[target].map((i) => i.letter);
-    } else if (target === "syllable") {
-      correct = item.result;
-      pool = learningData[target].map((i) => i.result);
-    } else if (target === "word") {
-      correct = item.word;
-      pool = learningData[target].map((i) => i.word);
-    }
+    const correct = item.letter;
+    const pool = data.map((i) => i.letter);
     const choices = [correct];
     while (choices.length < 3) {
       const random = pool[Math.floor(Math.random() * pool.length)];
@@ -66,64 +28,89 @@ const LearnByRead = ({ target }) => {
   };
 
   const handleSelect = (choice) => {
-    const correct =
-      target === "syllable"
-        ? item.result
-        : target === "word"
-        ? item.word
-        : item.letter;
-    const isCorrect = choice === correct;
+    const isCorrect = choice === item.letter;
     onAnswer(isCorrect, generateChoices);
   };
 
-  const renderLevelContent = () => {
-    if (target === "consonant")
-      return <ConsonantView item={item} index={currentRepeat - 1} />;
-    if (target === "vowel")
-      return <VowelView item={item} index={currentRepeat - 1} />;
-    if (target === "syllable")
-      return <SyllableView item={item} index={currentRepeat - 1} />;
-    if (target === "word") return <WordView item={item} />;
-    return <div>학습 단계 로드 오류</div>;
-  };
+  useEffect(() => {
+    generateChoices();
+  }, [currentItemIndex, target]);
 
   return (
-    <>
-      <div className="grid grid-rows-[auto_auto_1fr] md:gap-4 px-4 py-6 w-full h-full">
-        <header className="inline-flex col-span-full gap-3 text-2xl font-extrabold md:text-6xl text-start">
-          <span className={`text-${COLORS[target]}-500`}>
-            {TARGETS[target]}
-          </span>
-          <span className={`text-${COLORS.read}-500`}>보기</span>
-          <span>학습</span>
-        </header>
-        <p className="col-span-full text-xl font-semibold md:text-4xl">
-          재미있게 배울 방법을 선택해주세요.
-        </p>
+    <div className="grid grid-cols-12 gap-4 h-full">
+      {/* 힌트 영역 */}
+      <div className="col-span-5 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
+        <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
+          {item.image[currentRepeat - 1]}
+        </div>
+        {(target === "vowel" || target === "consonant") && (
+          <>
+            <div className="col-span-1 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+              {item.name}
+            </div>
+            <div className="col-span-1 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+              {item.sound}
+            </div>
+          </>
+        )}
+        {target === "syllable" && (
+          <div className="flex col-span-2 justify-center items-center py-2 bg-white rounded-lg border shadow-sm">
+            <LetterConsonant
+              letter={item.components[0]}
+              className="col-span-1 p-4 text-9xl"
+            />
+            <span className="text-8xl">+</span>
+            <LetterVowel
+              letter={item.components[1]}
+              className="col-span-1 p-4 text-9xl"
+            />
+            <span className="text-8xl">=</span>
+          </div>
+        )}
+        {(target === "vowel" || target === "consonant") && (
+          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+            {item?.example[currentRepeat - 1]}
+          </div>
+        )}
+        {(target === "syllable" || target === "word") && (
+          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+            {item?.meaning[currentRepeat - 1]}
+          </div>
+        )}
       </div>
-      <div className="p-6 mx-auto max-w-xl text-center">
-        <h2 className="mb-1 text-2xl font-bold">한글 단계 학습: {target}</h2>
-        <p className="mb-2 text-sm text-gray-600">
-          진행: {progress}% | 문제: {currentItemIndex + 1} /{" "}
-          {learningData[target].length} | 반복: {currentRepeat} /{" "}
-          {repeatSettings.correct}
-        </p>
-        <p className="mb-2 text-sm text-gray-600">경과 시간: {timer}초</p>
-        {/* <p className="mb-4 font-semibold text-blue-600">{tutorMessage}</p> */}
-        {renderLevelContent()}
-        <ChoicesGrid
-          correctAnswer={
-            target === "syllable"
-              ? item.result
-              : target === "word"
-              ? item.word
-              : item.letter
-          }
+      {/* 문제-보기 영역 */}
+      <div className="col-span-7 grid grid-cols-[1fr_auto] gap-4">
+        {/* 문제 영역 */}
+        <div className="col-span-1 grid grid-rows-[auto_1fr] gap-4">
+          <div className="p-2 w-full text-2xl font-bold text-center bg-amber-300 rounded-lg border shadow-sm">
+            {`"${item.letter}"을 찾아보세요.`}
+          </div>
+          {target !== "word" && (
+            <div className="flex justify-center items-center p-2 w-full text-9xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+              {item.letter}
+            </div>
+          )}
+          {target === "word" && (
+            <div className="flex gap-1 justify-center items-center p-4 w-full text-9xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+              {item.components.map((c, i) => (
+                <LetterSyllable
+                  letter={c}
+                  key={`${c}-${i}`}
+                  className="col-span-1 p-2 text-9xl font-extrabold"
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        {/* 보기 영역 */}
+        <Options
+          correctAnswer={item.letter}
           options={options}
           onSelect={handleSelect}
+          color="amber"
         />
       </div>
-    </>
+    </div>
   );
 };
 

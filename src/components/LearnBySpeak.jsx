@@ -1,41 +1,39 @@
-import React, { useState } from "react";
-import learningData from "../data/learningData.json";
-import { toast } from "sonner";
-import useLearningSession from "@/hook/useLearningSession";
+import React, { useEffect, useState } from "react";
+import LetterConsonant from "./LetterConsonant";
+import LetterVowel from "./LetterVowel";
+import { Button } from "./ui/button";
+import LetterSyllable from "./LetterSyllable";
 
-const LearnBySpeak = ({ target }) => {
-  const {
-    onAnswer,
-    progress,
-    timer,
-    currentItemIndex,
-    currentRepeat,
-    repeatSettings,
-  } = useLearningSession(target);
-  const [tutorMessage, setTutorMessage] = useState(
-    "마이크 버튼을 눌러 발음을 연습해 보세요."
-  );
+const LearnBySpeak = ({
+  item,
+  target,
+  onAnswer,
+  currentRepeat,
+  currentItemIndex,
+}) => {
+  const [tutorMessage, setTutorMessage] = useState("말하기");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [recognizedText, setRecognizedText] = useState("");
-  const item = learningData[target][currentItemIndex];
 
-  const playTargetSound = () => {
-    const utterance = new SpeechSynthesisUtterance(
-      item.sound.replace(/\[|\]/g, "")
-    );
-    utterance.lang = "ko-KR";
-    utterance.rate = 0.7;
-    utterance.pitch = 1.2;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-    setTutorMessage("발음을 잘 듣고 따라 말해 보세요!");
-  };
+  // 목표 발음 재생 - 문제가 전환되면 자동 실행?
+  // const playTargetSound = () => {
+  //   const utterance = new SpeechSynthesisUtterance(
+  //     item.sound.replace(/\[|\]/g, "")
+  //   );
+  //   utterance.lang = "ko-KR";
+  //   utterance.rate = 0.7;
+  //   utterance.pitch = 1.2;
+  //   window.speechSynthesis.cancel();
+  //   window.speechSynthesis.speak(utterance);
+  // };
 
   const startListening = () => {
     if (
       !("webkitSpeechRecognition" in window || "SpeechRecognition" in window)
     ) {
-      toast.error("브라우저가 음성 인식을 지원하지 않습니다.");
+      console.log("브라우저가 음성 인식을 지원하지 않습니다.");
+      setErrorMessage(`브라우저가 음성 인식을 지원하지 않습니다.`);
       return;
     }
     const SpeechRecognition =
@@ -47,72 +45,149 @@ const LearnBySpeak = ({ target }) => {
 
     recognition.onstart = () => {
       setIsListening(true);
-      setTutorMessage("듣는 중입니다. 발음해 보세요.");
+      setTutorMessage("듣는 중...");
     };
 
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
+      console.log(transcript);
       setRecognizedText(transcript);
       checkPronunciation(transcript);
     };
 
-    recognition.onerror = () =>
-      toast.error("음성 인식 오류가 발생했습니다. 다시 시도해 주세요.");
-
+    recognition.onerror = (e) => {
+      let msg = "";
+      if (e.error === "no-speech") {
+        msg = `음성이 감지되지 않았습니다.\n마이크에 대고 또박또박 말해 주세요.`;
+      } else if (e.error === "aborted") {
+        msg = `음성 인식이 중단되었습니다.\n다시 시도해 주세요.`;
+      } else if (e.error === "audio-capture") {
+        msg = `마이크를 찾을 수 없습니다.\n마이크 연결을 확인해 주세요.`;
+      } else if (e.error === "network") {
+        msg = `네트워크 오류가 발생했습니다.\n인터넷 연결을 확인해 주세요.`;
+      } else if (
+        e.error === "not-allowed" ||
+        e.error === "service-not-allowed"
+      ) {
+        msg = `마이크 사용이 허용되지 않았습니다.\n브라우저 설정을 확인해 주세요.`;
+      } else if (e.error === "bad-grammar") {
+        msg = `음성 인식 문법 오류가 발생했습니다.\n다시 시도해 주세요.`;
+      } else if (e.error === "language-not-supported") {
+        msg = `지원하지 않는 언어입니다.\n한국어로 설정해 주세요.`;
+      } else {
+        msg = `음성 인식 오류가 발생했습니다.\n다시 시도해 주세요.`;
+      }
+      setErrorMessage(msg);
+      console.log(msg);
+    };
     recognition.onend = () => setIsListening(false);
-
     recognition.start();
   };
 
   const checkPronunciation = (transcript) => {
-    const correct =
-      target === "syllable"
-        ? item.result
-        : target === "word"
-        ? item.word
-        : item.letter;
+    const correct = item.name;
     const isCorrect = transcript.includes(correct);
+    console.log(isCorrect, recognizedText);
     onAnswer(isCorrect);
   };
 
+  useEffect(() => {
+    document.dispatchEvent(new Event("stop-sound"));
+  }, [currentItemIndex, target]);
+
   return (
-    <div className="p-6 mx-auto max-w-xl text-center">
-      <h2 className="mb-1 text-2xl font-bold">한글 단계 학습: {target}</h2>
-      <p className="mb-2 text-sm text-gray-600">
-        진행: {progress}% | 문제: {currentItemIndex + 1} /{" "}
-        {learningData[target].length} | 반복: {currentRepeat} /{" "}
-        {repeatSettings.correct}
-      </p>
-      <p className="mb-2 text-sm text-gray-600">경과 시간: {timer}초</p>
-      <p className="mb-4 font-semibold text-blue-600">{tutorMessage}</p>
-      <div className="mb-2 text-5xl">{item.letter}</div>
-      <div className="mb-4 text-lg">
-        {item.name} [{item.sound}]
+    <div className="grid grid-cols-12 gap-4 h-full">
+      {/* 힌트 영역 */}
+      <div className="col-span-5 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
+        <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
+          {item.image[currentRepeat - 1]}
+        </div>
+        {(target === "vowel" || target === "consonant") && (
+          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+            {item?.example[currentRepeat - 1]}
+          </div>
+        )}
+        {(target === "syllable" || target === "word") && (
+          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+            {item?.meaning[currentRepeat - 1]}
+          </div>
+        )}
+        {(target === "vowel" || target === "consonant") && (
+          <div className="col-span-2 p-4 text-3xl font-semibold text-center bg-white rounded-lg border shadow-sm">
+            {`이번에는 "${
+              item?.example[currentRepeat - 1]
+            }"을 생각하며 발음해 보세요.`}
+          </div>
+        )}
+        {(target === "syllable" || target === "word") && (
+          <div className="col-span-2 p-4 text-3xl font-semibold text-left bg-white rounded-lg border shadow-sm">
+            {`이번에는 "${
+              item?.meaning[currentRepeat - 1]
+            }"을 생각하며 발음해 보세요.`}
+          </div>
+        )}
       </div>
-      <div className="mb-4 text-4xl">{item.image[currentRepeat - 1]}</div>
-      <p className="mb-4 text-sm text-gray-700">
-        {item.example[currentRepeat - 1] || item.meaning}
-      </p>
-      <button
-        onClick={startListening}
-        disabled={isListening}
-        className={`px-4 py-2 rounded ${
-          isListening ? "bg-gray-400" : "text-white bg-red-500"
-        } mb-2`}
-      >
-        🎤 {isListening ? "듣는 중..." : "발음 시작"}
-      </button>
-      <button
-        onClick={playTargetSound}
-        className="px-4 py-2 ml-2 text-white bg-green-500 rounded"
-      >
-        🔊 발음 듣기
-      </button>
-      {recognizedText && (
-        <p className="mt-4 text-sm text-gray-800">
-          인식된 발음: "{recognizedText}"
-        </p>
-      )}
+      {/* 문제-보기 영역 */}
+      <div className="col-span-7 grid grid-cols-[1fr_auto] gap-4">
+        {/* 문제 영역 */}
+        <div className="col-span-1 grid grid-rows-[auto_1fr] gap-4">
+          <div className="p-2 w-full text-2xl font-bold text-center bg-blue-300 rounded-lg border shadow-sm">
+            {`"말하기"를 선택하고 "${item.name}"을 소리내어 말해보세요.`}
+          </div>
+          <div className="flex flex-col gap-4 justify-center items-center p-2 w-full text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+            <p className="text-9xl">{item.name}</p>
+            {(target === "vowel" || target === "consonant") && (
+              <p>{item.sound}</p>
+            )}
+            {target === "syllable" && (
+              <div className="flex justify-center items-center">
+                <LetterConsonant
+                  letter={item.components[0]}
+                  className="p-2 text-6xl"
+                />
+                <span>+</span>
+                <LetterVowel
+                  letter={item.components[1]}
+                  className="p-2 text-6xl"
+                />
+              </div>
+            )}
+            {target === "word" && (
+              <div className="flex justify-center items-center">
+                {item.components.map((c, i) => (
+                  <>
+                    <LetterSyllable
+                      letter={c}
+                      key={`${c}-${i}`}
+                      className="p-2 text-6xl font-extrabold"
+                    />
+                    {i < item.components.length - 1 && (
+                      <span className="text-5xl">+</span>
+                    )}
+                  </>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        {/* 보기 영역 */}
+        <div className="flex flex-col col-span-1 gap-10 justify-center items-center p-8 w-full text-center bg-white rounded-lg border shadow-sm">
+          <Button
+            onClick={startListening}
+            disabled={isListening}
+            size="lg"
+            className="flex flex-col gap-10 justify-center pt-12 pb-6 text-2xl font-bold bg-blue-500 animate-focus hover:bg-blue-600 h-fit max-w-48"
+          >
+            <p className="text-9xl">🎙️</p>
+            <p className="max-w-fit text-wrap">{tutorMessage}</p>
+          </Button>
+          {errorMessage && (
+            <span className="text-red-500 max-w-48 text-start text-wrap">
+              {errorMessage}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
