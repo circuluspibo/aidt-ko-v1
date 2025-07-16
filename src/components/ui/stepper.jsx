@@ -12,9 +12,10 @@ const SimpleStepper = ({
   totalSteps = 3,
   activeColor = "bg-slate-500",
   className = "",
+  style = {},
 }) => {
   return (
-    <div className={`flex items-center ${className}`}>
+    <div className={`flex items-center ${className}`} style={style}>
       {Array.from({ length: totalSteps }).map((_, idx) => {
         const stepNum = idx + 1;
         const isCompleted = stepNum < currentStep;

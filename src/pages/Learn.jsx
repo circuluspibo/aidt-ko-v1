@@ -25,6 +25,7 @@ const Learn = () => {
     method,
     loading,
     onAnswer,
+    repeatSettings,
     currentRepeat,
     currentItemIndex,
     videoRef,
@@ -74,9 +75,9 @@ const Learn = () => {
             <span className="text-sm font-bold">반복</span>
             <Stepper
               currentStep={currentRepeat}
-              totalSteps={3}
+              totalSteps={repeatSettings.correct}
               activeColor={`bg-${COLORS[method]}-500`}
-              className="min-w-32"
+              style={{ minWidth: `${repeatSettings.correct * 2.5}rem` }}
             />
           </div>
           <div className="flex gap-2 items-center">
