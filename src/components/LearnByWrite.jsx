@@ -13,43 +13,22 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
   const ctxRef = useRef(null);
   const parentRef = useRef(null);
   const { mutate: checkAnswer, isPending } = useMutation({
-    mutationFn: async () => {
-      const blob = new Promise((resolve) => {
-        canvasRef.current.toBlob((blob) => {
-          resolve(blob);
-        }, "image/png");
-      });
+    mutationFn: async (blob) => {
       const formData = new FormData();
-      formData.append("uploadFile", await blob, "test.png");
-      let prompt = "다음이미지를 한글 OCR 판독해서 결과만 알려줘. 결과는 ";
-      switch (target) {
-        case "consonant":
-          prompt +=
-            "한글 자음(ㄱ,ㄴ,ㄷ,ㄹ,ㅁ,ㅂ,ㅅ,ㅇ,ㅈ,ㅊ,ㅋ,ㅌ,ㅍ,ㅎ,ㄲ,ㄸ,ㅃ,ㅆ,ㅉ) 중에서 방향도 고려해서 가장 근접한 것을 알려줘.";
-          break;
-        case "vowel":
-          prompt +=
-            "한글 모음(ㅏ,ㅑ,ㅓ,ㅕ,ㅗ,ㅛ,ㅜ,ㅠ,ㅡ,ㅣ,ㅐ,ㅒ,ㅔ,ㅖ,ㅘ,ㅙ,ㅚ,ㅝ,ㅞ,ㅟ,ㅢ) 중에서 방향도 고려해서 가장 근접한 것을 알려줘.";
-          break;
-        case "syllable":
-        case "word":
-          prompt += "한글 단어 중에서 가장 근접한 것을 알려줘.";
-          break;
-      }
+      formData.append("uploadFile", blob, "test.png");
       try {
-        const resp = await fetch(
-          `https://o-vapi.circul.us/vlm/vlm_inference_e?prompt=${prompt}`,
-          {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-            },
-            body: formData,
-          }
-        );
-        const data = await resp.json();
-        const isCorrect = data.data.answer.indexOf(item.letter) > -1;
-        return isCorrect;
+        const resp = await fetch("https://o-vapi.circul.us/code/ocr?lang=ko", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+          },
+          body: formData,
+        });
+        const res = await resp.json();
+        if (res.result && res.data.length) {
+          const isCorrect = res.data[0].text === item.letter;
+          return isCorrect;
+        }
       } catch (error) {
         console.error("채점 요청 오류:", error);
         return false;
@@ -110,7 +89,30 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
   };
 
   const handleSubmit = async () => {
-    checkAnswer();
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = canvasRef.current.width;
+    tempCanvas.height = canvasRef.current.height;
+    const tempCtx = tempCanvas.getContext("2d");
+    tempCtx.fillStyle = "white";
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    tempCtx.drawImage(canvasRef.current, 0, 0);
+    const blobPromise = new Promise((resolve) => {
+      tempCanvas.toBlob((blob) => {
+        /* 다운로드용 링크 생성
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${item.letter}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+         */
+        resolve(blob);
+      }, "image/png");
+    });
+    const blob = await blobPromise;
+    checkAnswer(blob);
   };
 
   useEffect(() => {
@@ -196,7 +198,6 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
                 onTouchEnd={endDraw}
               />
             </div>
-
             <div className="grid grid-rows-[1fr_1fr_1fr] col-span-1 gap-2">
               <Button
                 size="lg"
