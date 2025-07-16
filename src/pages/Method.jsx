@@ -21,7 +21,11 @@ function Method() {
 
   const handleConfirm = () => {
     setOpen(false);
-    navigate(`/${character}/${target}/${selectedCard}`);
+    if (target === "word") {
+      navigate(`/${character}/${target}/${selectedCard}?repeat=1,3`);
+    } else {
+      navigate(`/${character}/${target}/${selectedCard}`);
+    }
   };
 
   const handleCancel = () => {
