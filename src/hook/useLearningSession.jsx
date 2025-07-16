@@ -5,14 +5,17 @@ import { Camera } from "@mediapipe/camera_utils";
 import { toast } from "sonner";
 import { Toast } from "@/components/Toast";
 import { TARGETS, METHODS } from "@/utils/globals";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, useLocation } from "react-router";
 
 const useLearningSession = () => {
   const { character, target, method } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const paramRepeat = searchParams.get("repeat") || "3,5";
   const [repeatSettings] = useState({
-    correct: 1,
-    incorrect: 1,
+    correct: paramRepeat.split(",")[0],
+    incorrect: paramRepeat.split(",")[1],
   });
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [currentRepeat, setCurrentRepeat] = useState(1);
