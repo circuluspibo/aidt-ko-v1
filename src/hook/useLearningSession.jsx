@@ -14,8 +14,8 @@ const useLearningSession = () => {
   const searchParams = new URLSearchParams(location.search);
   const paramRepeat = searchParams.get("repeat") || "3,5";
   const [repeatSettings] = useState({
-    correct: paramRepeat.split(",")[0],
-    incorrect: paramRepeat.split(",")[1],
+    correct: Number(paramRepeat.split(",")[0]),
+    incorrect: Number(paramRepeat.split(",")[1]),
   });
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [currentRepeat, setCurrentRepeat] = useState(1);
@@ -175,12 +175,11 @@ const useLearningSession = () => {
           duration: 1500,
           onAutoClose: () => {
             setLoading(false);
-
-            if (currentRepeat < repeatSettings.incorrect) {
-              setCurrentRepeat((prev) => prev + 1);
-            } else {
-              setCurrentRepeat(1);
-            }
+            // if (currentRepeat < repeatSettings.incorrect) {
+            //   setCurrentRepeat((prev) => prev + 1);
+            // } else {
+            //   setCurrentRepeat(1);
+            // }
             refreshOptions();
           },
         }

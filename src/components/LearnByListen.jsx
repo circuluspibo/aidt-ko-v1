@@ -112,9 +112,9 @@ const LearnByListen = ({
               onClick={playSound}
               disabled={isPlaying}
               size="lg"
-              className={`flex flex-col gap-10 justify-center pt-12 pb-6 text-2xl font-bold ${
+              className={`flex flex-col gap-10 justify-center pt-12 pb-6 text-2xl font-bold hover:bg-teal-600 ${
                 isPlaying
-                  ? "text-teal-600 bg-teal-100"
+                  ? "text-teal-500 bg-teal-100 hover:bg-teal-200"
                   : "bg-teal-500 animate-focus hover:bg-teal-600"
               } h-fit`}
             >

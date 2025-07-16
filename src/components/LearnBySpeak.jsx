@@ -204,8 +204,8 @@ const LearnBySpeak = ({
             size="lg"
             className={`flex flex-col gap-10 justify-center pt-12 pb-6 text-2xl font-bold ${
               isListening
-                ? "text-blue-500 bg-blue-100"
-                : "bg-blue-500 animate-focus"
+                ? "text-blue-500 bg-blue-100 hover:bg-blue-200"
+                : "bg-blue-500 animate-focus hover:bg-blue-600"
             } h-fit max-w-48`}
           >
             <p className="text-9xl">🎙️</p>
