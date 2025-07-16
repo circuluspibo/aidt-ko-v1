@@ -4,7 +4,7 @@ import { FaceMesh } from "@mediapipe/face_mesh";
 import { Camera } from "@mediapipe/camera_utils";
 import { toast } from "sonner";
 import { Toast } from "@/components/Toast";
-import { TARGETS, METHODS } from "@/utils/globals";
+import { METHODS } from "@/utils/globals";
 import { useParams, useNavigate, useLocation } from "react-router";
 
 const useLearningSession = () => {
@@ -12,13 +12,14 @@ const useLearningSession = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
-  const paramRepeat = searchParams.get("repeat") || "3,5";
+  const paramRepeat = searchParams.get("repeat") || "3,3";
   const [repeatSettings] = useState({
     correct: Number(paramRepeat.split(",")[0]),
     incorrect: Number(paramRepeat.split(",")[1]),
   });
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
-  const [currentRepeat, setCurrentRepeat] = useState(1);
+  const [currentQuestionNo, setCurrentQuestion] = useState(1);
+  const [currentLearningCount, setCurrentLearning] = useState(1);
   const [timer, setTimer] = useState(0);
   const [tutorMessage, setTutorMessage] = useState("학습을 시작해 주세요.");
   const [progress, setProgress] = useState(0);
@@ -109,7 +110,8 @@ const useLearningSession = () => {
             1000
           );
           setCurrentItemIndex(0);
-          setCurrentRepeat(1);
+          setCurrentQuestion(1);
+          setCurrentLearning(1);
           setTimer(0);
           setTutorMessage("학습을 시작해 주세요.");
           setProgress(0);
@@ -124,6 +126,20 @@ const useLearningSession = () => {
         },
       }
     );
+  };
+
+  const nextQuestion = () => {
+    // 다음 문제로 넘어가는 프로세스
+    setCurrentLearning(1);
+    setCurrentQuestion(1);
+    // 해당 학습 내용이 완료되지 않았으면 다음 문항으로
+    if (currentItemIndex < learningData[target].length - 1) {
+      setCurrentItemIndex((prev) => prev + 1);
+    } else {
+      // 해당 학습 내용이 완료되면 다음 학습 내용으로 자음 => 모음 => 글자 => 단어
+      handleNextStep();
+      return;
+    }
   };
 
   const handleAnswer = (isCorrect, refreshOptions) => {
@@ -146,16 +162,14 @@ const useLearningSession = () => {
           duration: 1500,
           onAutoClose: () => {
             setLoading(false);
-            if (currentRepeat < repeatSettings.correct) {
-              setCurrentRepeat((prev) => prev + 1);
+            // 반복 횟수가 정답수보다 적을때 다음 반복으로 넘어감
+            // 최대 반복횟수는 repeatSettings.incorrect 로 잡고 최대 3번 틀리면 그냥 다음 문제로 넘어감
+            //
+            if (currentQuestionNo < repeatSettings.correct) {
+              setCurrentLearning((p) => p + 1);
+              setCurrentQuestion((p) => p + 1);
             } else {
-              setCurrentRepeat(1);
-              if (currentItemIndex < learningData[target].length - 1) {
-                setCurrentItemIndex((prev) => prev + 1);
-              } else {
-                handleNextStep();
-                return;
-              }
+              nextQuestion();
             }
             refreshOptions?.();
           },
@@ -175,12 +189,19 @@ const useLearningSession = () => {
           duration: 1500,
           onAutoClose: () => {
             setLoading(false);
-            // if (currentRepeat < repeatSettings.incorrect) {
-            //   setCurrentRepeat((prev) => prev + 1);
-            // } else {
-            //   setCurrentRepeat(1);
-            // }
-            refreshOptions();
+            // currentLearningCount+1이 repeatSettigs.incorrect와 같고,
+            // currentQuestionNo이 repeatSettigs.correct 보다 작으면 다음 문제로 넘어감
+            if (currentLearningCount === repeatSettings.incorrect) {
+              if (currentQuestionNo < repeatSettings.correct) {
+                setCurrentLearning(1);
+                setCurrentQuestion((p) => p + 1);
+              } else {
+                nextQuestion();
+              }
+            } else {
+              setCurrentLearning((p) => p + 1);
+            }
+            refreshOptions?.();
           },
         }
       );
@@ -283,7 +304,7 @@ const useLearningSession = () => {
   return {
     character,
     currentItemIndex,
-    currentRepeat,
+    currentRepeat: currentQuestionNo,
     repeatSettings,
     target,
     method,
