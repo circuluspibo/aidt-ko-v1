@@ -14,6 +14,7 @@ const LearnByRead = ({
   currentItemIndex,
 }) => {
   const [options, setOptions] = useState([]);
+  const [index, setIndex] = useState(0);
 
   const generateChoices = () => {
     if (item) {
@@ -35,6 +36,12 @@ const LearnByRead = ({
   };
 
   useEffect(() => {
+    if (target !== "word") {
+      setIndex(currentRepeat - 1);
+    }
+  }, [currentRepeat]);
+
+  useEffect(() => {
     generateChoices();
   }, [currentItemIndex, target]);
 
@@ -43,7 +50,7 @@ const LearnByRead = ({
       {/* 힌트 영역 */}
       <div className="col-span-4 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
         <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
-          {item.image[currentRepeat - 1]}
+          {item.image[index]}
         </div>
         {(target === "vowel" || target === "consonant") && (
           <>
@@ -71,12 +78,12 @@ const LearnByRead = ({
         )}
         {(target === "vowel" || target === "consonant") && (
           <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
-            {item?.example[currentRepeat - 1]}
+            {item?.example[index]}
           </div>
         )}
         {(target === "syllable" || target === "word") && (
           <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
-            {item?.meaning[currentRepeat - 1]}
+            {item?.meaning[index]}
           </div>
         )}
       </div>

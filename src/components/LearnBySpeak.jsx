@@ -16,7 +16,7 @@ const LearnBySpeak = ({
   const [isListening, setIsListening] = useState(false);
   const [recognizedText, setRecognizedText] = useState("");
   const recognitionRef = useRef(null); // recognition 인스턴스 저장
-
+  const [index, setIndex] = useState(0);
   // 목표 발음 재생 - 문제가 전환되면 자동 실행?
   const playTargetSound = () => {
     setTimeout(() => {
@@ -112,43 +112,45 @@ const LearnBySpeak = ({
   };
 
   useEffect(() => {
+    document.dispatchEvent(new Event("stop-sound"));
+  }, [currentItemIndex, target]);
+
+  useEffect(() => {
+    if (target !== "word") {
+      setIndex(currentRepeat - 1);
+    }
     setIsListening(false);
     setErrorMessage("");
     setRecognizedText("");
     setTutorMessage("말하기");
     playTargetSound();
-    document.dispatchEvent(new Event("stop-sound"));
-  }, [currentItemIndex, target]);
+  }, [currentRepeat]);
 
   return (
     <div className="grid grid-cols-12 gap-4 h-full">
       {/* 힌트 영역 */}
       <div className="col-span-4 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
         <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
-          {item.image[currentRepeat - 1]}
+          {item.image[index]}
         </div>
         {(target === "vowel" || target === "consonant") && (
           <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
-            {item?.example[currentRepeat - 1]}
+            {item?.example[index]}
           </div>
         )}
         {(target === "syllable" || target === "word") && (
           <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
-            {item?.meaning[currentRepeat - 1]}
+            {item?.meaning[index]}
           </div>
         )}
         {(target === "vowel" || target === "consonant") && (
           <div className="col-span-2 p-4 text-3xl font-semibold text-center bg-white rounded-lg border shadow-sm">
-            {`이번에는 "${
-              item?.example[currentRepeat - 1]
-            }"을 생각하며 발음해 보세요.`}
+            {`이번에는 "${item?.example[index]}"을 생각하며 발음해 보세요.`}
           </div>
         )}
         {(target === "syllable" || target === "word") && (
           <div className="col-span-2 p-4 text-3xl font-semibold text-left bg-white rounded-lg border shadow-sm">
-            {`이번에는 "${
-              item?.meaning[currentRepeat - 1]
-            }"을 생각하며 발음해 보세요.`}
+            {`이번에는 "${item?.meaning[index]}"을 생각하며 발음해 보세요.`}
           </div>
         )}
       </div>
