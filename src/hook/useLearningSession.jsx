@@ -259,17 +259,20 @@ const useLearningSession = () => {
         faceMesh.onResults(onResults);
         faceMeshRef.current = faceMesh;
 
-        const camera = new Camera(videoRef.current, {
-          onFrame: async () => {
-            await faceMesh.send({ image: videoRef.current });
-          },
-          width: 640,
-          height: 480,
-        });
-        camera.start();
-        cameraRef.current = camera;
-
-        clearInterval(interval);
+        try {
+          const camera = new Camera(videoRef.current, {
+            onFrame: async () => {
+              await faceMesh.send({ image: videoRef.current });
+            },
+            width: 640,
+            height: 480,
+          });
+          camera.start();
+          cameraRef.current = camera;
+          clearInterval(interval);
+        } catch (error) {
+          console.error(error);
+        }
       }
     }
     interval = setInterval(tryInit, 100);
