@@ -34,7 +34,7 @@ const Learn = () => {
 
   return (
     <div className="grid grid-rows-[auto_1fr] md:gap-4 px-6 py-4 w-full h-full">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <Breadcrumb>
           <BreadcrumbList className="font-bold text-[2.5rem]">
             <BreadcrumbItem>
@@ -70,8 +70,8 @@ const Learn = () => {
             )}
           </BreadcrumbList>
         </Breadcrumb>
-        <div className="flex gap-8 items-center">
-          <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-2">
             <span className="text-sm font-bold">반복</span>
             <Stepper
               currentStep={currentRepeat}
@@ -80,7 +80,7 @@ const Learn = () => {
               style={{ minWidth: `${repeatSettings.correct * 2.5}rem` }}
             />
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex items-center gap-2">
             <span className="text-sm font-bold">진행</span>
             <AnimatedCircularProgressBar
               className="w-12 h-12"

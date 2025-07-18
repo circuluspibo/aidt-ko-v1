@@ -10,7 +10,7 @@ function App() {
   return (
     <QueryProvider>
       <BrowserRouter>
-        <div className="flex justify-center items-center w-full h-full">
+        <div className="flex items-center justify-center w-full h-full">
           <div
             className={`flex flex-col flex-grow justify-center items-center w-full h-full shadow-2xl backdrop-blur-sm tb-lg:rounded-3xl bg-white/90 tb-lg:h-[800px] tb-lg:max-w-[1200px]`}
           >
