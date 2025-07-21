@@ -15,6 +15,7 @@ const LearnByRead = ({
 }) => {
   const [options, setOptions] = useState([]);
   const [index, setIndex] = useState(0);
+  let startTime = null;
 
   const generateChoices = () => {
     if (item) {
@@ -31,8 +32,17 @@ const LearnByRead = ({
   };
 
   const handleSelect = (choice) => {
+    const endTime = new Date().valueOf();
+    const responseTime = (endTime - startTime) / 1000;
     const isCorrect = choice === item.letter;
-    onAnswer(isCorrect, generateChoices);
+    const attempt = {
+      timestamp: new Date(),
+      responseTime,
+      isCorrect,
+      correct: item.letter,
+      user: choice,
+    };
+    onAnswer(attempt, generateChoices);
   };
 
   useEffect(() => {
@@ -42,28 +52,29 @@ const LearnByRead = ({
   }, [currentRepeat]);
 
   useEffect(() => {
+    startTime = new Date().valueOf();
     generateChoices();
   }, [currentItemIndex, target]);
 
   return (
-    <div className="grid grid-cols-12 gap-4 h-full">
+    <div className="grid h-full grid-cols-12 gap-4">
       {/* 힌트 영역 */}
       <div className="col-span-4 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
-        <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
+        <div className="flex items-center justify-center col-span-2 p-4 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
           {item.image[index]}
         </div>
         {(target === "vowel" || target === "consonant") && (
           <>
-            <div className="col-span-1 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+            <div className="col-span-1 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
               {item.name}
             </div>
-            <div className="col-span-1 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+            <div className="col-span-1 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
               {item.sound}
             </div>
           </>
         )}
         {target === "syllable" && (
-          <div className="flex col-span-2 justify-center items-center py-2 bg-white rounded-lg border shadow-sm">
+          <div className="flex items-center justify-center col-span-2 py-2 bg-white border rounded-lg shadow-sm">
             <LetterConsonant
               letter={item.components[0]}
               className="col-span-1 p-4 text-9xl"
@@ -77,12 +88,12 @@ const LearnByRead = ({
           </div>
         )}
         {(target === "vowel" || target === "consonant") && (
-          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.example[index]}
           </div>
         )}
         {(target === "syllable" || target === "word") && (
-          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.meaning[index]}
           </div>
         )}
@@ -91,21 +102,21 @@ const LearnByRead = ({
       <div className="col-span-8 grid grid-cols-[1fr_auto] gap-4">
         {/* 문제 영역 */}
         <div className="col-span-1 grid grid-rows-[auto_1fr] gap-4">
-          <div className="p-2 w-full text-2xl font-bold text-center bg-amber-300 rounded-lg border shadow-sm">
+          <div className="w-full p-2 text-2xl font-bold text-center border rounded-lg shadow-sm bg-amber-300">
             {`"${item.letter}"을 찾아보세요.`}
           </div>
           {target !== "word" && (
-            <div className="flex justify-center items-center p-2 w-full text-9xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+            <div className="flex items-center justify-center w-full p-2 font-extrabold text-center bg-white border rounded-lg shadow-sm text-9xl">
               {item.letter}
             </div>
           )}
           {target === "word" && (
-            <div className="flex overflow-auto gap-1 justify-center items-center p-4 w-full text-9xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+            <div className="flex items-center justify-center w-full gap-1 p-4 overflow-auto font-extrabold text-center bg-white border rounded-lg shadow-sm text-9xl">
               {item.components.map((c, i) => (
                 <LetterSyllable
                   letter={c}
                   key={`${c}-${i}`}
-                  className="col-span-1 p-2 text-8xl font-extrabold"
+                  className="col-span-1 p-2 font-extrabold text-8xl"
                 />
               ))}
             </div>

@@ -1,9 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useEffect, useState } from "react";
 import LetterConsonant from "./LetterConsonant";
 import LetterVowel from "./LetterVowel";
 import { Button } from "./ui/button";
 import LetterSyllable from "./LetterSyllable";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 
+let startTime = null;
 const LearnBySpeak = ({
   item,
   target,
@@ -11,13 +16,24 @@ const LearnBySpeak = ({
   currentRepeat,
   currentItemIndex,
 }) => {
-  const [tutorMessage, setTutorMessage] = useState("말하기");
   const [errorMessage, setErrorMessage] = useState("");
-  const [isListening, setIsListening] = useState(false);
-  const [recognizedText, setRecognizedText] = useState("");
-  const recognitionRef = useRef(null); // recognition 인스턴스 저장
   const [index, setIndex] = useState(0);
-  // 목표 발음 재생 - 문제가 전환되면 자동 실행?
+  const [manuallyStopped, setManuallyStopped] = useState(false);
+
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
+
+  // 음성 인식 결과 처리
+  useEffect(() => {
+    if (!listening && transcript && !manuallyStopped) {
+      checkPronunciation(transcript);
+    }
+  }, [listening]);
+
   const playTargetSound = () => {
     setTimeout(() => {
       const utterance = new SpeechSynthesisUtterance(item.name);
@@ -29,127 +45,100 @@ const LearnBySpeak = ({
     }, 500);
   };
 
-  const startListening = () => {
-    if (
-      !("webkitSpeechRecognition" in window || "SpeechRecognition" in window)
-    ) {
-      console.log("브라우저가 음성 인식을 지원하지 않습니다.");
-      setErrorMessage(`브라우저가 음성 인식을 지원하지 않습니다.`);
+  const handleMicButton = () => {
+    if (!browserSupportsSpeechRecognition) {
+      setErrorMessage("브라우저가 음성 인식을 지원하지 않습니다.");
       return;
     }
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = "ko-KR";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
 
-    recognition.onstart = () => {
-      setIsListening(true);
-      setTutorMessage("듣는 중...");
-    };
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      console.log(transcript);
-      setRecognizedText(transcript);
-      checkPronunciation(transcript);
-    };
-
-    recognition.onerror = (e) => {
-      let msg = "";
-      if (e.error === "no-speech") {
-        msg = `음성이 감지되지 않았습니다.\n마이크에 대고 또박또박 말해 주세요.`;
-      } else if (e.error === "aborted") {
-        msg = `음성 인식이 중단되었습니다.\n다시 시도해 주세요.`;
-      } else if (e.error === "audio-capture") {
-        msg = `마이크를 찾을 수 없습니다.\n마이크 연결을 확인해 주세요.`;
-      } else if (e.error === "network") {
-        msg = `네트워크 오류가 발생했습니다.\n인터넷 연결을 확인해 주세요.`;
-      } else if (
-        e.error === "not-allowed" ||
-        e.error === "service-not-allowed"
-      ) {
-        msg = `마이크 사용이 허용되지 않았습니다.\n브라우저 설정을 확인해 주세요.`;
-      } else if (e.error === "bad-grammar") {
-        msg = `음성 인식 문법 오류가 발생했습니다.\n다시 시도해 주세요.`;
-      } else if (e.error === "language-not-supported") {
-        msg = `지원하지 않는 언어입니다.\n한국어로 설정해 주세요.`;
-      } else {
-        msg = `음성 인식 오류가 발생했습니다.\n다시 시도해 주세요.`;
-      }
-      setErrorMessage(msg);
-      console.log(msg);
-    };
-    recognitionRef.current = recognition; // ref에 저장
-    recognition.start();
-  };
-
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
-    }
-    setIsListening(false);
-    setErrorMessage("");
-    setRecognizedText("");
-    setTutorMessage("말하기");
-  };
-
-  const handleMicButton = () => {
-    if (isListening) {
-      stopListening();
+    if (listening) {
+      window.SpeechRecognition &&
+        window.SpeechRecognition.stop &&
+        window.SpeechRecognition.stop(); // 일부 브라우저에서 필수
+      SpeechRecognition.stopListening();
+      setManuallyStopped(true);
     } else {
-      startListening();
+      resetTranscript();
+      SpeechRecognition.startListening({
+        continuous: false,
+        language: "ko-KR",
+      });
+      setManuallyStopped(false);
     }
   };
 
   const checkPronunciation = (transcript) => {
     const correct = item.name;
     const isCorrect = transcript.includes(correct);
-    console.log(isCorrect, recognizedText);
-    onAnswer(isCorrect);
+    const endTime = new Date().valueOf();
+    const responseTime = (endTime - startTime) / 1000;
+
+    const attempt = {
+      timestamp: new Date(),
+      responseTime,
+      isCorrect,
+      correct,
+      user: transcript,
+    };
+    onAnswer(attempt);
+
+    if (!isCorrect) handleMicButton();
   };
 
   useEffect(() => {
+    startTime = new Date().valueOf();
     document.dispatchEvent(new Event("stop-sound"));
+    window.SpeechRecognition &&
+      window.SpeechRecognition.stop &&
+      window.SpeechRecognition.stop(); // 일부 브라우저에서 필수
+    SpeechRecognition.stopListening();
+    setManuallyStopped(true);
   }, [currentItemIndex, target]);
 
   useEffect(() => {
     if (target !== "word") {
       setIndex(currentRepeat - 1);
     }
-    setIsListening(false);
     setErrorMessage("");
-    setRecognizedText("");
-    setTutorMessage("말하기");
+    window.SpeechRecognition &&
+      window.SpeechRecognition.stop &&
+      window.SpeechRecognition.stop(); // 일부 브라우저에서 필수
+    SpeechRecognition.stopListening();
+    setManuallyStopped(true);
     playTargetSound();
   }, [currentRepeat]);
 
+  useEffect(() => {
+    window.SpeechRecognition &&
+      window.SpeechRecognition.stop &&
+      window.SpeechRecognition.stop(); // 일부 브라우저에서 필수
+    SpeechRecognition.stopListening();
+  }, []);
+
   return (
-    <div className="grid grid-cols-12 gap-4 h-full">
+    <div className="grid h-full grid-cols-12 gap-4">
       {/* 힌트 영역 */}
       <div className="col-span-4 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
-        <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
+        <div className="flex items-center justify-center col-span-2 p-4 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
           {item.image[index]}
         </div>
         {(target === "vowel" || target === "consonant") && (
-          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.example[index]}
           </div>
         )}
         {(target === "syllable" || target === "word") && (
-          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.meaning[index]}
           </div>
         )}
         {(target === "vowel" || target === "consonant") && (
-          <div className="col-span-2 p-4 text-3xl font-semibold text-center bg-white rounded-lg border shadow-sm">
+          <div className="col-span-2 p-4 text-3xl font-semibold text-center bg-white border rounded-lg shadow-sm">
             {`이번에는 "${item?.example[index]}"을 생각하며 발음해 보세요.`}
           </div>
         )}
         {(target === "syllable" || target === "word") && (
-          <div className="col-span-2 p-4 text-3xl font-semibold text-left bg-white rounded-lg border shadow-sm">
+          <div className="col-span-2 p-4 text-3xl font-semibold text-left bg-white border rounded-lg shadow-sm">
             {`이번에는 "${item?.meaning[index]}"을 생각하며 발음해 보세요.`}
           </div>
         )}
@@ -158,16 +147,16 @@ const LearnBySpeak = ({
       <div className="col-span-8 grid grid-cols-[1fr_auto] gap-4">
         {/* 문제 영역 */}
         <div className="col-span-1 grid grid-rows-[auto_1fr] gap-4">
-          <div className="p-2 w-full text-2xl font-bold text-center bg-blue-300 rounded-lg border shadow-sm">
+          <div className="w-full p-2 text-2xl font-bold text-center bg-blue-300 border rounded-lg shadow-sm">
             {`"말하기"를 선택하고 "${item.name}"을 소리내어 말해보세요.`}
           </div>
-          <div className="flex flex-col gap-4 justify-center items-center p-2 w-full text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+          <div className="flex flex-col items-center justify-center w-full gap-4 p-2 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             <p className="text-9xl">{item.name}</p>
             {(target === "vowel" || target === "consonant") && (
               <p>{item.sound}</p>
             )}
             {target === "syllable" && (
-              <div className="flex justify-center items-center">
+              <div className="flex items-center justify-center">
                 <LetterConsonant
                   letter={item.components[0]}
                   className="p-2 text-6xl"
@@ -180,7 +169,7 @@ const LearnBySpeak = ({
               </div>
             )}
             {target === "word" && (
-              <div className="flex justify-center items-center">
+              <div className="flex items-center justify-center">
                 {item.components.map((c, i) => (
                   <>
                     <LetterSyllable
@@ -198,18 +187,20 @@ const LearnBySpeak = ({
           </div>
         </div>
         {/* 보기 영역 */}
-        <div className="flex flex-col col-span-1 gap-10 justify-center items-center p-8 w-full text-center bg-white rounded-lg border shadow-sm">
+        <div className="flex flex-col items-center justify-center w-full col-span-1 gap-10 p-8 text-center bg-white border rounded-lg shadow-sm">
           <Button
             onClick={handleMicButton}
             size="lg"
             className={`flex flex-col gap-10 justify-center pt-12 pb-6 text-2xl font-bold ${
-              isListening
+              listening
                 ? "text-blue-500 bg-blue-100 hover:bg-blue-200"
                 : "bg-blue-500 animate-focus hover:bg-blue-600"
             } h-fit max-w-48`}
           >
             <p className="text-9xl">🎙️</p>
-            <p className="max-w-fit text-wrap">{tutorMessage}</p>
+            <p className="max-w-fit text-wrap">
+              {listening ? "듣는 중..." : "말하기"}
+            </p>
           </Button>
           {errorMessage && (
             <span className="text-red-500 max-w-48 text-start text-bold text-wrap">

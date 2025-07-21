@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from "react";
 import learningData from "../data/learningData.converted.json";
 import { FaceMesh } from "@mediapipe/face_mesh";
@@ -17,9 +18,24 @@ const useLearningSession = () => {
     correct: Number(paramRepeat.split(",")[0]),
     incorrect: Number(paramRepeat.split(",")[1]),
   });
-  const [currentItemIndex, setCurrentItemIndex] = useState(0);
-  const [currentQuestionNo, setCurrentQuestion] = useState(1);
-  const [currentLearningCount, setCurrentLearning] = useState(1);
+  const savedSession = JSON.parse(localStorage.getItem("learningSession"));
+  const shouldRestore =
+    savedSession &&
+    savedSession.target === target &&
+    savedSession.method === method;
+
+  // 현재 학습 중인 항목 인덱스
+  const [currentItemIndex, setCurrentItemIndex] = useState(
+    shouldRestore ? savedSession.currentItemIndex : 0
+  );
+  // 현재 항목의 학습 문항
+  const [currentQuestionNo, setCurrentQuestion] = useState(
+    shouldRestore ? savedSession.currentQuestionNo : 1
+  );
+  // 현재 항목의 학습 횟수
+  const [currentLearningCount, setCurrentLearning] = useState(
+    shouldRestore ? savedSession.currentLearningCount : 1
+  );
   const [timer, setTimer] = useState(0);
   const [tutorMessage, setTutorMessage] = useState("학습을 시작해 주세요.");
   const [progress, setProgress] = useState(0);
@@ -28,7 +44,13 @@ const useLearningSession = () => {
     () =>
       JSON.parse(localStorage.getItem("learningStats")) || {
         totalQuestions: 0,
-        correctAnswers: 0,
+        totalCorrects: 0,
+        totalIncorrects: 0,
+        totalFocusLack: 0,
+        currentStreak: 0,
+        bestStreak: 0,
+        totalTime: 0,
+        attempts: [],
         sessionStart: Date.now(),
       }
   );
@@ -71,18 +93,6 @@ const useLearningSession = () => {
     },
   };
 
-  useEffect(() => {
-    setTimer(0);
-    clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => setTimer((prev) => prev + 1), 1000);
-    setProgress(
-      Math.round(
-        ((currentItemIndex + 1) / learningData[target].length) * 100
-      ).toFixed(0)
-    );
-    return () => clearInterval(timerRef.current);
-  }, [currentItemIndex, target]);
-
   const playFeedbackSound = (isCorrect) => {
     const sound = document.getElementById(
       isCorrect ? "correct-audio" : "wrong-audio"
@@ -118,11 +128,18 @@ const useLearningSession = () => {
           navigate(next);
           setLearningStats({
             totalQuestions: 0,
-            correctAnswers: 0,
+            totalCorrects: 0,
+            totalIncorrects: 0,
+            totalFocusLack: 0,
+            currentStreak: 0,
+            bestStreak: 0,
+            totalTime: 0,
+            attempts: [],
             sessionStart: Date.now(),
           });
           setFocusLog([]);
           setLoading(false);
+          localStorage.removeItem("learningSession"); // 저장된 진행 정보 초기화
         },
       }
     );
@@ -142,17 +159,32 @@ const useLearningSession = () => {
     }
   };
 
-  const handleAnswer = (isCorrect, refreshOptions) => {
+  const handleAnswer = (data, refreshOptions) => {
     setLoading(true);
     const updatedStats = {
       ...learningStats,
       totalQuestions: learningStats.totalQuestions + 1,
-      correctAnswers: learningStats.correctAnswers + (isCorrect ? 1 : 0),
+      totalTime: learningStats.totalTime + data?.responseTime,
+      attempts: [
+        ...learningStats.attempts,
+        {
+          ...data,
+          target,
+          method,
+          currentItemIndex,
+          currentQuestionNo,
+          currentLearningCount,
+        },
+      ],
     };
-    setLearningStats(updatedStats);
-    localStorage.setItem("learningStats", JSON.stringify(updatedStats));
-    playFeedbackSound(isCorrect);
-    if (isCorrect) {
+    playFeedbackSound(data?.isCorrect);
+    if (data?.isCorrect) {
+      updatedStats.totalCorrects += 1;
+      updatedStats.currentStreak += 1;
+      updatedStats.bestStreak = Math.max(
+        updatedStats.bestStreak,
+        updatedStats.currentStreak
+      );
       toast.custom(
         () => (
           <Toast title="정답입니다!" description="잘했어요." type="success" />
@@ -176,6 +208,9 @@ const useLearningSession = () => {
         }
       );
     } else {
+      updatedStats.totalIncorrects += 1;
+      updatedStats.currentStreak = 0;
+
       toast.custom(
         () => (
           <Toast
@@ -206,6 +241,18 @@ const useLearningSession = () => {
         }
       );
     }
+    /* {
+      totalQuestions:0,
+      totalCorrects: 0,
+      totalIncorrects: 0,
+      currentStreak: 0,
+      bestStreak: 0,
+      totalTime:0,
+      attempts: [],
+      sessionStart: Date.now(),
+    } */
+    setLearningStats(updatedStats);
+    localStorage.setItem("learningStats", JSON.stringify(updatedStats));
   };
 
   const onResults = (results) => {
@@ -230,11 +277,47 @@ const useLearningSession = () => {
   };
 
   useEffect(() => {
+    localStorage.setItem("learningStats", JSON.stringify(learningStats));
+  }, [learningStats]);
+
+  useEffect(() => {
+    const sessionData = {
+      currentItemIndex,
+      currentQuestionNo,
+      currentLearningCount,
+      target,
+      method,
+      character,
+      sessionStart: learningStats.sessionStart,
+    };
+    localStorage.setItem("learningSession", JSON.stringify(sessionData));
+  }, [
+    currentItemIndex,
+    currentQuestionNo,
+    currentLearningCount,
+    target,
+    method,
+  ]);
+
+  useEffect(() => {
+    setTimer(0);
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => setTimer((prev) => prev + 1), 1000);
+    setProgress(
+      Math.round(
+        ((currentItemIndex + 1) / learningData[target].length) * 100
+      ).toFixed(0)
+    );
+    return () => clearInterval(timerRef.current);
+  }, [currentItemIndex, target]);
+
+  useEffect(() => {
     focusLogRef.current = focusLog;
   }, [focusLog]);
 
   useEffect(() => {
-    let interval;
+    let initInterval;
+    let focusInterval;
     function tryInit() {
       if (videoRef.current) {
         // 이미 생성된 인스턴스가 있으면 stop/해제
@@ -246,20 +329,20 @@ const useLearningSession = () => {
           faceMeshRef.current = null;
         }
 
-        const faceMesh = new FaceMesh({
-          locateFile: (file) =>
-            `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
-        });
-        faceMesh.setOptions({
-          maxNumFaces: 1,
-          refineLandmarks: true,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5,
-        });
-        faceMesh.onResults(onResults);
-        faceMeshRef.current = faceMesh;
-
         try {
+          const faceMesh = new FaceMesh({
+            locateFile: (file) =>
+              `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
+          });
+          faceMesh.setOptions({
+            maxNumFaces: 1,
+            refineLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5,
+          });
+          faceMesh.onResults(onResults);
+          faceMeshRef.current = faceMesh;
+
           const camera = new Camera(videoRef.current, {
             onFrame: async () => {
               await faceMesh.send({ image: videoRef.current });
@@ -269,16 +352,46 @@ const useLearningSession = () => {
           });
           camera.start();
           cameraRef.current = camera;
-          clearInterval(interval);
+          clearInterval(initInterval);
         } catch (error) {
           console.error(error);
         }
       }
     }
-    interval = setInterval(tryInit, 100);
-
+    function focusCheck() {
+      if (focusLogRef.current.length >= 30) {
+        const recent = focusLogRef.current.slice(-30);
+        const focusRate = recent.filter((x) => x).length / 30;
+        console.log(`집중도: ${(focusRate * 100).toFixed(1)}%`);
+        if (focusRate < 0.5) {
+          // setTutorMessage("집중도가 낮아요! 화면을 잘 보고 집중해 주세요 👀");
+          toast.custom(
+            () => (
+              <Toast
+                title="집중도가 낮아요!"
+                description="화면을 잘 보고 집중해 주세요 👀"
+                type="warning"
+              />
+            ),
+            {
+              position: "bottom-center",
+              duration: 2500,
+              onAutoClose: () => {
+                setLearningStats((prev) => ({
+                  ...prev,
+                  totalFocusLack: prev.totalFocusLack + 1,
+                }));
+              },
+            }
+          );
+        }
+      }
+    }
+    initInterval = setInterval(tryInit, 100);
+    focusInterval = setInterval(focusCheck, 3000);
     return () => {
-      clearInterval(interval);
+      clearInterval(focusInterval);
+      clearInterval(initInterval);
       if (cameraRef.current) {
         cameraRef.current.stop();
         cameraRef.current = null;
@@ -287,21 +400,6 @@ const useLearningSession = () => {
         faceMeshRef.current = null;
       }
     };
-  }, []);
-
-  useEffect(() => {
-    const focusCheck = setInterval(() => {
-      if (focusLogRef.current.length >= 30) {
-        const recent = focusLogRef.current.slice(-30);
-        const focusRate = recent.filter((x) => x).length / 30;
-        console.log(`집중도: ${(focusRate * 100).toFixed(1)}%`);
-        if (focusRate < 0.5) {
-          setTutorMessage("집중도가 낮아요! 화면을 잘 보고 집중해 주세요 👀");
-        }
-      }
-    }, 3000);
-
-    return () => clearInterval(focusCheck);
   }, []);
 
   return {

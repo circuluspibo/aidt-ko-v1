@@ -15,6 +15,7 @@ const LearnByListen = ({
   const [options, setOptions] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [index, setIndex] = useState(0);
+  let startTime = null;
 
   const generateChoices = () => {
     const correct = item.letter;
@@ -30,8 +31,17 @@ const LearnByListen = ({
 
   const handleSelect = (choice) => {
     document.dispatchEvent(new Event("stop-sound"));
+    const endTime = new Date().valueOf();
+    const responseTime = (endTime - startTime) / 1000;
     const isCorrect = choice === item.letter;
-    onAnswer(isCorrect, generateChoices);
+    const attempt = {
+      timestamp: new Date(),
+      responseTime,
+      isCorrect,
+      correct: item.letter,
+      user: choice,
+    };
+    onAnswer(attempt, generateChoices);
   };
 
   const playSound = () => {
@@ -51,22 +61,26 @@ const LearnByListen = ({
 
     const speakName = () => {
       if (cancelled) return;
-      const utterance = new SpeechSynthesisUtterance(item.name);
-      utterance.lang = "ko-KR";
-      utterance.rate = 0.6;
-      utterance.pitch = 1.2;
-      utterance.onend = () => {
-        repeatCount += 1;
-        if (repeatCount < 3 && !cancelled) {
-          setTimeout(() => {
-            speakName();
-          }, 500);
-        } else {
-          setIsPlaying(false);
-          document.removeEventListener("stop-sound", stopHandler);
-        }
-      };
-      window.speechSynthesis.speak(utterance);
+      try {
+        const utterance = new SpeechSynthesisUtterance(item.name);
+        utterance.lang = "ko-KR";
+        utterance.rate = 0.6;
+        utterance.pitch = 1.2;
+        utterance.onend = () => {
+          repeatCount += 1;
+          if (repeatCount < 3 && !cancelled) {
+            setTimeout(() => {
+              speakName();
+            }, 500);
+          } else {
+            setIsPlaying(false);
+            document.removeEventListener("stop-sound", stopHandler);
+          }
+        };
+        window.speechSynthesis.speak(utterance);
+      } catch (error) {
+        console.error(error);
+      }
     };
     speakName();
   };
@@ -78,24 +92,25 @@ const LearnByListen = ({
   }, [currentRepeat]);
 
   useEffect(() => {
+    startTime = new Date().valueOf();
     document.dispatchEvent(new Event("stop-sound"));
     generateChoices();
   }, [currentItemIndex, target]);
 
   return (
-    <div className="grid grid-cols-12 gap-4 h-full">
+    <div className="grid h-full grid-cols-12 gap-4">
       {/* 힌트 영역 */}
       <div className="col-span-4 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
-        <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
+        <div className="flex items-center justify-center col-span-2 p-4 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
           {item.image[index]}
         </div>
         {(target === "vowel" || target === "consonant") && (
-          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.example[index]}
           </div>
         )}
         {(target === "syllable" || target === "word") && (
-          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.meaning[index]}
           </div>
         )}
@@ -104,10 +119,10 @@ const LearnByListen = ({
       <div className="col-span-8 grid grid-cols-[1fr_auto] gap-4">
         {/* 문제 영역 */}
         <div className="col-span-1 grid grid-rows-[auto_1fr] gap-4">
-          <div className="p-2 w-full text-2xl font-bold text-center bg-teal-300 rounded-lg border shadow-sm">
+          <div className="w-full p-2 text-2xl font-bold text-center bg-teal-300 border rounded-lg shadow-sm">
             {`"소리 듣기"를 선택하여 들리는 소리와 같은 "${TARGETS[target]}"을 선택하세요.`}
           </div>
-          <div className="flex flex-col gap-10 justify-center items-center p-2 w-full text-center bg-white rounded-lg border shadow-sm">
+          <div className="flex flex-col items-center justify-center w-full gap-10 p-2 text-center bg-white border rounded-lg shadow-sm">
             <Button
               onClick={playSound}
               disabled={isPlaying}

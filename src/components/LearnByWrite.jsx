@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { Loader2Icon } from "lucide-react";
 
+let startTime = null;
 const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [hint, setHint] = useState(true);
@@ -27,7 +28,16 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
         const res = await resp.json();
         if (res.result && res.data.length) {
           const isCorrect = res.data[0].text === item.letter;
-          return isCorrect;
+          const endTime = new Date().valueOf();
+          const responseTime = (endTime - startTime) / 1000;
+          const attempt = {
+            timestamp: new Date(),
+            responseTime,
+            isCorrect,
+            correct: item.letter,
+            user: res.data[0].text,
+          };
+          return attempt;
         }
       } catch (error) {
         console.error("채점 요청 오류:", error);
@@ -116,6 +126,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
   };
 
   useEffect(() => {
+    startTime = new Date().valueOf();
     if (target !== "word") {
       setIndex(currentRepeat - 1);
     }
@@ -133,34 +144,34 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
   }, []);
 
   return (
-    <div className="grid grid-cols-12 gap-4 h-full">
+    <div className="grid h-full grid-cols-12 gap-4">
       {/* 힌트 영역 */}
       <div className="col-span-4 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
-        <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
+        <div className="flex items-center justify-center col-span-2 p-4 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
           {item.image[index]}
         </div>
-        <div className="flex col-span-2 justify-center items-center py-2 text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
+        <div className="flex items-center justify-center col-span-2 py-2 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
           {item.letter}
         </div>
         {(target === "vowel" || target === "consonant") && (
-          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.example[index]}
           </div>
         )}
         {(target === "syllable" || target === "word") && (
-          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white rounded-lg border shadow-sm">
+          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.meaning[index]}
           </div>
         )}
       </div>
       {/* 문제-보기 영역 */}
       <div className="col-span-8 grid grid-rows-[auto_1fr] gap-4">
-        <div className="col-span-1 p-2 w-full text-2xl font-bold text-center bg-rose-300 rounded-lg border shadow-sm">
+        <div className="w-full col-span-1 p-2 text-2xl font-bold text-center border rounded-lg shadow-sm bg-rose-300">
           {`"${item.name}"을 직접 써보세요.`}
         </div>
-        <div className="flex flex-col gap-10 justify-center items-center p-2 w-full text-center bg-white rounded-lg border shadow-sm">
+        <div className="flex flex-col items-center justify-center w-full gap-10 p-2 text-center bg-white border rounded-lg shadow-sm">
           <div className="grid grid-cols-[1fr_auto] gap-2 w-full h-full">
-            <div className="relative col-span-1 w-full h-full" ref={parentRef}>
+            <div className="relative w-full h-full col-span-1" ref={parentRef}>
               {hint && (
                 <div
                   className="absolute inset-0 z-0 w-full h-full font-extrabold cursor-default bg-black/10 text-black/20"
@@ -169,7 +180,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
                   aria-hidden="true"
                 >
                   <p
-                    className="flex justify-center items-center h-full text-9xl select-none"
+                    className="flex items-center justify-center h-full select-none text-9xl"
                     style={{
                       fontSize: `${
                         item.letter.length > 3
@@ -211,7 +222,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
               </Button>
               <Button
                 size="lg"
-                className="p-4 h-full text-6xl bg-white hover:bg-error/20 disabled:grayscale disabled:bg-black/20"
+                className="h-full p-4 text-6xl bg-white hover:bg-error/20 disabled:grayscale disabled:bg-black/20"
                 disabled={isPending}
                 onClick={clearCanvas}
               >
@@ -219,7 +230,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
               </Button>
               <Button
                 size="lg"
-                className="p-4 h-full text-6xl bg-white hover:bg-success/20 disabled:bg-black/20"
+                className="h-full p-4 text-6xl bg-white hover:bg-success/20 disabled:bg-black/20"
                 disabled={isPending}
                 onClick={handleSubmit}
               >
