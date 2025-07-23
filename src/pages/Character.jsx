@@ -1,11 +1,14 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import StepDialog from "@/components/StepDialog";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { Card } from "@/components/ui/card";
+import { useSessionStore } from "@/hook/useSessionStore";
 
 const Character = () => {
   const navigate = useNavigate();
+  const { getDefaultProgress } = useSessionStore();
   const [selectedCard, setSelectedCard] = useState(null);
   const [open, setOpen] = useState(false);
 
@@ -26,6 +29,8 @@ const Character = () => {
 
   useEffect(() => {
     localStorage.removeItem("learningStats");
+    const resume = getDefaultProgress();
+    if (resume?.character) return navigate(`/${resume.character}`);
   }, []);
 
   return (
