@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Toast } from "@/components/Toast";
 import { METHODS } from "@/utils/globals";
 import { useParams, useNavigate, useLocation } from "react-router";
+import { useSessionStore } from "./useSessionStore";
 
 const useLearningSession = () => {
   const { character, target, method } = useParams();
@@ -18,49 +19,32 @@ const useLearningSession = () => {
     correct: Number(paramRepeat.split(",")[0]),
     incorrect: Number(paramRepeat.split(",")[1]),
   });
-  const savedSession = JSON.parse(localStorage.getItem("learningSession"));
-  const shouldRestore =
-    savedSession &&
-    savedSession.target === target &&
-    savedSession.method === method;
 
-  // 현재 학습 중인 항목 인덱스
-  const [currentItemIndex, setCurrentItemIndex] = useState(
-    shouldRestore ? savedSession.currentItemIndex : 0
-  );
-  // 현재 항목의 학습 문항
+  const { loadProgress, saveProgress, loadStats, saveStats } =
+    useSessionStore();
+
+  const saved = loadProgress(target, method);
+  const [currentItemIndex, setCurrentItemIndex] = useState(saved?.index ?? 0);
   const [currentQuestionNo, setCurrentQuestion] = useState(
-    shouldRestore ? savedSession.currentQuestionNo : 1
+    saved?.question ?? 1
   );
-  // 현재 항목의 학습 횟수
-  const [currentLearningCount, setCurrentLearning] = useState(
-    shouldRestore ? savedSession.currentLearningCount : 1
+  const [currentLearningCount, setCurrentLearningCount] = useState(
+    saved?.learningCount ?? 1
   );
   const [timer, setTimer] = useState(0);
   const [tutorMessage, setTutorMessage] = useState("학습을 시작해 주세요.");
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [learningStats, setLearningStats] = useState(
-    () =>
-      JSON.parse(localStorage.getItem("learningStats")) || {
-        totalQuestions: 0,
-        totalCorrects: 0,
-        totalIncorrects: 0,
-        totalFocusLack: 0,
-        currentStreak: 0,
-        bestStreak: 0,
-        totalTime: 0,
-        attempts: [],
-        sessionStart: Date.now(),
-      }
-  );
+  const [learningStats, setLearningStats] = useState(loadStats());
   const [focusLog, setFocusLog] = useState([]);
+
   const videoRef = useRef(null);
   const timerRef = useRef(null);
   const focusLogRef = useRef([]);
   const cameraRef = useRef(null);
   const faceMeshRef = useRef(null);
   const item = learningData[target][currentItemIndex];
+
   const NEXT_STEP = {
     consonant: {
       title: `축하합니다!`,
@@ -103,7 +87,6 @@ const useLearningSession = () => {
 
   const handleNextStep = () => {
     setLoading(true);
-
     const { title, description, next } = NEXT_STEP[target];
     const sound = document.getElementById("complete-audio");
     sound.currentTime = 0;
@@ -115,18 +98,14 @@ const useLearningSession = () => {
         duration: 5000,
         onAutoClose: () => {
           clearInterval(timerRef.current);
-          timerRef.current = setInterval(
-            () => setTimer((prev) => prev + 1),
-            1000
-          );
           setCurrentItemIndex(0);
           setCurrentQuestion(1);
-          setCurrentLearning(1);
+          setCurrentLearningCount(1);
           setTimer(0);
           setTutorMessage("학습을 시작해 주세요.");
           setProgress(0);
           navigate(next);
-          setLearningStats({
+          const resetStats = {
             totalQuestions: 0,
             totalCorrects: 0,
             totalIncorrects: 0,
@@ -136,31 +115,29 @@ const useLearningSession = () => {
             totalTime: 0,
             attempts: [],
             sessionStart: Date.now(),
-          });
+          };
+          setLearningStats(resetStats);
+          saveStats(resetStats);
           setFocusLog([]);
           setLoading(false);
-          localStorage.removeItem("learningSession"); // 저장된 진행 정보 초기화
         },
       }
     );
   };
 
   const nextQuestion = () => {
-    // 다음 문제로 넘어가는 프로세스
-    setCurrentLearning(1);
+    setCurrentLearningCount(1);
     setCurrentQuestion(1);
-    // 해당 학습 내용이 완료되지 않았으면 다음 문항으로
     if (currentItemIndex < learningData[target].length - 1) {
       setCurrentItemIndex((prev) => prev + 1);
     } else {
-      // 해당 학습 내용이 완료되면 다음 학습 내용으로 자음 => 모음 => 글자 => 단어
       handleNextStep();
-      return;
     }
   };
 
   const handleAnswer = (data, refreshOptions) => {
     setLoading(true);
+    console.log(learningStats);
     const updatedStats = {
       ...learningStats,
       totalQuestions: learningStats.totalQuestions + 1,
@@ -178,6 +155,7 @@ const useLearningSession = () => {
       ],
     };
     playFeedbackSound(data?.isCorrect);
+
     if (data?.isCorrect) {
       updatedStats.totalCorrects += 1;
       updatedStats.currentStreak += 1;
@@ -194,11 +172,8 @@ const useLearningSession = () => {
           duration: 1500,
           onAutoClose: () => {
             setLoading(false);
-            // 반복 횟수가 정답수보다 적을때 다음 반복으로 넘어감
-            // 최대 반복횟수는 repeatSettings.incorrect 로 잡고 최대 3번 틀리면 그냥 다음 문제로 넘어감
-            //
             if (currentQuestionNo < repeatSettings.correct) {
-              setCurrentLearning((p) => p + 1);
+              setCurrentLearningCount((p) => p + 1);
               setCurrentQuestion((p) => p + 1);
             } else {
               nextQuestion();
@@ -210,7 +185,6 @@ const useLearningSession = () => {
     } else {
       updatedStats.totalIncorrects += 1;
       updatedStats.currentStreak = 0;
-
       toast.custom(
         () => (
           <Toast
@@ -224,47 +198,36 @@ const useLearningSession = () => {
           duration: 1500,
           onAutoClose: () => {
             setLoading(false);
-            // currentLearningCount+1이 repeatSettigs.incorrect와 같고,
-            // currentQuestionNo이 repeatSettigs.correct 보다 작으면 다음 문제로 넘어감
             if (currentLearningCount === repeatSettings.incorrect) {
               if (currentQuestionNo < repeatSettings.correct) {
-                setCurrentLearning(1);
+                setCurrentLearningCount(1);
                 setCurrentQuestion((p) => p + 1);
               } else {
                 nextQuestion();
               }
             } else {
-              setCurrentLearning((p) => p + 1);
+              setCurrentLearningCount((p) => p + 1);
             }
             refreshOptions?.();
           },
         }
       );
     }
-    /* {
-      totalQuestions:0,
-      totalCorrects: 0,
-      totalIncorrects: 0,
-      currentStreak: 0,
-      bestStreak: 0,
-      totalTime:0,
-      attempts: [],
-      sessionStart: Date.now(),
-    } */
     setLearningStats(updatedStats);
-    localStorage.setItem("learningStats", JSON.stringify(updatedStats));
+    saveStats(updatedStats);
+    saveProgress(
+      target,
+      method,
+      currentItemIndex,
+      currentQuestionNo,
+      currentLearningCount
+    );
   };
 
   const onResults = (results) => {
-    if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+    if (results.multiFaceLandmarks?.length > 0) {
       const lm = results.multiFaceLandmarks[0];
-      const leftEye = lm[33];
-      const rightEye = lm[263];
-      const leftIris = lm[468];
-      const rightIris = lm[473];
-      const irisCenterX = (leftIris.x + rightIris.x) / 2;
-      const eyeCenterX = (leftEye.x + rightEye.x) / 2;
-      const dx = irisCenterX - eyeCenterX;
+      const dx = (lm[468].x + lm[473].x) / 2 - (lm[33].x + lm[263].x) / 2;
       const focused = Math.abs(dx) < 0.015;
       setFocusLog((prev) =>
         (prev.length > 90 ? prev.slice(-89) : prev).concat(focused)
@@ -275,29 +238,6 @@ const useLearningSession = () => {
       );
     }
   };
-
-  useEffect(() => {
-    localStorage.setItem("learningStats", JSON.stringify(learningStats));
-  }, [learningStats]);
-
-  useEffect(() => {
-    const sessionData = {
-      currentItemIndex,
-      currentQuestionNo,
-      currentLearningCount,
-      target,
-      method,
-      character,
-      sessionStart: learningStats.sessionStart,
-    };
-    localStorage.setItem("learningSession", JSON.stringify(sessionData));
-  }, [
-    currentItemIndex,
-    currentQuestionNo,
-    currentLearningCount,
-    target,
-    method,
-  ]);
 
   useEffect(() => {
     setTimer(0);
@@ -320,7 +260,6 @@ const useLearningSession = () => {
     let focusInterval;
     function tryInit() {
       if (videoRef.current) {
-        // 이미 생성된 인스턴스가 있으면 stop/해제
         if (cameraRef.current) {
           cameraRef.current.stop();
           cameraRef.current = null;
@@ -364,7 +303,6 @@ const useLearningSession = () => {
         const focusRate = recent.filter((x) => x).length / 30;
         console.log(`집중도: ${(focusRate * 100).toFixed(1)}%`);
         if (focusRate < 0.5) {
-          // setTutorMessage("집중도가 낮아요! 화면을 잘 보고 집중해 주세요 👀");
           toast.custom(
             () => (
               <Toast
@@ -377,10 +315,14 @@ const useLearningSession = () => {
               position: "bottom-center",
               duration: 2500,
               onAutoClose: () => {
-                setLearningStats((prev) => ({
-                  ...prev,
-                  totalFocusLack: prev.totalFocusLack + 1,
-                }));
+                setLearningStats((prev) => {
+                  const updated = {
+                    ...prev,
+                    totalFocusLack: prev.totalFocusLack + 1,
+                  };
+                  saveStats(updated);
+                  return updated;
+                });
               },
             }
           );
@@ -392,6 +334,9 @@ const useLearningSession = () => {
     return () => {
       clearInterval(focusInterval);
       clearInterval(initInterval);
+      if (videoRef.current) {
+        videoRef.current = null;
+      }
       if (cameraRef.current) {
         cameraRef.current.stop();
         cameraRef.current = null;
