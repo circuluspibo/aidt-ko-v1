@@ -25,21 +25,17 @@ const ResumeLearningModal = ({ target, method }) => {
   useEffect(() => {
     const all = getAllProgress();
     if (all.length > 0) {
-      const sorted = all.sort(
-        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-      );
       if (target && method) {
-        const lastOne = sorted.filter(
+        const lastOne = all.filter(
           (item) => item?.target === target && item?.method === method
         );
-        console.log(lastOne);
         setLastSession(lastOne[0]);
       } else if (target) {
-        const lastOne = sorted.filter((item) => item?.target === target);
+        const lastOne = all.filter((item) => item?.target === target);
         setLastSession(lastOne[0]);
       } else {
         // 가장 최근 학습만 골라서 표시 (updatedAt 기준)
-        setLastSession(sorted[0]);
+        setLastSession(all[0]);
       }
       setOpen(true);
     }
@@ -48,16 +44,13 @@ const ResumeLearningModal = ({ target, method }) => {
   useEffect(() => {
     const all = getAllProgress();
     if (all.length > 0) {
-      const sorted = all.sort(
-        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-      );
       let lastOne;
       if (target && method) {
-        lastOne = sorted.filter(
+        lastOne = all.filter(
           (item) => item?.target === target && item?.method === method
         );
       } else if (target) {
-        lastOne = sorted.filter((item) => item?.target === target);
+        lastOne = all.filter((item) => item?.target === target);
       }
       if (lastOne?.length) {
         setLastSession(lastOne[0]);

@@ -99,7 +99,16 @@ export const useSessionStore = () => {
       });
     });
 
-    return result;
+    const sorted = result.length
+      ? result.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+      : [];
+    return sorted;
+  }, []);
+
+  const getDefaultProgress = useCallback(() => {
+    const data = getAllProgress();
+    if (data.length) return data[0];
+    return null;
   }, []);
 
   const clearSessionFor = useCallback((target, method) => {
@@ -122,6 +131,7 @@ export const useSessionStore = () => {
     saveStats,
     hasSavedProgress,
     getAllProgress,
+    getDefaultProgress,
     clearSessionFor,
   };
 };
