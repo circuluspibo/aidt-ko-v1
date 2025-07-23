@@ -29,14 +29,13 @@ function Target() {
     setSelectedCard(null);
     setOpen(false);
   };
-
   return (
     <>
       <div className="grid grid-rows-[auto_auto_1fr] md:gap-4 px-6 py-4 w-full h-full">
-        <header className="col-span-full text-2xl font-extrabold md:text-5xl text-start">
+        <header className="text-2xl font-extrabold col-span-full md:text-5xl text-start">
           📚 무엇을 배울까요?
         </header>
-        <p className="col-span-full text-xl font-semibold md:text-4xl">
+        <p className="text-xl font-semibold col-span-full md:text-4xl">
           배우고 싶은 한글을 선택해주세요.
         </p>
         <div className="grid flex-grow gap-2 p-2 tp:grid-cols-2 tp:grid-rows-2 tl5:grid-cols-4 tl5:grid-rows-1 lg:gap-4 tl6:gap-4 tl6:p-4">
@@ -78,7 +77,7 @@ function Target() {
               delay={0.25 * i}
               key={i}
               inView
-              className="flex flex-col col-span-1 gap-2 justify-center items-center self-stretch tl6:p-2"
+              className="flex flex-col items-center self-stretch justify-center col-span-1 gap-2 tl6:p-2"
             >
               <Card
                 className={`flex p-2 flex-col justify-center items-center gap-2 flex-grow self-stretch col-span-1 shadow-xl ${
@@ -89,9 +88,9 @@ function Target() {
                   `}
                 onClick={() => onCardClick(item.name)}
               >
-                <div className="flex flex-grow gap-2 justify-center items-center self-stretch p-2">
-                  <div className="flex flex-col flex-grow gap-4 justify-center items-center self-stretch py-2 md:py-6">
-                    <div className="flex justify-center items-center w-full">
+                <div className="flex items-center self-stretch justify-center flex-grow gap-2 p-2">
+                  <div className="flex flex-col items-center self-stretch justify-center flex-grow gap-4 py-2 md:py-6">
+                    <div className="flex items-center justify-center w-full">
                       <div className="w-24 h-24 tl6:w-28 tl6:h-28 aspect-square">
                         {item.icon}
                       </div>
