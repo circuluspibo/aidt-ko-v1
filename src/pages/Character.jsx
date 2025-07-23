@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import StepDialog from "@/components/StepDialog";
 import { BlurFade } from "@/components/magicui/blur-fade";
@@ -24,16 +24,20 @@ const Character = () => {
     setOpen(true);
   };
 
+  useEffect(() => {
+    localStorage.removeItem("learningStats");
+  }, []);
+
   return (
     <>
       <div className="grid grid-rows-[auto_auto_1fr] md:gap-4 px-6 py-4 w-full h-full">
-        <header className="col-span-full text-2xl font-extrabold md:text-5xl text-start">
+        <header className="text-2xl font-extrabold col-span-full md:text-5xl text-start">
           👦🏻👧🏻 나는 누구일까요?
         </header>
-        <p className="col-span-full text-xl font-semibold md:text-4xl">
+        <p className="text-xl font-semibold col-span-full md:text-4xl">
           나와 가장 비슷한 친구를 선택해주세요! 🤗
         </p>
-        <div className="flex flex-wrap flex-auto gap-2 justify-center items-center p-2 h-fit lg:gap-4 tl6:gap-4 tl6:p-4">
+        <div className="flex flex-wrap items-center justify-center flex-auto gap-2 p-2 h-fit lg:gap-4 tl6:gap-4 tl6:p-4">
           {[
             {
               name: "뚜디",
