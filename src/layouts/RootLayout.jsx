@@ -1,0 +1,29 @@
+import { Toaster } from "@/components/ui/sonner";
+import { Outlet } from "react-router-dom";
+
+const RootLayout = () => {
+  return (
+    <div className="flex items-center justify-center w-full h-full">
+      <div
+        className={`flex flex-col flex-grow justify-center items-center w-full h-full shadow-2xl backdrop-blur-sm tb-lg:rounded-3xl bg-white/90 tb-lg:h-[800px] tb-lg:max-w-[1200px]`}
+      >
+        <Outlet />
+      </div>
+      <Toaster
+        toastOptions={{
+          duration: 1500,
+          style: {
+            background: "transparent",
+            marginTop: "calc(90vh/2)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            border: "none",
+          },
+        }}
+      />
+    </div>
+  );
+};
+
+export default RootLayout;
