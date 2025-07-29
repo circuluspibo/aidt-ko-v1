@@ -153,16 +153,16 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
         <div className="flex items-center justify-center col-span-2 py-2 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
           {item.letter}
         </div>
-        {(target === "vowel" || target === "consonant") && (
+        {target !== "word" && (
           <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.example[index]}
           </div>
         )}
-        {(target === "syllable" || target === "word") && (
+        {/* {target === "word" && (
           <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.meaning[index]}
           </div>
-        )}
+        )} */}
       </div>
       {/* 문제-보기 영역 */}
       <div className="col-span-8 grid grid-rows-[auto_1fr] gap-4">

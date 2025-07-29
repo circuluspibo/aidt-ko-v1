@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import LetterConsonant from "./LetterConsonant";
 import LetterVowel from "./LetterVowel";
 import { Button } from "./ui/button";
-import LetterSyllable from "./LetterSyllable";
+import Letters from "./Letters";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
@@ -122,26 +122,26 @@ const LearnBySpeak = ({
         <div className="flex items-center justify-center col-span-2 p-4 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
           {item.image[index]}
         </div>
-        {(target === "vowel" || target === "consonant") && (
+        {target !== "word" && (
           <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.example[index]}
           </div>
         )}
-        {(target === "syllable" || target === "word") && (
+        {/* {(target === "word") && (
           <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.meaning[index]}
           </div>
-        )}
-        {(target === "vowel" || target === "consonant") && (
+        )} */}
+        {target !== "word" && (
           <div className="col-span-2 p-4 text-3xl font-semibold text-center bg-white border rounded-lg shadow-sm">
             {`이번에는 "${item?.example[index]}"을 생각하며 발음해 보세요.`}
           </div>
         )}
-        {(target === "syllable" || target === "word") && (
+        {/* {(target === "word") && (
           <div className="col-span-2 p-4 text-3xl font-semibold text-left bg-white border rounded-lg shadow-sm">
             {`이번에는 "${item?.meaning[index]}"을 생각하며 발음해 보세요.`}
           </div>
-        )}
+        )} */}
       </div>
       {/* 문제-보기 영역 */}
       <div className="col-span-8 grid grid-cols-[1fr_auto] gap-4">
@@ -155,7 +155,7 @@ const LearnBySpeak = ({
             {(target === "vowel" || target === "consonant") && (
               <p>{item.sound}</p>
             )}
-            {target === "syllable" && (
+            {target === "letter" && (
               <div className="flex items-center justify-center">
                 <LetterConsonant
                   letter={item.components[0]}
@@ -172,7 +172,7 @@ const LearnBySpeak = ({
               <div className="flex items-center justify-center">
                 {item.components.map((c, i) => (
                   <>
-                    <LetterSyllable
+                    <Letters
                       letter={c}
                       key={`${c}-${i}`}
                       className="p-2 text-6xl font-extrabold"

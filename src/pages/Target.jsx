@@ -59,9 +59,9 @@ function Target() {
               description: ["ㅏ,ㅓ,ㅗ,ㅜ,ㅡ...", "예쁜 소리를 내는 글자"],
             },
             {
-              name: "syllable",
+              name: "letter",
               icon: (
-                <img src={syllable} alt="syllable" className="aspect-square" />
+                <img src={syllable} alt="letter" className="aspect-square" />
               ),
               title: "글자",
               description: ["가, 나, 다, 라...", "자음 + 모음 = 글자"],

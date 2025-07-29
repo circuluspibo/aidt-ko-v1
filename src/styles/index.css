@@ -174,7 +174,7 @@ button {
     /* 학습 카테고리 색상들 추가 - HSL 형식 */
     --color-consonant: #90e9f7;
     --color-vowel: #f3bcfc;
-    --color-syllable: #b9b1f1;
+    --color-letter: #b9b1f1;
     --color-word: #6f5ff8;
   }
   .dark {

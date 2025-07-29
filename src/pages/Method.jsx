@@ -54,7 +54,7 @@ function Method() {
             <option value="prev">학습 대상 변경</option>
             <option value="consonant">자음</option>
             <option value="vowel">모음</option>
-            <option value="syllable">글자</option>
+            <option value="letter">글자</option>
             <option value="word">단어</option>
           </select>
           {target === "word" ? "를" : "을"} 어떻게 배울까요?

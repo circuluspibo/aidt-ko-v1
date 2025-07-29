@@ -87,7 +87,7 @@ export default {
         // 학습 카테고리 색상들 추가
         consonant: "#71cfff",
         vowel: "#ffa6ea",
-        syllable: "#cbadff",
+        letter: "#cbadff",
         word: "#6f5ff8",
       },
       screens: {
@@ -123,7 +123,7 @@ export default {
     },
     {
       pattern:
-        /^(bg|border|from|to|text)-(consonant|vowel|syllable|word|info|success|warning|error).*$/,
+        /^(bg|border|from|to|text)-(consonant|vowel|letter|word|info|success|warning|error).*$/,
     },
   ],
 };

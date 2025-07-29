@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Options from "@/features/Options";
 import LetterConsonant from "./LetterConsonant";
 import LetterVowel from "./LetterVowel";
-import LetterSyllable from "./LetterSyllable";
+import Letters from "./Letters";
 
 const LearnByRead = ({
   data,
@@ -69,11 +69,11 @@ const LearnByRead = ({
               {item.name}
             </div>
             <div className="col-span-1 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
-              {item.sound}
+              {item.letter}
             </div>
           </>
         )}
-        {target === "syllable" && (
+        {target === "letter" && (
           <div className="flex items-center justify-center col-span-2 py-2 bg-white border rounded-lg shadow-sm">
             <LetterConsonant
               letter={item.components[0]}
@@ -87,16 +87,16 @@ const LearnByRead = ({
             <span className="text-8xl">=</span>
           </div>
         )}
-        {(target === "vowel" || target === "consonant") && (
+        {target !== "word" && (
           <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.example[index]}
           </div>
         )}
-        {(target === "syllable" || target === "word") && (
+        {/* {(target === "letter" || target === "word") && (
           <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.meaning[index]}
           </div>
-        )}
+        )} */}
       </div>
       {/* 문제-보기 영역 */}
       <div className="col-span-8 grid grid-cols-[1fr_auto] gap-4">
@@ -113,7 +113,7 @@ const LearnByRead = ({
           {target === "word" && (
             <div className="flex items-center justify-center w-full gap-1 p-4 overflow-auto font-extrabold text-center bg-white border rounded-lg shadow-sm text-9xl">
               {item.components.map((c, i) => (
-                <LetterSyllable
+                <Letters
                   letter={c}
                   key={`${c}-${i}`}
                   className="col-span-1 p-2 font-extrabold text-8xl"

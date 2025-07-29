@@ -104,16 +104,16 @@ const LearnByListen = ({
         <div className="flex items-center justify-center col-span-2 p-4 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
           {item.image[index]}
         </div>
-        {(target === "vowel" || target === "consonant") && (
+        {target !== "word" && (
           <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.example[index]}
           </div>
         )}
-        {(target === "syllable" || target === "word") && (
+        {/* {(target === "word") && (
           <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
             {item?.meaning[index]}
           </div>
-        )}
+        )} */}
       </div>
       {/* 문제-보기 영역 */}
       <div className="col-span-8 grid grid-cols-[1fr_auto] gap-4">
