@@ -14,7 +14,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { X, Circle, RefreshCcw } from "lucide-react";
 import { TARGETS, METHODS } from "@/utils/globals";
-import learningData from "@/data/learningData.converted.json";
 
 const ResumeLearningModal = ({ target, method }) => {
   const { getAllProgress, clearSessionFor } = useSessionStore();
@@ -87,9 +86,9 @@ const ResumeLearningModal = ({ target, method }) => {
           </DialogTitle>
         </DialogHeader>
         <DialogDescription className="text-2xl text-center md:text-3xl">
-          {`${TARGETS[lastSession.target]} - ${METHODS[lastSession.method]} - ${
-            learningData[lastSession.target][lastSession.index]["letter"]
-          } 학습`}
+          {`${TARGETS[lastSession.target]} - ${
+            METHODS[lastSession.method]
+          } - "${lastSession.letter}" 학습`}
         </DialogDescription>
         <DialogFooter className="flex flex-row justify-center gap-6 mt-8">
           <Button

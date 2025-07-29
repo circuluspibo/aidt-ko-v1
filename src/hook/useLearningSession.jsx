@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from "react";
-import learningData from "../data/learningData.converted.json";
 import { FaceMesh } from "@mediapipe/face_mesh";
 import { Camera } from "@mediapipe/camera_utils";
 import { toast } from "sonner";
@@ -9,7 +8,7 @@ import { METHODS } from "@/utils/globals";
 import { useParams, useNavigate, useLocation } from "react-router";
 import { useSessionStore } from "./useSessionStore";
 
-const useLearningSession = () => {
+const useLearningSession = (learningDataForTarget) => {
   const { character, target, method } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -43,7 +42,7 @@ const useLearningSession = () => {
   const focusLogRef = useRef([]);
   const cameraRef = useRef(null);
   const faceMeshRef = useRef(null);
-  const item = learningData[target][currentItemIndex];
+  const item = learningDataForTarget?.[currentItemIndex];
 
   const NEXT_STEP = {
     consonant: {
@@ -128,7 +127,7 @@ const useLearningSession = () => {
   const nextQuestion = () => {
     setCurrentLearningCount(1);
     setCurrentQuestion(1);
-    if (currentItemIndex < learningData[target].length - 1) {
+    if (currentItemIndex < learningDataForTarget?.length - 1) {
       setCurrentItemIndex((prev) => prev + 1);
     } else {
       handleNextStep();
@@ -219,6 +218,7 @@ const useLearningSession = () => {
       target,
       method,
       currentItemIndex,
+      item.letter,
       currentQuestionNo,
       currentLearningCount
     );
@@ -245,11 +245,11 @@ const useLearningSession = () => {
     timerRef.current = setInterval(() => setTimer((prev) => prev + 1), 1000);
     setProgress(
       Math.round(
-        ((currentItemIndex + 1) / learningData[target].length) * 100
+        ((currentItemIndex + 1) / learningDataForTarget?.length) * 100
       ).toFixed(0)
     );
     return () => clearInterval(timerRef.current);
-  }, [currentItemIndex, target]);
+  }, [currentItemIndex, target, learningDataForTarget]);
 
   useEffect(() => {
     focusLogRef.current = focusLog;

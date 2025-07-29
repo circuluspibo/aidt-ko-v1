@@ -46,13 +46,16 @@ export const useSessionStore = () => {
   }, []);
 
   const saveProgress = useCallback(
-    (target, method, index, question, learningCount) => {
+    (target, method, index, letter, question, learningCount) => {
       const data = getSessionData();
       if (!data.sessions[target]) data.sessions[target] = {};
       data.sessions[target][method] = {
+        target,
+        method,
         index,
         question,
         learningCount,
+        letter,
         updatedAt: new Date().toISOString(),
       };
       saveToStorage(data);
@@ -95,6 +98,7 @@ export const useSessionStore = () => {
           question: session.question,
           learningCount: session.learningCount,
           updatedAt: session.updatedAt,
+          letter: session.letter,
         });
       });
     });

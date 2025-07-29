@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import LearnByRead from "@/components/LearnByRead";
 import LearnBySpeak from "@/components/LearnBySpeak";
 import LearnByWrite from "@/components/LearnByWrite";
@@ -10,27 +10,51 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { TARGETS, METHODS, COLORS } from "@/utils/globals";
-import learningData from "@/data/learningData.converted.json";
 import useLearningSession from "@/hook/useLearningSession";
 import Stepper from "@/components/ui/stepper";
 import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
 import colors from "tailwindcss/colors";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import LearnByListen from "@/components/LearnByListen";
+import { useQuery } from "@tanstack/react-query";
+import { fetchLearningDataByTarget } from "@/api/learning";
 
 const Learn = () => {
+  // URL 파라미터는 여기서 한 번만 가져옵니다.
+  const { character, target, method } = useParams();
+
+  // useQuery를 사용하여 target에 맞는 학습 데이터를 가져옵니다.
   const {
-    character,
-    target,
-    method,
+    data: learningDataForTarget,
+    isLoading: isDataLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["learningData", target],
+    queryFn: () => fetchLearningDataByTarget(target),
+    enabled: !!target, // target이 있을 때만 쿼리를 실행합니다.
+    staleTime: 1000 * 60 * 5, // 5분 동안 데이터를 fresh 상태로 유지 (API 호출 최소화)
+  });
+  const {
     loading,
     onAnswer,
     repeatSettings,
     currentRepeat,
     currentItemIndex,
     videoRef,
-  } = useLearningSession();
-  const item = learningData[target][currentItemIndex];
+  } = useLearningSession(learningDataForTarget);
+  // 현재 학습 아이템
+  const item = learningDataForTarget?.[currentItemIndex];
+
+  if (isDataLoading)
+    return (
+      <div className="flex items-center justify-center h-full">로딩 중...</div>
+    );
+  if (isError)
+    return (
+      <div className="flex items-center justify-center h-full">
+        데이터를 불러오는 중 에러가 발생했습니다.
+      </div>
+    );
 
   return (
     <div className="grid grid-rows-[auto_1fr] md:gap-4 px-6 py-4 w-full h-full">
@@ -84,7 +108,7 @@ const Learn = () => {
             <span className="text-sm font-bold">진행</span>
             <AnimatedCircularProgressBar
               className="w-12 h-12"
-              max={learningData[target].length}
+              max={learningDataForTarget?.length || 0}
               min={1}
               value={currentItemIndex + 1}
               gaugePrimaryColor={
@@ -103,7 +127,7 @@ const Learn = () => {
             onAnswer,
             currentRepeat,
             currentItemIndex,
-            data: learningData[target],
+            data: learningDataForTarget,
           }}
         />
       )}
@@ -115,7 +139,7 @@ const Learn = () => {
             onAnswer,
             currentRepeat,
             currentItemIndex,
-            data: learningData[target],
+            data: learningDataForTarget,
           }}
         />
       )}
@@ -127,7 +151,7 @@ const Learn = () => {
             onAnswer,
             currentRepeat,
             currentItemIndex,
-            data: learningData[target],
+            data: learningDataForTarget,
           }}
         />
       )}
@@ -139,7 +163,7 @@ const Learn = () => {
             onAnswer,
             currentRepeat,
             currentItemIndex,
-            data: learningData[target],
+            data: learningDataForTarget,
           }}
         />
       )}
