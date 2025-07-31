@@ -85,8 +85,8 @@ export default {
           content: "hsl(var(--color-error-content))",
         },
         // 학습 카테고리 색상들 추가
-        consonant: "#71cfff",
-        vowel: "#ffa6ea",
+        vowel: "#71cfff",
+        consonant: "#ffa6ea",
         letter: "#cbadff",
         word: "#6f5ff8",
       },

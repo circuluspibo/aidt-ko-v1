@@ -12,7 +12,7 @@ const WordView = ({ item }) => {
       </div>
       <div className="text-6xl">{item.image}</div>
       <div className="text-lg">
-        단어: {item.word} - {item.meaning}
+        낱말: {item.word} - {item.meaning}
       </div>
       <p className="font-semibold">"{item.word}" 을 찾아보세요!</p>
     </div>

@@ -65,13 +65,13 @@ const useLearningSession = (learningDataForTarget) => {
       title: `축하합니다!`,
       description: [
         `글자 ${METHODS[method]} 학습을 완료했습니다!`,
-        "단어 학습을 시작합니다.",
+        "낱말 학습을 시작합니다.",
       ],
       next: `/${character}/word/${method}`,
     },
     word: {
       title: `축하합니다!`,
-      description: [`단어 ${METHODS[method]} 학습을 완료했습니다!`],
+      description: [`낱말 ${METHODS[method]} 학습을 완료했습니다!`],
       next: `/${character}`,
     },
   };

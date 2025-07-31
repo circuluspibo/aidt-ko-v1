@@ -13,7 +13,7 @@ export const TARGETS = {
   vowel: "모음",
   consonant: "자음",
   letter: "글자",
-  word: "단어",
+  word: "낱말",
 };
 
 export const METHODS = {

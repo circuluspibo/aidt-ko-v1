@@ -41,6 +41,12 @@ function Target() {
         <div className="grid flex-grow gap-2 p-2 tp:grid-cols-2 tp:grid-rows-2 tl5:grid-cols-4 tl5:grid-rows-1 lg:gap-4 tl6:gap-4 tl6:p-4">
           {[
             {
+              name: "vowel",
+              icon: <img src={vowel} alt="vowel" className="aspect-square" />,
+              title: "모음",
+              description: ["ㅏ,ㅓ,ㅗ,ㅜ,ㅡ...", "예쁜 소리를 내는 글자"],
+            },
+            {
               name: "consonant",
               icon: (
                 <img
@@ -53,12 +59,6 @@ function Target() {
               description: ["ㄱ,ㄴ,ㄷ,ㄹ,ㅁ...", "한글의 기본이 되는 소리"],
             },
             {
-              name: "vowel",
-              icon: <img src={vowel} alt="vowel" className="aspect-square" />,
-              title: "모음",
-              description: ["ㅏ,ㅓ,ㅗ,ㅜ,ㅡ...", "예쁜 소리를 내는 글자"],
-            },
-            {
               name: "letter",
               icon: (
                 <img src={syllable} alt="letter" className="aspect-square" />
@@ -69,7 +69,7 @@ function Target() {
             {
               name: "word",
               icon: <img src={word} alt="word" className="aspect-square" />,
-              title: "단어",
+              title: "낱말",
               description: ["엄마, 아빠, 사과...", "의미가 있는 완전한 말"],
             },
           ].map((item, i) => (
