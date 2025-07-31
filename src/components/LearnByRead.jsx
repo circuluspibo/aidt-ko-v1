@@ -4,6 +4,7 @@ import Options from "@/features/Options";
 import LetterConsonant from "./LetterConsonant";
 import LetterVowel from "./LetterVowel";
 import Letters from "./Letters";
+import { JOSA } from "@/utils/globals";
 
 const LearnByRead = ({
   data,
@@ -60,7 +61,7 @@ const LearnByRead = ({
     <div className="grid h-full grid-cols-12 gap-4">
       <div className="col-span-9 grid grid-rows-[auto_1fr] gap-4">
         <div className="w-full row-span-1 p-2 text-2xl font-bold text-center border rounded-lg shadow border-neutral-300 bg-amber-300/80">
-          {`"${item.letter}"을 찾아보세요.`}
+          {`"${item.letter}"${JOSA().c(item.name, "을/를")} 찾아보세요.`}
         </div>
         <div className="grid w-full h-full grid-cols-9 row-span-2 gap-4">
           {/* 힌트 영역 */}
