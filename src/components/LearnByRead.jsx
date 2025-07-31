@@ -86,9 +86,10 @@ const LearnByRead = ({
             )}
           </div>
           {/* 문제-보기 영역 */}
-          <div className="flex items-center justify-center w-full h-full col-span-5 gap-4 bg-white border rounded-lg shadow">
+          <div className="flex items-center justify-center w-full h-full col-span-5 gap-2 bg-white border rounded-lg shadow">
             {target !== "word" && (
               <Letters
+                n={1}
                 letter={item.letter}
                 className="col-span-1 p-2 font-extrabold"
                 noBorder
@@ -98,6 +99,7 @@ const LearnByRead = ({
               <>
                 {item.components.map((c, i) => (
                   <Letters
+                    n={item.components.length}
                     letter={c}
                     key={`${c}-${i}`}
                     className="col-span-1 p-2 font-extrabold"

@@ -1,23 +1,20 @@
 import { useEffect, useState } from "react";
 
-const Letters = ({ letter, className, noBorder }) => {
+const Letters = ({ letter, n, className, noBorder }) => {
   const [textSize, setTextSize] = useState("text-len1");
   useEffect(() => {
-    switch (letter.length) {
-      case 2:
+    switch (n) {
+      case 3:
         setTextSize("text-9xl");
         break;
-      case 3:
-        setTextSize("text-8xl");
-        break;
       case 4:
-        setTextSize("text-7xl");
+        setTextSize("text-8xl");
         break;
       default:
         setTextSize("text-len1");
         break;
     }
-  }, [letter]);
+  }, [n]);
   return (
     <div
       className={`font-extrabold text-center rounded-lg ${
