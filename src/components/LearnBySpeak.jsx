@@ -7,6 +7,7 @@ import Letters from "./Letters";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
+import { JOSA } from "../utils/globals";
 
 let startTime = null;
 const LearnBySpeak = ({
@@ -19,6 +20,7 @@ const LearnBySpeak = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [index, setIndex] = useState(0);
   const [manuallyStopped, setManuallyStopped] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const {
     transcript,
@@ -33,17 +35,6 @@ const LearnBySpeak = ({
       checkPronunciation(transcript);
     }
   }, [listening]);
-
-  const playTargetSound = () => {
-    setTimeout(() => {
-      const utterance = new SpeechSynthesisUtterance(item.name);
-      utterance.lang = "ko-KR";
-      utterance.rate = 0.6;
-      utterance.pitch = 1.2;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    }, 500);
-  };
 
   const handleMicButton = () => {
     if (!browserSupportsSpeechRecognition) {
@@ -85,6 +76,47 @@ const LearnBySpeak = ({
     if (!isCorrect) handleMicButton();
   };
 
+  const playSound = () => {
+    setIsPlaying(true);
+    window.speechSynthesis.cancel();
+
+    let repeatCount = 0;
+    let cancelled = false;
+
+    const stopHandler = () => {
+      cancelled = true;
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      document.removeEventListener("stop-sound", stopHandler);
+    };
+    document.addEventListener("stop-sound", stopHandler);
+
+    const speakName = () => {
+      if (cancelled) return;
+      try {
+        const utterance = new SpeechSynthesisUtterance(item.name);
+        utterance.lang = "ko-KR";
+        utterance.rate = 0.6;
+        utterance.pitch = 1.2;
+        utterance.onend = () => {
+          repeatCount += 1;
+          if (repeatCount < 3 && !cancelled) {
+            setTimeout(() => {
+              speakName();
+            }, 500);
+          } else {
+            setIsPlaying(false);
+            document.removeEventListener("stop-sound", stopHandler);
+          }
+        };
+        window.speechSynthesis.speak(utterance);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    speakName();
+  };
+
   useEffect(() => {
     startTime = new Date().valueOf();
     document.dispatchEvent(new Event("stop-sound"));
@@ -105,7 +137,6 @@ const LearnBySpeak = ({
       window.SpeechRecognition.stop(); // 일부 브라우저에서 필수
     SpeechRecognition.stopListening();
     setManuallyStopped(true);
-    playTargetSound();
   }, [currentRepeat]);
 
   useEffect(() => {
@@ -117,97 +148,95 @@ const LearnBySpeak = ({
 
   return (
     <div className="grid h-full grid-cols-12 gap-4">
-      {/* 힌트 영역 */}
-      <div className="col-span-4 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
-        <div className="flex items-center justify-center col-span-2 p-4 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
-          {item.image[index]}
+      <div className="col-span-9 grid grid-rows-[auto_1fr] gap-4">
+        <div className="w-full row-span-1 p-2 text-2xl font-bold text-center border rounded-lg shadow border-neutral-300 bg-blue-300/80">
+          {`"말하기"를 선택하고 "${item.letter}"${JOSA().c(
+            item.name,
+            "을/를"
+          )} 소리내어 말해보세요.`}
         </div>
-        {target !== "word" && (
-          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
-            {item?.example[index]}
-          </div>
-        )}
-        {/* {(target === "word") && (
-          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
-            {item?.meaning[index]}
-          </div>
-        )} */}
-        {target !== "word" && (
-          <div className="col-span-2 p-4 text-3xl font-semibold text-center bg-white border rounded-lg shadow-sm">
-            {`이번에는 "${item?.example[index]}"을 생각하며 발음해 보세요.`}
-          </div>
-        )}
-        {/* {(target === "word") && (
-          <div className="col-span-2 p-4 text-3xl font-semibold text-left bg-white border rounded-lg shadow-sm">
-            {`이번에는 "${item?.meaning[index]}"을 생각하며 발음해 보세요.`}
-          </div>
-        )} */}
-      </div>
-      {/* 문제-보기 영역 */}
-      <div className="col-span-8 grid grid-cols-[1fr_auto] gap-4">
-        {/* 문제 영역 */}
-        <div className="col-span-1 grid grid-rows-[auto_1fr] gap-4">
-          <div className="w-full p-2 text-2xl font-bold text-center bg-blue-300 border rounded-lg shadow-sm">
-            {`"말하기"를 선택하고 "${item.name}"을 소리내어 말해보세요.`}
-          </div>
-          <div className="flex flex-col items-center justify-center w-full gap-4 p-2 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
-            <p className="text-9xl">{item.name}</p>
-            {(target === "vowel" || target === "consonant") && (
-              <p>{item.sound}</p>
+        <div className="grid w-full h-full grid-cols-9 row-span-2 gap-4">
+          {/* 힌트 영역 */}
+          <div className="flex items-center justify-center w-full h-full col-span-4 gap-4 bg-white border rounded-lg shadow">
+            {target !== "letter" && (
+              <div className="flex items-center justify-center col-span-2 p-4 font-extrabold text-9xl">
+                {item.image[index]}
+              </div>
             )}
             {target === "letter" && (
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center text-6xl">
                 <LetterConsonant
                   letter={item.components[0]}
-                  className="p-2 text-6xl"
+                  className="py-2 text-9xl"
                 />
                 <span>+</span>
                 <LetterVowel
                   letter={item.components[1]}
-                  className="p-2 text-6xl"
+                  className="py-2 text-9xl"
                 />
-              </div>
-            )}
-            {target === "word" && (
-              <div className="flex items-center justify-center">
-                {item.components.map((c, i) => (
-                  <>
-                    <Letters
-                      letter={c}
-                      key={`${c}-${i}`}
-                      className="p-2 text-6xl font-extrabold"
-                    />
-                    {i < item.components.length - 1 && (
-                      <span className="text-5xl">+</span>
-                    )}
-                  </>
-                ))}
+                <span>=</span>
               </div>
             )}
           </div>
+          {/* 문제-보기 영역 */}
+          <div className="flex flex-col items-center justify-center w-full h-full col-span-5 gap-2 bg-white border rounded-lg shadow">
+            <div className="flex gap-2">
+              {target !== "word" && (
+                <Letters
+                  n={1}
+                  letter={item.letter}
+                  className="col-span-1 p-2 font-extrabold"
+                  noBorder
+                />
+              )}
+              {target === "word" && (
+                <>
+                  {item.components.map((c, i) => (
+                    <Letters
+                      n={item.components.length}
+                      letter={c}
+                      key={`${c}-${i}`}
+                      className="col-span-1 p-2 font-extrabold"
+                    />
+                  ))}
+                </>
+              )}
+            </div>
+            <Button
+              onClick={playSound}
+              disabled={isPlaying}
+              size="lg"
+              className={`flex flex-col gap-10 justify-center text-2xl font-bold hover:bg-blue-600/50 ${
+                isPlaying
+                  ? "text-blue-500 bg-blue-100 hover:bg-blue-200"
+                  : "bg-blue-400 hover:bg-blue-200/"
+              } h-fit`}
+            >
+              {isPlaying ? "🔊 소리 듣는 중..." : "🔊 소리 듣기"}
+            </Button>
+          </div>
         </div>
-        {/* 보기 영역 */}
-        <div className="flex flex-col items-center justify-center w-full col-span-1 gap-10 p-8 text-center bg-white border rounded-lg shadow-sm">
-          <Button
-            onClick={handleMicButton}
-            size="lg"
-            className={`flex flex-col gap-10 justify-center pt-12 pb-6 text-2xl font-bold ${
-              listening
-                ? "text-blue-500 bg-blue-100 hover:bg-blue-200"
-                : "bg-blue-500 animate-focus hover:bg-blue-600"
-            } h-fit max-w-48`}
-          >
-            <p className="text-9xl">🎙️</p>
-            <p className="max-w-fit text-wrap">
-              {listening ? "듣는 중..." : "말하기"}
-            </p>
-          </Button>
-          {errorMessage && (
-            <span className="text-red-500 max-w-48 text-start text-bold text-wrap">
-              {errorMessage}
-            </span>
-          )}
-        </div>
+      </div>
+      <div className="flex flex-col items-center justify-center w-full h-full col-span-3 grid-rows-3 gap-10 p-8 text-center bg-white border rounded-lg shadow-sm">
+        <Button
+          onClick={handleMicButton}
+          size="lg"
+          className={`flex flex-col gap-10 justify-center pt-12 pb-6 text-2xl font-bold ${
+            listening
+              ? "text-blue-500 bg-blue-100 hover:bg-blue-200"
+              : "bg-blue-500 animate-focus hover:bg-blue-600"
+          } h-fit max-w-48`}
+        >
+          <p className="text-9xl">🎙️</p>
+          <p className="max-w-fit text-wrap">
+            {listening ? "듣는 중..." : "말하기"}
+          </p>
+        </Button>
+        {errorMessage && (
+          <span className="text-red-500 max-w-48 text-start text-bold text-wrap">
+            {errorMessage}
+          </span>
+        )}
       </div>
     </div>
   );
