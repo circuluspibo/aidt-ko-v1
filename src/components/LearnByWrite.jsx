@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { Loader2Icon } from "lucide-react";
+import { JOSA } from "@/utils/globals";
 
 let startTime = null;
 const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
@@ -18,13 +19,18 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
       const formData = new FormData();
       formData.append("uploadFile", blob, "test.png");
       try {
-        const resp = await fetch("https://o-vapi.circul.us/code/ocr?lang=ko", {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-          },
-          body: formData,
-        });
+        const resp = await fetch(
+          target === "word"
+            ? "https://s-vapi.circul.us/ocr2/ocr2"
+            : "https://o-vapi.circul.us/code/ocr?lang=ko",
+          {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+            },
+            body: formData,
+          }
+        );
         const res = await resp.json();
         if (res.result && res.data.length) {
           const isCorrect = res.data[0].text === item.letter;
@@ -146,28 +152,15 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
   return (
     <div className="grid h-full grid-cols-12 gap-4">
       {/* 힌트 영역 */}
-      <div className="col-span-4 grid grid-rows-[1fr_auto_auto] grid-cols-2 gap-4">
-        <div className="flex items-center justify-center col-span-2 p-4 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
+      <div className="grid-cols-2 col-span-4 gap-4">
+        <div className="flex items-center justify-center h-full p-4 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
           {item.image[index]}
         </div>
-        <div className="flex items-center justify-center col-span-2 py-2 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
-          {item.letter}
-        </div>
-        {target !== "word" && (
-          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
-            {item?.example[index]}
-          </div>
-        )}
-        {/* {target === "word" && (
-          <div className="col-span-2 p-4 text-6xl font-extrabold text-center bg-white border rounded-lg shadow-sm">
-            {item?.meaning[index]}
-          </div>
-        )} */}
       </div>
       {/* 문제-보기 영역 */}
       <div className="col-span-8 grid grid-rows-[auto_1fr] gap-4">
-        <div className="w-full col-span-1 p-2 text-2xl font-bold text-center border rounded-lg shadow-sm bg-rose-300">
-          {`"${item.name}"을 직접 써보세요.`}
+        <div className="w-full row-span-1 p-2 text-2xl font-bold text-center border rounded-lg shadow border-neutral-300 bg-rose-300/80">
+          {`"${item.name}"${JOSA().c(item.name, "을/를")} 직접 써보세요.`}
         </div>
         <div className="flex flex-col items-center justify-center w-full gap-10 p-2 text-center bg-white border rounded-lg shadow-sm">
           <div className="grid grid-cols-[1fr_auto] gap-2 w-full h-full">
