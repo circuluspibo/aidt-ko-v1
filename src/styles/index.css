@@ -176,6 +176,9 @@ button {
     --color-vowel: #f3bcfc;
     --color-letter: #b9b1f1;
     --color-word: #6f5ff8;
+
+    --text-len1: 14rem;
+    --text-len1--line-height: 1;
   }
   .dark {
     --background: 224 71.4% 4.1%;

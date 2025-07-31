@@ -113,6 +113,9 @@ export default {
           raw: "(min-width: 1200px) and (orientation: landscape) and (min-height: 800px)",
         },
       },
+      fontSize: {
+        len1: ["14rem", { lineHeight: "1" }],
+      },
     },
   },
   plugins: [animate],
@@ -124,6 +127,9 @@ export default {
     {
       pattern:
         /^(bg|border|from|to|text)-(consonant|vowel|letter|word|info|success|warning|error).*$/,
+    },
+    {
+      pattern: /^(text)-(9xl|8xl|7xl|len1).*$/,
     },
   ],
 };
