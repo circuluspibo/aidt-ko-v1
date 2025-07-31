@@ -17,7 +17,7 @@ const Options = ({ correctAnswer, options, onSelect, color }) => {
       {options.length > 0 &&
         options.map((choice, idx) => (
           <button
-            key={`${choice}-${idx}`}
+            key={`${new Date().valueOf()}-${idx}`}
             onClick={() => handleClick(choice)}
             style={{
               "--hover-bg": colors[color]["200"],
