@@ -45,10 +45,6 @@ const Learn = () => {
   // 현재 학습 아이템
   const item = learningDataForTarget?.[currentItemIndex];
 
-  if (isDataLoading)
-    return (
-      <div className="flex items-center justify-center h-full">로딩 중...</div>
-    );
   if (isError)
     return (
       <div className="flex items-center justify-center h-full">
@@ -119,63 +115,68 @@ const Learn = () => {
           </div>
         </div>
       </div>
-      {method === "read" && (
-        <LearnByRead
-          {...{
-            item,
-            target,
-            onAnswer,
-            currentRepeat,
-            currentItemIndex,
-            data: learningDataForTarget,
-          }}
-        />
+      {item && (
+        <>
+          {method === "read" && (
+            <LearnByRead
+              {...{
+                item,
+                target,
+                onAnswer,
+                currentRepeat,
+                currentItemIndex,
+                data: learningDataForTarget,
+              }}
+            />
+          )}
+          {method === "listen" && (
+            <LearnByListen
+              {...{
+                item,
+                target,
+                onAnswer,
+                currentRepeat,
+                currentItemIndex,
+                data: learningDataForTarget,
+              }}
+            />
+          )}
+          {method === "speak" && (
+            <LearnBySpeak
+              {...{
+                item,
+                target,
+                onAnswer,
+                currentRepeat,
+                currentItemIndex,
+                data: learningDataForTarget,
+              }}
+            />
+          )}
+          {method === "write" && (
+            <LearnByWrite
+              {...{
+                item,
+                target,
+                onAnswer,
+                currentRepeat,
+                currentItemIndex,
+                data: learningDataForTarget,
+              }}
+            />
+          )}
+        </>
       )}
-      {method === "listen" && (
-        <LearnByListen
-          {...{
-            item,
-            target,
-            onAnswer,
-            currentRepeat,
-            currentItemIndex,
-            data: learningDataForTarget,
-          }}
-        />
-      )}
-      {method === "speak" && (
-        <LearnBySpeak
-          {...{
-            item,
-            target,
-            onAnswer,
-            currentRepeat,
-            currentItemIndex,
-            data: learningDataForTarget,
-          }}
-        />
-      )}
-      {method === "write" && (
-        <LearnByWrite
-          {...{
-            item,
-            target,
-            onAnswer,
-            currentRepeat,
-            currentItemIndex,
-            data: learningDataForTarget,
-          }}
-        />
-      )}
-      {loading && (
-        <BlurFade
-          delay={0.15}
-          inView
-          className="fixed inset-0 z-50 w-full h-full"
-        >
-          <div className="w-full h-full rounded-3xl backdrop-blur-sm bg-white/95" />
-        </BlurFade>
-      )}
+      {loading ||
+        (isDataLoading && (
+          <BlurFade
+            delay={0.15}
+            inView
+            className="fixed inset-0 z-50 w-full h-full"
+          >
+            <div className="w-full h-full rounded-3xl backdrop-blur-sm bg-white/95" />
+          </BlurFade>
+        ))}
       <audio id="correct-audio" src="/sounds/correct.mp3" preload="auto" />
       <audio id="wrong-audio" src="/sounds/wrong.mp3" preload="auto" />
       <audio id="complete-audio" src="/sounds/completed.mp3" preload="auto" />
