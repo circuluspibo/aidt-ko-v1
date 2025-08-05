@@ -262,3 +262,23 @@ button {
     }
   }
 }
+
+.nanum-gothic-extrabold {
+  font-family: "Nanum Gothic", sans-serif;
+  font-weight: 800;
+  font-style: normal;
+}
+.write-letter-consonant-1,
+.write-letter-vowel-1,
+.write-letter-letter-1 {
+  font-size: 32rem;
+}
+.write-letter-word-1 {
+  font-size: 30rem;
+}
+.write-letter-word-2 {
+  font-size: 20rem;
+}
+.write-letter-word-3 {
+  font-size: 13.5rem;
+}

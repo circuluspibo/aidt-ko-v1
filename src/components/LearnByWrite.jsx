@@ -160,7 +160,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
                 item.image[index]
               ) : (
                 <img
-                  src={`/images/${item.letter.charCodeAt(0)}.png`}
+                  src={`/images/write/${item.letter.charCodeAt(0)}.png`}
                   alt={item.letter}
                 />
               )}
@@ -173,15 +173,15 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
                   className="py-2 text-9xl"
                 /> */}
               <img
-                src={`/images/${item.components[0].charCodeAt(0)}.png`}
+                src={`/images/write/${item.components[0].charCodeAt(0)}.png`}
                 alt={item.components[0]}
-                className="flex-1 object-contain w-1/3 h-auto scale-75"
+                className="flex-1 object-contain w-1/2 h-auto scale-75"
               />
               <span>+</span>
               <img
-                src={`/images/${item.components[1].charCodeAt(0)}.png`}
+                src={`/images/write/${item.components[1].charCodeAt(0)}.png`}
                 alt={item.components[1]}
-                className="flex-1 object-contain w-1/3 h-auto"
+                className="flex-1 object-contain w-auto h-48"
               />
               {/* <LetterVowel
                   letter={item.components[1]}
@@ -208,18 +208,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
                   aria-hidden="true"
                 >
                   <p
-                    className="flex items-center justify-center h-full select-none text-9xl"
-                    style={{
-                      fontSize: `${
-                        item.letter.length > 3
-                          ? "9.25rem"
-                          : item.letter.length > 2
-                          ? "12rem"
-                          : item.letter.length > 1
-                          ? "18rem"
-                          : "22rem"
-                      }`,
-                    }}
+                    className={`flex items-center justify-center h-full select-none text-9xl nanum-gothic-extrabold write-letter-${target}-${item.letter.length}`}
                   >
                     {item.letter}
                   </p>

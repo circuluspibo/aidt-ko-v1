@@ -17,7 +17,7 @@ const Letters = ({ letter, n, className, noBorder }) => {
   }, [n]);
   return (
     <div
-      className={`font-extrabold text-center rounded-lg ${
+      className={`font-extrabold text-center rounded-lg nanum-gothic-extrabold ${
         !noBorder && "border-2 border-letter"
       } ${className} ${textSize}`}
     >
