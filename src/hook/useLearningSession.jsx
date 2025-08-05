@@ -98,8 +98,8 @@ const useLearningSession = (learningDataForTarget) => {
         onAutoClose: () => {
           clearInterval(timerRef.current);
           setCurrentItemIndex(0);
-          setCurrentQuestion(1);
-          setCurrentLearningCount(1);
+          // setCurrentQuestion(1);
+          // setCurrentLearningCount(1);
           setTimer(0);
           setTutorMessage("학습을 시작해 주세요.");
           setProgress(0);
@@ -125,8 +125,8 @@ const useLearningSession = (learningDataForTarget) => {
   };
 
   const nextQuestion = () => {
-    setCurrentLearningCount(1);
-    setCurrentQuestion(1);
+    // setCurrentLearningCount(1);
+    // setCurrentQuestion(1);
     if (currentItemIndex < learningDataForTarget?.length - 1) {
       setCurrentItemIndex((prev) => prev + 1);
     } else {
@@ -136,7 +136,6 @@ const useLearningSession = (learningDataForTarget) => {
 
   const handleAnswer = (data, refreshOptions) => {
     setLoading(true);
-    console.log(learningStats);
     const updatedStats = {
       ...learningStats,
       totalQuestions: learningStats.totalQuestions + 1,
@@ -241,6 +240,8 @@ const useLearningSession = (learningDataForTarget) => {
 
   useEffect(() => {
     setTimer(0);
+    setCurrentLearningCount(1);
+    setCurrentQuestion(1);
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => setTimer((prev) => prev + 1), 1000);
     setProgress(
@@ -362,6 +363,7 @@ const useLearningSession = (learningDataForTarget) => {
     videoRef,
     onAnswer: handleAnswer,
     setTutorMessage,
+    setCurrentItemIndex,
   };
 };
 

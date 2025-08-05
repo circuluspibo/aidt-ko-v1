@@ -18,11 +18,13 @@ import { BlurFade } from "@/components/magicui/blur-fade";
 import LearnByListen from "@/components/LearnByListen";
 import { useQuery } from "@tanstack/react-query";
 import { fetchLearningDataByTarget } from "@/api/learning";
+import { useState } from "react";
+import TopContentList from "@/features/TopContentList";
 
 const Learn = () => {
   // URL 파라미터는 여기서 한 번만 가져옵니다.
   const { character, target, method } = useParams();
-
+  const [openContentList, setOpen] = useState(false);
   // useQuery를 사용하여 target에 맞는 학습 데이터를 가져옵니다.
   const {
     data: learningDataForTarget,
@@ -34,16 +36,22 @@ const Learn = () => {
     enabled: !!target, // target이 있을 때만 쿼리를 실행합니다.
     staleTime: 1000 * 60 * 5, // 5분 동안 데이터를 fresh 상태로 유지 (API 호출 최소화)
   });
+
   const {
     loading,
     onAnswer,
     repeatSettings,
     currentRepeat,
     currentItemIndex,
+    setCurrentItemIndex,
     videoRef,
   } = useLearningSession(learningDataForTarget);
   // 현재 학습 아이템
   const item = learningDataForTarget?.[currentItemIndex];
+
+  const handleContent = () => {
+    setOpen(!openContentList);
+  };
 
   if (isError)
     return (
@@ -53,7 +61,15 @@ const Learn = () => {
     );
 
   return (
-    <div className="grid grid-rows-[auto_1fr] md:gap-4 px-6 py-4 w-full h-full">
+    <div className="grid grid-rows-[auto_1fr] md:gap-4 px-6 py-4 w-full h-full relative rounded-t-3xl overflow-hidden">
+      <TopContentList
+        open={openContentList}
+        color={COLORS[method]}
+        currentIndex={currentItemIndex}
+        data={learningDataForTarget}
+        onSelect={(i) => setCurrentItemIndex(i)}
+        onClose={() => setOpen(false)}
+      />
       <div className="flex items-center justify-between">
         <Breadcrumb>
           <BreadcrumbList className="font-bold text-[2.5rem]">
@@ -84,7 +100,15 @@ const Learn = () => {
             {item && (
               <BreadcrumbItem>
                 <BreadcrumbLink asChild className="font-extrabold text-black">
-                  <p>{`"${item.letter}" 학습`}</p>
+                  <div>
+                    <button
+                      className="px-1 py-0 font-extrabold bg-transparent btn"
+                      onClick={handleContent}
+                    >
+                      "{item.letter}"
+                    </button>
+                    학습
+                  </div>
                 </BreadcrumbLink>
               </BreadcrumbItem>
             )}

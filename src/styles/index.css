@@ -79,6 +79,13 @@ body,
 }
 
 * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--s) var(--p);
+  word-break: keep-all;
+  text-wrap: wrap;
+}
+
+* {
   --scrollbar-thumb: rgba(24 24 24 / 30%) !important;
   --scrollbar-track: rgba(24 24 24 / 5%) !important;
   scrollbar-width: thin;
@@ -172,9 +179,9 @@ button {
     --color-error-content: 5 100% 98%;
 
     /* 학습 카테고리 색상들 추가 - HSL 형식 */
-    --color-consonant: #90e9f7;
-    --color-vowel: #f3bcfc;
-    --color-letter: #b9b1f1;
+    --color-consonant: #ffa6ea;
+    --color-vowel: #71cfff;
+    --color-letter: #cbadff;
     --color-word: #6f5ff8;
 
     --text-len1: 14rem;
