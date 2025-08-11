@@ -14,7 +14,7 @@ const Character = () => {
 
   const handleConfirm = () => {
     setOpen(false);
-    navigate(`/${selectedCard?.name}`);
+    navigate(`${selectedCard?.name}`);
   };
 
   const handleCancel = () => {
@@ -30,7 +30,7 @@ const Character = () => {
   useEffect(() => {
     localStorage.removeItem("learningStats");
     const resume = getDefaultProgress();
-    if (resume?.character) return navigate(`/${resume.character}`);
+    if (resume?.character) return navigate(`/learn/${resume.character}`);
   }, []);
 
   return (

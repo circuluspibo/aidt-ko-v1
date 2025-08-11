@@ -22,7 +22,7 @@ function Target() {
 
   const handleConfirm = () => {
     setOpen(false);
-    navigate(`/${character}/${selectedCard}`);
+    navigate(`/learn/${character}/${selectedCard}`);
   };
 
   const handleCancel = () => {

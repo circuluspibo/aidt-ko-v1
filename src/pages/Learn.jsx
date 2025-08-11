@@ -204,12 +204,12 @@ const Learn = () => {
       <audio id="correct-audio" src="/sounds/correct.mp3" preload="auto" />
       <audio id="wrong-audio" src="/sounds/wrong.mp3" preload="auto" />
       <audio id="complete-audio" src="/sounds/completed.mp3" preload="auto" />
-      <video
+      {/* <video
         ref={videoRef}
         muted
         playsInline
         className="hidden w-full h-full"
-      />
+      /> */}
     </div>
   );
 };

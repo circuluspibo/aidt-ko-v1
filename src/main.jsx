@@ -15,11 +15,13 @@ import Method from "./pages/Method";
 import Learn from "./pages/Learn";
 import RootLayout from "./layouts/RootLayout";
 import ProgressLayout from "./layouts/ProgressLayout";
+import DashboardIndex from "./pages/dashboard";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
-      <Route path="/" element={<RootLayout />}>
+      <Route index element={<DashboardIndex />} />
+      <Route path="learn" element={<RootLayout />}>
         <Route index element={<Character />} />
         <Route path=":character" element={<ProgressLayout />}>
           <Route index element={<Target />} />

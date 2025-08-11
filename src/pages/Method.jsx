@@ -22,9 +22,9 @@ function Method() {
   const handleConfirm = () => {
     setOpen(false);
     if (target === "word") {
-      navigate(`/${character}/${target}/${selectedCard}?repeat=1,3`);
+      navigate(`/learn/${character}/${target}/${selectedCard}?repeat=1,3`);
     } else {
-      navigate(`/${character}/${target}/${selectedCard}`);
+      navigate(`/learn/${character}/${target}/${selectedCard}`);
     }
   };
 
@@ -35,9 +35,9 @@ function Method() {
 
   const handleTargetChange = (e) => {
     if (e.target.value === "prev") {
-      navigate(`/${character}`);
+      navigate(`/learn/${character}`);
     } else {
-      navigate(`/${character}/${e.target.value}`);
+      navigate(`/learn/${character}/${e.target.value}`);
     }
   };
 
