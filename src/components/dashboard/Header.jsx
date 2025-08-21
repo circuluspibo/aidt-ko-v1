@@ -1,9 +1,10 @@
-import { User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useAuth } from "@/context/AuthContext";
+import { Button } from "../ui/button";
 
 export function Header() {
-  const { getName } = useAuth();
+  const { getName, logout } = useAuth();
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-6 bg-white border-b border-border">
       <div className="flex items-center gap-4">
@@ -18,19 +19,16 @@ export function Header() {
       <div className="flex items-center gap-4">
         {/* <Button variant="ghost" size="icon">
           <Bell className="w-5 h-5" />
-        </Button>
-        <Button variant="ghost" size="icon">
-          <Settings className="w-5 h-5" />
         </Button> */}
-        <div className="flex items-center gap-2">
+        <span className="text-sm cursor-default">{getName() || "guest"}</span>
+        <Button variant="ghost" size="icon" onClick={logout}>
           <Avatar className="w-8 h-8">
             <AvatarImage src="" />
             <AvatarFallback>
-              <User className="w-4 h-4" />
+              <LogOut className="w-5 h-5" />
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm cursor-default">{getName() || "guest"}</span>
-        </div>
+        </Button>
       </div>
     </header>
   );
