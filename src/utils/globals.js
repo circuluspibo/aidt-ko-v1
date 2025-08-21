@@ -17,7 +17,7 @@ export const TARGETS = {
 };
 
 export const METHODS = {
-  read: "보기",
+  read: "읽기",
   listen: "듣기",
   speak: "말하기",
   write: "쓰기",
