@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { Outlet } from "react-router-dom";
 
-const RootLayout = () => {
+const LearnLayout = () => {
   return (
     <div className="flex items-center justify-center w-full h-full">
       <div
@@ -26,4 +26,4 @@ const RootLayout = () => {
   );
 };
 
-export default RootLayout;
+export default LearnLayout;
