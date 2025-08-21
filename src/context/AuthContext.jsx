@@ -18,7 +18,7 @@ export const AuthProvider = ({ children, user: userData }) => {
     setToken(t);
     const { role } = data;
     if (role === "student") {
-      navigate("/learn");
+      navigate(`/learn/${data.characterId}`);
     } else {
       navigate("/manage");
     }
@@ -45,8 +45,11 @@ export const AuthProvider = ({ children, user: userData }) => {
       setToken("");
       if (user) {
         window.location.reload();
-      } else {
-        navigate("/login", { replace: true });
+      } else if (
+        window.location.pathname !== "/" &&
+        window.location.pathname !== "/login"
+      ) {
+        navigate("/", { replace: true });
       }
     }
   }, [userData]);

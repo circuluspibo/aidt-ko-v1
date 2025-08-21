@@ -18,31 +18,26 @@ import { useMutation } from "@tanstack/react-query";
 import { userSignIn } from "@/api";
 import { useState } from "react";
 
-export function LoginForm({ className, ...props }) {
+export function StudentForm({ className, ...props }) {
   const { login } = useAuth();
   const [error, setError] = useState("");
   const form = useForm({
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
-      userId: "",
-      password: "",
+      code: "",
     },
   });
 
   const signInMutation = useMutation({
-    mutationKey: [
-      "signin",
-      form.getValues("userId"),
-      form.getValues("password"),
-    ],
+    mutationKey: ["signin", "student", form.getValues("code")],
     mutationFn: userSignIn,
     onSuccess: async (result) => {
       form.clearErrors("signin");
       await login(result);
     },
     onError: (error) => {
-      form.setValue("password", "");
+      form.setValue("code", "");
       setError(error.message);
     },
     retry: false,
@@ -50,20 +45,14 @@ export function LoginForm({ className, ...props }) {
 
   const onSubmit = (data) => {
     setError("");
-    signInMutation.mutate(data);
+    signInMutation.mutate({ userId: data.code, password: data.code });
   };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-2">
-          <img src="logo.png" alt="또박한글" className=" max-w-96" />
-          {/* <div className="text-sm text-center">
-              Don&apos;t have an account?{" "}
-              <a href="#" className="underline underline-offset-4">
-                Sign up
-              </a>
-            </div> */}
+          <img src="/logo.png" alt="또박한글" className=" max-w-96" />
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -71,43 +60,20 @@ export function LoginForm({ className, ...props }) {
               <div className="grid gap-3">
                 <FormField
                   control={form.control}
-                  rules={{ required: "아이디를 입력하세요." }}
-                  name="userId"
+                  rules={{ required: "학습 코드를 입력하세요." }}
+                  name="code"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>아이디</FormLabel>
+                      <FormLabel>학습 코드 입력</FormLabel>
                       <FormControl>
                         <Input
-                          id="userId"
+                          id="code"
                           type="text"
-                          placeholder="아이디를 입력하세요."
+                          placeholder="학습 코드를 입력하세요."
                           {...field}
                         />
                       </FormControl>
-                      <FormMessage>{form?.errors?.userId?.message}</FormMessage>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid gap-3">
-                <FormField
-                  control={form.control}
-                  rules={{ required: "비밀번호를 입력하세요." }}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>비밀번호</FormLabel>
-                      <FormControl>
-                        <Input
-                          id="password"
-                          type="password"
-                          placeholder="비밀번호를 입력하세요."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage>
-                        {form?.errors?.password?.message}
-                      </FormMessage>
+                      <FormMessage>{form?.errors?.code?.message}</FormMessage>
                     </FormItem>
                   )}
                 />
@@ -119,20 +85,15 @@ export function LoginForm({ className, ...props }) {
                 </Alert>
               )}
               <Button type="submit" className="w-full">
-                로그인
+                학습하기
               </Button>
             </div>
           </form>
         </Form>
         <div className="relative text-sm text-center after:border-border after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t"></div>
-        <div className="grid gap-4">
-          <Button variant="outline" type="button" className="w-full">
-            회원가입
-          </Button>
-        </div>
       </div>
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        선생님 계정만 가입이 가능합니다.
+        선생님이 알려준 학습 코드를 입력하고 학습을 시작하세요.
       </div>
     </div>
   );

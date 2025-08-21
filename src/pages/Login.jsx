@@ -1,9 +1,11 @@
-import { LoginForm } from "@/components/Login";
+import { LoginForm } from "@/components/LoginForm";
+import { StudentForm } from "@/components/StudentForm";
 
-export default function LoginPage() {
+export default function LoginPage({ target }) {
   return (
     <div className="grid min-h-screen bg-white place-items-center">
-      <LoginForm />
+      {target === "teacher" && <LoginForm />}
+      {target === "student" && <StudentForm />}
     </div>
   );
 }
