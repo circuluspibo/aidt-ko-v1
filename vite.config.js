@@ -12,28 +12,23 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: [
-        "favicon.ico",
-        "apple-touch-icon.png",
-        "android-chrome-192x192.png",
-        "android-chrome-512x512.png",
-      ],
+      includeAssets: ["favicon.ico", "180.png", "192.png", "512.png"],
       manifest: {
-        name: "한글나라",
-        short_name: "한글나라",
-        description: "한글나라 특수교육용 한글학습",
+        name: "또박한글",
+        short_name: "또박한글",
+        description: "또박한글 특수교육용 한글학습",
         start_url: "/",
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#317EFB",
         icons: [
           {
-            src: "android-chrome-192x192.png",
+            src: "192.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "android-chrome-512x512.png",
+            src: "512.png",
             sizes: "512x512",
             type: "image/png",
           },
