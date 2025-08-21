@@ -1,7 +1,7 @@
 export const fetchLearningDataByTarget = async (type) => {
   try {
     const response = await fetch(
-      `http://192.168.0.103:59421/v1/content?type=${type}`
+      `http://localhost:59421/v1/content?type=${type}`
     );
 
     if (!response.ok) {
