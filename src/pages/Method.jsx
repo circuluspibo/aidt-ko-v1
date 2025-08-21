@@ -67,8 +67,8 @@ function Method() {
             {
               name: "read",
               icon: <img src={read} alt="read" className="aspect-square" />,
-              title: "보기",
-              description: ["글자를 보고 찾아보기", ""],
+              title: "읽기",
+              description: ["글자를 보고 읽기", ""],
             },
             {
               name: "listen",
