@@ -50,6 +50,8 @@ export function StudentManagement() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isIEPOpen, setIsIEPOpen] = useState(false);
 
+  console.log(students);
+  console.log(mockLearningOverview);
   const gradeColors = {
     우수: "bg-success text-white",
     보통: "bg-warning text-white",

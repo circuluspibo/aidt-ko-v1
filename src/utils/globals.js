@@ -72,3 +72,9 @@ export const JOSA = () => {
     },
   };
 };
+
+export const getPrevPath = (pathname, prev = -1) => {
+  const segments = pathname.split("/").filter(Boolean);
+  const parentSegments = segments.slice(0, prev);
+  return "/" + parentSegments.join("/");
+};

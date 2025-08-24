@@ -85,8 +85,12 @@ export const patch = async (route, data, headers = {}) => {
 
 export const get = async (route, params, headers = {}, signal = false) => {
   try {
+    const url = `${API_URL()}/${route}?${
+      params ? encodeGetParams(params) : ""
+    }`;
+    console.log(url);
     const res = await fetch(
-      `${API_URL()}/${route}?${params ? encodeGetParams(params) : ""}`,
+      url,
       signal
         ? {
             method: "GET",

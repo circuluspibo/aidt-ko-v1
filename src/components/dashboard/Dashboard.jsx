@@ -25,7 +25,7 @@ import { mockLearningOverview } from "./mock-learning-stats";
 
 export function Dashboard({ onNavigate }) {
   const overview = mockLearningOverview;
-
+  console.log(overview);
   const summaryData = [
     {
       title: "활동 학생",

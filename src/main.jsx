@@ -34,7 +34,6 @@ import CharacterCurriculumManagement from "./components/dashboard/CharacterCurri
 import LoginPage from "./pages/Login";
 import { getUserData } from "./api";
 import AuthLayout from "./layouts/AuthLayout";
-import TeacherLogin from "./pages/Login";
 
 dayjs.locale("ko");
 dayjs.extend(objectSupport);
@@ -73,8 +72,8 @@ const router = createBrowserRouter(
         <Route index element={<Character />} />
         <Route path=":character" element={<ProgressLayout />}>
           <Route index element={<Target />} />
-          <Route path=":target" element={<Method />} />
-          <Route path=":target/:method" element={<Learn />} />
+          <Route path=":chapter" element={<Method />} />
+          <Route path=":chapter/:method" element={<Learn />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
