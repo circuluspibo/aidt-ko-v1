@@ -5,24 +5,35 @@ import { Camera } from "@mediapipe/camera_utils";
 import { toast } from "sonner";
 import { Toast } from "@/components/Toast";
 import { METHODS } from "@/utils/globals";
-import { useParams, useNavigate, useLocation } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { useSessionStore } from "./useSessionStore";
+import useContentQuery from "./useContentQuery";
 
-const useLearningSession = (learningDataForTarget) => {
-  const { character, target, method } = useParams();
-  const location = useLocation();
+const useLearningSession = () => {
+  // URL 파라미터 관리
+  const { character, chapter, method } = useParams();
   const navigate = useNavigate();
-  const searchParams = new URLSearchParams(location.search);
-  const paramRepeat = searchParams.get("repeat") || "3,3";
+
+  // 콘텐츠 리스트 상태
+  const [openContentList, setOpenContentList] = useState(false);
+
+  // 데이터 쿼리
+  const {
+    data,
+    isLoading: isDataLoading,
+    isError,
+  } = useContentQuery(character, chapter, method);
+  const learningDataForTarget = data?.contents;
+
   const [repeatSettings] = useState({
-    correct: Number(paramRepeat.split(",")[0]),
-    incorrect: Number(paramRepeat.split(",")[1]),
+    correct: data?.repeat || 1,
+    incorrect: Math.round(data?.repeat * 1.5) || 2,
   });
 
   const { loadProgress, saveProgress, loadStats, saveStats } =
     useSessionStore();
 
-  const saved = loadProgress(target, method);
+  const saved = loadProgress(data?.target, method);
   const [currentItemIndex, setCurrentItemIndex] = useState(saved?.index ?? 0);
   const [currentQuestionNo, setCurrentQuestion] = useState(
     saved?.question ?? 1
@@ -76,6 +87,19 @@ const useLearningSession = (learningDataForTarget) => {
     },
   };
 
+  // 콘텐츠 리스트 핸들러
+  const handleContentListToggle = () => {
+    setOpenContentList(!openContentList);
+  };
+
+  const handleContentListClose = () => {
+    setOpenContentList(false);
+  };
+
+  const handleContentSelect = (index) => {
+    setCurrentItemIndex(index);
+  };
+
   const playFeedbackSound = (isCorrect) => {
     const sound = document.getElementById(
       isCorrect ? "correct-audio" : "wrong-audio"
@@ -86,7 +110,7 @@ const useLearningSession = (learningDataForTarget) => {
 
   const handleNextStep = () => {
     setLoading(true);
-    const { title, description, next } = NEXT_STEP[target];
+    const { title, description, next } = NEXT_STEP[data?.target];
     const sound = document.getElementById("complete-audio");
     sound.currentTime = 0;
     sound.play();
@@ -144,7 +168,7 @@ const useLearningSession = (learningDataForTarget) => {
         ...learningStats.attempts,
         {
           ...data,
-          target,
+          target: data?.target,
           method,
           currentItemIndex,
           currentQuestionNo,
@@ -196,6 +220,7 @@ const useLearningSession = (learningDataForTarget) => {
           duration: 1500,
           onAutoClose: () => {
             setLoading(false);
+            console.log(repeatSettings.incorrect);
             if (currentLearningCount === repeatSettings.incorrect) {
               if (currentQuestionNo < repeatSettings.correct) {
                 setCurrentLearningCount(1);
@@ -214,7 +239,7 @@ const useLearningSession = (learningDataForTarget) => {
     setLearningStats(updatedStats);
     saveStats(updatedStats);
     saveProgress(
-      target,
+      chapter,
       method,
       currentItemIndex,
       item.letter,
@@ -250,7 +275,7 @@ const useLearningSession = (learningDataForTarget) => {
       ).toFixed(0)
     );
     return () => clearInterval(timerRef.current);
-  }, [currentItemIndex, target, learningDataForTarget]);
+  }, [currentItemIndex, data?.target, learningDataForTarget]);
 
   useEffect(() => {
     focusLogRef.current = focusLog;
@@ -349,12 +374,28 @@ const useLearningSession = (learningDataForTarget) => {
   }, []);
 
   return {
+    // URL 파라미터
     character,
+    chapter,
+    method,
+    target: data?.target,
+
+    // 콘텐츠 리스트 관련
+    openContentList,
+    handleContentListToggle,
+    handleContentListClose,
+    handleContentSelect,
+
+    // 데이터 관련
+    data,
+    isDataLoading,
+    isError,
+    learningDataForTarget,
+
+    // 학습 세션 관련
     currentItemIndex,
     currentRepeat: currentQuestionNo,
     repeatSettings,
-    target,
-    method,
     timer,
     tutorMessage,
     progress,

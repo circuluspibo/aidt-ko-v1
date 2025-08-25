@@ -1,10 +1,9 @@
 import { get } from "@/api";
 import { useQuery } from "@tanstack/react-query";
 
-const useContentQuery = (characterId, chapterId) => {
-  console.log(characterId, chapterId, !!(characterId && chapterId));
+const useContentQuery = (characterId, chapterId, method) => {
   const { data, error, isPending, refetch } = useQuery({
-    queryKey: ["learning", "content", characterId, chapterId],
+    queryKey: ["learning", "content", characterId, chapterId, method],
     queryFn: async () => {
       const result = await get(`content`, { characterId, chapterId });
       return result;
@@ -29,7 +28,6 @@ const useContentQuery = (characterId, chapterId) => {
     //   contents: [],
     // },
   });
-  console.log(data);
   return {
     data,
     isPending,

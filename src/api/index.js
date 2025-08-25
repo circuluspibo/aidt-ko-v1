@@ -29,7 +29,7 @@ export const post = async (route, data, headers = {}) => {
   return json;
 };
 
-export const del = async (route, data, headers = {}) => {
+export const del = async (route, data = {}, headers = {}) => {
   try {
     const res = await fetch(`${API_URL()}/${route}`, {
       method: "DELETE",

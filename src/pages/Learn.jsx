@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import LearnByRead from "@/components/LearnByRead";
 import LearnBySpeak from "@/components/LearnBySpeak";
 import LearnByWrite from "@/components/LearnByWrite";
@@ -14,43 +14,40 @@ import useLearningSession from "@/hook/useLearningSession";
 import Stepper from "@/components/ui/stepper";
 import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
 import colors from "tailwindcss/colors";
-import { BlurFade } from "@/components/magicui/blur-fade";
 import LearnByListen from "@/components/LearnByListen";
-import { useState } from "react";
 import TopContentList from "@/features/TopContentList";
-import useContentQuery from "@/hook/useContentQuery";
 import { Loading } from "@/components/Loading";
 
 const Learn = () => {
-  // URL 파라미터는 여기서 한 번만 가져옵니다.
-  const { character, chapter, method } = useParams();
-  const [openContentList, setOpen] = useState(false);
-  // useQuery를 사용하여 target에 맞는 학습 데이터를 가져옵니다.
   const {
+    // URL 파라미터
+    chapter,
+    character,
+    method,
+    target,
+
+    // 콘텐츠 리스트 관련
+    openContentList,
+    handleContentListToggle,
+    handleContentListClose,
+    handleContentSelect,
+
+    // 데이터 관련
     data,
-    isLoading: isDataLoading,
+    isDataLoading,
     isError,
-  } = useContentQuery(character, chapter);
 
-  const {
-    loading,
-    onAnswer,
-    repeatSettings,
-    currentRepeat,
+    // 학습 세션 관련
     currentItemIndex,
-    setCurrentItemIndex,
-    videoRef,
-  } = useLearningSession(data?.contents);
-  // 현재 학습 아이템
-  const item = data?.contents?.[currentItemIndex];
-
-  const handleContent = () => {
-    setOpen(!openContentList);
-  };
+    currentRepeat,
+    repeatSettings,
+    onAnswer,
+    item,
+  } = useLearningSession();
 
   if (isError)
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex justify-center items-center h-full">
         데이터를 불러오는 중 에러가 발생했습니다.
       </div>
     );
@@ -65,24 +62,24 @@ const Learn = () => {
             color={COLORS[method]}
             currentIndex={currentItemIndex}
             data={data?.contents}
-            onSelect={(i) => setCurrentItemIndex(i)}
-            onClose={() => setOpen(false)}
+            onSelect={handleContentSelect}
+            onClose={handleContentListClose}
           />
-          <div className="flex items-center justify-between">
+          <div className="flex justify-between items-center">
             <Breadcrumb>
               <BreadcrumbList className="font-bold text-[2.5rem]">
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/">홈</Link>
+                    <Link to={`/learn/${character}`}>홈</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink
                     asChild
-                    className={`font-extrabold text-${data?.target}`}
+                    className={`font-extrabold text-${target}`}
                   >
-                    <Link to={`/${character}`}>{TARGETS[data?.target]}</Link>
+                    <Link to={`/learn/${character}`}>{TARGETS[target]}</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
@@ -91,7 +88,9 @@ const Learn = () => {
                     asChild
                     className={`font-extrabold text-${COLORS[method]}-500`}
                   >
-                    <Link to={`/${character}/${data?.target}`}>
+                    <Link
+                      to={`/learn/${character}/${chapter}?target=${target}`}
+                    >
                       {METHODS[method]}
                     </Link>
                   </BreadcrumbLink>
@@ -106,7 +105,7 @@ const Learn = () => {
                       <div>
                         <button
                           className="px-1 py-0 font-extrabold bg-transparent btn"
-                          onClick={handleContent}
+                          onClick={handleContentListToggle}
                         >
                           "{item.letter}"
                         </button>
@@ -117,8 +116,8 @@ const Learn = () => {
                 )}
               </BreadcrumbList>
             </Breadcrumb>
-            <div className="flex items-center gap-8">
-              <div className="flex items-center gap-2">
+            <div className="flex gap-8 items-center">
+              <div className="flex gap-2 items-center">
                 <span className="text-sm font-bold">반복</span>
                 <Stepper
                   currentStep={currentRepeat}
@@ -127,7 +126,7 @@ const Learn = () => {
                   style={{ minWidth: `${repeatSettings.correct * 2.5}rem` }}
                 />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex gap-2 items-center">
                 <span className="text-sm font-bold">진행</span>
                 <AnimatedCircularProgressBar
                   className="w-12 h-12"
@@ -148,7 +147,7 @@ const Learn = () => {
                 <LearnByRead
                   {...{
                     item,
-                    target: data?.target,
+                    target,
                     onAnswer,
                     currentRepeat,
                     currentItemIndex,
@@ -160,7 +159,7 @@ const Learn = () => {
                 <LearnByListen
                   {...{
                     item,
-                    target: data?.target,
+                    target,
                     onAnswer,
                     currentRepeat,
                     currentItemIndex,
@@ -172,7 +171,7 @@ const Learn = () => {
                 <LearnBySpeak
                   {...{
                     item,
-                    target: data?.target,
+                    target,
                     onAnswer,
                     currentRepeat,
                     currentItemIndex,
@@ -184,7 +183,7 @@ const Learn = () => {
                 <LearnByWrite
                   {...{
                     item,
-                    target: data?.target,
+                    target,
                     onAnswer,
                     currentRepeat,
                     currentItemIndex,
@@ -194,16 +193,6 @@ const Learn = () => {
               )}
             </>
           )}
-          {loading ||
-            (isDataLoading && (
-              <BlurFade
-                delay={0.15}
-                inView
-                className="fixed inset-0 z-50 w-full h-full"
-              >
-                <div className="w-full h-full rounded-3xl backdrop-blur-sm bg-white/95" />
-              </BlurFade>
-            ))}
           <audio id="correct-audio" src="/sounds/correct.mp3" preload="auto" />
           <audio id="wrong-audio" src="/sounds/wrong.mp3" preload="auto" />
           <audio

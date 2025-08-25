@@ -18,7 +18,6 @@ const LearnBySpeak = ({
   currentItemIndex,
 }) => {
   const [errorMessage, setErrorMessage] = useState("");
-  const [index, setIndex] = useState(0);
   const [manuallyStopped, setManuallyStopped] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -128,9 +127,6 @@ const LearnBySpeak = ({
   }, [currentItemIndex, target]);
 
   useEffect(() => {
-    if (target !== "word") {
-      setIndex(currentRepeat - 1);
-    }
     setErrorMessage("");
     window.SpeechRecognition &&
       window.SpeechRecognition.stop &&
@@ -161,10 +157,17 @@ const LearnBySpeak = ({
             {target !== "letter" && (
               <div className="flex items-center justify-center col-span-2 p-4 font-extrabold text-9xl">
                 {target === "word" ? (
-                  item.image[index]
+                  <img
+                    src={`/images/words/${encodeURI(item.name).replace(
+                      /^%/g,
+                      ""
+                    )}.png`}
+                    alt={item.letter}
+                    className="p-2 aspect-square"
+                  />
                 ) : (
                   <img
-                    src={`/images/${item.letter.charCodeAt(0)}.png`}
+                    src={`/images/hangul/${item.letter.charCodeAt(0)}.png`}
                     alt={item.letter}
                   />
                 )}

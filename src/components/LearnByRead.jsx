@@ -6,16 +6,8 @@ import LetterVowel from "./LetterVowel";
 import Letters from "./Letters";
 import { JOSA } from "@/utils/globals";
 
-const LearnByRead = ({
-  data,
-  item,
-  target,
-  onAnswer,
-  currentRepeat,
-  currentItemIndex,
-}) => {
+const LearnByRead = ({ data, item, target, onAnswer, currentItemIndex }) => {
   const [options, setOptions] = useState([]);
-  const [index, setIndex] = useState(0);
   let startTime = null;
 
   const generateChoices = () => {
@@ -47,12 +39,6 @@ const LearnByRead = ({
   };
 
   useEffect(() => {
-    if (target !== "word") {
-      setIndex(currentRepeat - 1);
-    }
-  }, [currentRepeat]);
-
-  useEffect(() => {
     startTime = new Date().valueOf();
     generateChoices();
   }, [currentItemIndex, target]);
@@ -69,10 +55,17 @@ const LearnByRead = ({
             {target !== "letter" && (
               <div className="flex items-center justify-center col-span-2 p-4 font-extrabold text-9xl">
                 {target === "word" ? (
-                  item.image[index]
+                  <img
+                    src={`/images/words/${encodeURI(item.name).replace(
+                      /^%/g,
+                      ""
+                    )}.png`}
+                    alt={item.letter}
+                    className="p-2 aspect-square"
+                  />
                 ) : (
                   <img
-                    src={`/images/${item.letter.charCodeAt(0)}.png`}
+                    src={`/images/hangul/${item.letter.charCodeAt(0)}.png`}
                     alt={item.letter}
                   />
                 )}

@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
@@ -10,7 +9,6 @@ let startTime = null;
 const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [hint, setHint] = useState(true);
-  const [index, setIndex] = useState(0);
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const parentRef = useRef(null);
@@ -133,9 +131,6 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
 
   useEffect(() => {
     startTime = new Date().valueOf();
-    if (target !== "word") {
-      setIndex(currentRepeat - 1);
-    }
   }, [currentRepeat]);
 
   useEffect(() => {
@@ -157,7 +152,14 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
           {target !== "letter" && (
             <div className="flex items-center justify-center col-span-2 p-4 font-extrabold text-9xl">
               {target === "word" ? (
-                item.image[index]
+                <img
+                  src={`/images/words/${encodeURI(item.name).replace(
+                    /^%/g,
+                    ""
+                  )}.png`}
+                  alt={item.letter}
+                  className="p-2 aspect-square"
+                />
               ) : (
                 <img
                   src={`/images/write/${item.letter.charCodeAt(0)}.png`}
