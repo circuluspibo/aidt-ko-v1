@@ -79,21 +79,23 @@ export function NavigationProvider({ children }) {
       const token = Symbol(tokenKey);
       inflight.current.char[tokenKey] = token;
       // 엔드포인트는 실제 백엔드 규칙에 맞게 조정하세요
-      const data = await get(`character/${characterId}`, null, {}, signal);
+      if (characterId) {
+        const data = await get(`character/${characterId}`, null, {}, signal);
 
-      if (inflight.current.char[tokenKey] !== token) {
-        return (charsRef.current[groupId] || {})[characterId] ?? null;
-      }
+        if (inflight.current.char[tokenKey] !== token) {
+          return (charsRef.current[groupId] || {})[characterId] ?? null;
+        }
 
-      if (data?.result) {
-        // 캐시 저장
-        const nextGroupChars = {
-          ...(charsRef.current[groupId] || {}),
-          [characterId]: data.data,
-        };
-        charsRef.current[groupId] = nextGroupChars;
-        setCharsSnap((prev) => ({ ...prev, [groupId]: nextGroupChars }));
-        return data.data;
+        if (data?.result) {
+          // 캐시 저장
+          const nextGroupChars = {
+            ...(charsRef.current[groupId] || {}),
+            [characterId]: data.data,
+          };
+          charsRef.current[groupId] = nextGroupChars;
+          setCharsSnap((prev) => ({ ...prev, [groupId]: nextGroupChars }));
+          return data.data;
+        }
       }
     },
     []

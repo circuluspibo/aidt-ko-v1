@@ -19,19 +19,20 @@ export function CharacterManagement() {
   const [addDialogOpen, setAddDialog] = useState(false);
   const [delDialogOpen, setDeleteDialog] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState(null);
+  const [selectedCharacterToDelete, setSelectedCharacterToDelete] =
+    useState(null);
 
   const handleCreateCharacter = () => {
     setEditingCharacter(null);
     setAddDialog(true);
   };
 
-  const handleDeleteGroup = () => {
-    setDeleteDialog(true);
-  };
+  // 삭제 다이얼로그 오픈은 카드의 삭제 버튼에서 직접 처리합니다.
 
   const handleCloseDialog = () => {
     setAddDialog(false);
     setDeleteDialog(false);
+    setSelectedCharacterToDelete(null);
     refetch();
   };
 
@@ -54,11 +55,11 @@ export function CharacterManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex justify-between items-center">
+        <div className="flex gap-4 items-center">
           {groupId && (
             <Button variant="outline" size="sm" onClick={handleBackToGroups}>
-              <ArrowLeft className="w-4 h-4 mr-1" />
+              <ArrowLeft className="mr-1 w-4 h-4" />
               그룹 목록으로
             </Button>
           )}
@@ -93,7 +94,7 @@ export function CharacterManagement() {
                 className="transition-shadow hover:shadow-md"
               >
                 <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex gap-3 items-center">
                     <p className="mx-auto text-5xl rounded-full">
                       {String.fromCodePoint(character.icon)}
                     </p>
@@ -114,7 +115,7 @@ export function CharacterManagement() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex gap-2 items-center text-sm">
                       <BookOpen className="w-4 h-4 text-muted-foreground" />
                       <span>
                         {character?.curriculum?.length || 0}개 챕터 배정됨
@@ -146,19 +147,29 @@ export function CharacterManagement() {
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <CharacterDeleteDialog
-                      open={delDialogOpen}
-                      character={character}
-                      onOpenChange={setDeleteDialog}
-                      onDelete={handleDeleteGroup}
-                      onClose={handleCloseDialog}
-                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedCharacterToDelete(character);
+                        setDeleteDialog(true);
+                      }}
+                    >
+                      삭제
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
             );
           })}
       </div>
+
+      <CharacterDeleteDialog
+        open={delDialogOpen}
+        character={selectedCharacterToDelete}
+        onOpenChange={setDeleteDialog}
+        onClose={handleCloseDialog}
+      />
 
       {data?.total === 0 && (
         <Card>
@@ -169,7 +180,7 @@ export function CharacterManagement() {
                 : "등록된 캐릭터가 없습니다."}
             </p>
             <Button className="mt-4" onClick={handleCreateCharacter}>
-              <Plus className="w-4 h-4 mr-2" />첫 번째 캐릭터 추가
+              <Plus className="mr-2 w-4 h-4" />첫 번째 캐릭터 추가
             </Button>
           </CardContent>
         </Card>

@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import {
   ArrowLeft,
   X,
@@ -21,7 +20,7 @@ import { useDraggableInPortal } from "@/hook/useDraggableInPortal";
 import { useNavigation } from "@/context/NavigationContext";
 import { useEffect, useRef, useState } from "react";
 import reorder from "@/utils/reorder";
-import { get, put } from "@/api";
+import { del, get, put } from "@/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { Label } from "../ui/label";
@@ -68,6 +67,7 @@ const CharacterCurriculumManagement = () => {
         return response.data;
       }
     },
+    enabled: !!characterId,
   });
   const {
     mutate: upsertCurriculum,
@@ -91,22 +91,31 @@ const CharacterCurriculumManagement = () => {
       return res.result;
     },
     onSettled: (data, error) => {
-      console.log("data", data);
-      console.log("error", error);
+      console.log("upsert onSettled", data, error);
+    },
+  });
+  const { mutate: deleteCurriculum } = useMutation({
+    mutationKey: [
+      "learning",
+      "groups",
+      "character",
+      "curriculum",
+      "delete",
+      characterId,
+    ],
+    mutationFn: async (id) => {
+      const res = await del(`curriculum/${id}`);
+      if (res?.error) throw Error(res.error);
+      return res.result;
+    },
+    onSettled: (data, error) => {
+      console.log("delete onSettled", data, error);
     },
   });
   const renderInPortal = useDraggableInPortal();
   const [selectedOrder, setSelectedOrder] = useState([]);
   const [chapterConfigs, setChapterConfigs] = useState({});
   const saveTimer = useRef(null);
-
-  const scheduleSave = (nextConfigs) => {
-    // 디바운스하여 과도한 호출 방지
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      upsertCurriculum(buildPayload(nextConfigs));
-    }, 400);
-  };
 
   useEffect(
     () => () => saveTimer.current && clearTimeout(saveTimer.current),
@@ -134,6 +143,7 @@ const CharacterCurriculumManagement = () => {
       const index = selectedOrder.findIndex((item) => item.id === id);
       if (index > -1) config.index = index;
     });
+    console.log(nextConfigs);
     return nextConfigs;
   };
 
@@ -174,14 +184,19 @@ const CharacterCurriculumManagement = () => {
   };
 
   const onRemove = (id) => {
+    console.log(selectedOrder, id);
     const removeIndex = selectedOrder.findIndex((item) => item.id === id);
     if (removeIndex < 0) return;
+
     const newSelectedOrder = [...selectedOrder];
+    newSelectedOrder.splice(removeIndex, 1);
     setSelectedOrder(newSelectedOrder);
+    if (id.indexOf("chapter") < 0) {
+      deleteCurriculum(id);
+    }
   };
 
   const getChapterConfig = (chapterId) => {
-    console.log(chapterConfigs, chapterId);
     return (
       chapterConfigs[chapterId] || {
         target: "vowel",
@@ -198,7 +213,7 @@ const CharacterCurriculumManagement = () => {
       [chapterId]: {
         ...prev[chapterId],
         ...config,
-        level: config?.target === "word" ? 1 : 0,
+        level: config?.target === "word" ? 1 : config?.level || 0,
       },
     }));
   };
@@ -223,22 +238,22 @@ const CharacterCurriculumManagement = () => {
     }
   }, [selectedCharacter]);
 
-  useEffect(() => {
-    scheduleSave(chapterConfigs);
-  }, [selectedOrder, chapterConfigs]);
+  // useEffect(() => {
+  //   scheduleSave(chapterConfigs);
+  // }, [selectedOrder, chapterConfigs]);
 
   return (
     <>
       {selectedCharacter && !isPending && !error && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex justify-between items-center">
+            <div className="flex gap-4 items-center">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleBackToCharacterList}
               >
-                <ArrowLeft className="w-4 h-4 mr-1" />
+                <ArrowLeft className="mr-1 w-4 h-4" />
                 캐릭터 목록으로
               </Button>
               <div>
@@ -256,7 +271,7 @@ const CharacterCurriculumManagement = () => {
           {/* 캐릭터 정보 카드 */}
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-4">
+              <div className="flex gap-4 items-center">
                 <p className="mr-2 text-6xl rounded-full">
                   {String.fromCodePoint(selectedCharacter.icon)}
                 </p>
@@ -265,23 +280,23 @@ const CharacterCurriculumManagement = () => {
                   <p className="mt-1 text-muted-foreground">
                     {selectedCharacter.memo} 캐릭터
                   </p>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
+                  <div className="flex gap-4 items-center mt-2 text-sm text-muted-foreground">
+                    <div className="flex gap-1 items-center">
                       <Users className="w-4 h-4" />
                       <span>{currentGroup}</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex gap-1 items-center">
                       <BookOpen className="w-4 h-4" />
-                      <span>{selectedCharacter.curriculum.length}개 챕터</span>
+                      <span>{selectedOrder.length}개 챕터</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex gap-1 items-center">
                       <Calendar className="w-4 h-4" />
                       <span>
                         등록일:{" "}
                         {dayjs(selectedCharacter.createdAt).format("LLL")}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex gap-1 items-center">
                       <Calendar className="w-4 h-4" />
                       <span>
                         수정일:{" "}
@@ -298,8 +313,8 @@ const CharacterCurriculumManagement = () => {
           {/* 현재 커리큘럼 */}
           <DragDropContext onDragEnd={onDragEnd}>
             <div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 mb-4">
+              <div className="flex justify-between items-center">
+                <div className="flex gap-2 items-center mb-4">
                   <GripVertical className="w-4 h-4 text-muted-foreground" />
                   <h3 className="font-medium">현재 커리큘럼</h3>
                   <Badge variant="secondary" className="text-xs">
@@ -346,7 +361,7 @@ const CharacterCurriculumManagement = () => {
                     }`}
                   >
                     {selectedOrder.length === 0 && (
-                      <div className="flex items-center justify-center w-full text-muted-foreground">
+                      <div className="flex justify-center items-center w-full text-muted-foreground">
                         위의 챕터를 드래그하여 커리큘럼에 추가하세요.
                       </div>
                     )}
@@ -369,9 +384,9 @@ const CharacterCurriculumManagement = () => {
                           >
                             <Card className="relative w-64 transition-shadow cursor-grab hover:shadow-md">
                               <CardHeader className="p-4">
-                                <div className="flex items-start justify-between gap-2">
+                                <div className="flex gap-2 justify-between items-start">
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-2">
+                                    <div className="flex gap-2 items-center mb-2">
                                       <Badge
                                         variant="outline"
                                         className="font-mono text-xs"
@@ -387,7 +402,7 @@ const CharacterCurriculumManagement = () => {
                                       e.stopPropagation();
                                       onRemove(curriculumChapter.id);
                                     }}
-                                    className="w-6 h-6 p-0 text-muted-foreground hover:text-destructive"
+                                    className="p-0 w-6 h-6 text-muted-foreground hover:text-destructive"
                                   >
                                     <X className="w-3 h-3" />
                                   </Button>
@@ -478,7 +493,7 @@ const CharacterCurriculumManagement = () => {
                                         type="number"
                                         min={1}
                                         max={10}
-                                        value={
+                                        defaultValue={
                                           getChapterConfig(curriculumChapter.id)
                                             .repeat
                                         }
@@ -503,7 +518,7 @@ const CharacterCurriculumManagement = () => {
                                         </Label>
                                         <Select
                                           className="w-full h-8 text-xs"
-                                          value={
+                                          defaultValue={
                                             getChapterConfig(
                                               curriculumChapter.id
                                             )?.level || 1

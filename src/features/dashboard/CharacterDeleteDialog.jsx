@@ -13,14 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { useMutation } from "@tanstack/react-query";
 import { AlertCircleIcon, CheckCircle2Icon, Trash2 } from "lucide-react";
-import { useState } from "react";
-const CharacterDeleteDialog = ({
-  open,
-  character,
-  onOpenChange,
-  onDelete,
-  onClose,
-}) => {
+import { useEffect, useState } from "react";
+const CharacterDeleteDialog = ({ open, character, onOpenChange, onClose }) => {
   const [type, setType] = useState(null);
   const { mutate: deleteCharacter } = useMutation({
     mutationKey: ["learning", "group", "character", "delete", character?._id],
@@ -35,18 +29,18 @@ const CharacterDeleteDialog = ({
       } else {
         setType("success");
         setTimeout(() => {
-          onDelete();
+          onClose();
         }, 1500);
       }
     },
   });
+
+  useEffect(() => {
+    setType(null);
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" onClick={onDelete}>
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>캐릭터 삭제</DialogTitle>
@@ -80,9 +74,16 @@ const CharacterDeleteDialog = ({
               취소
             </Button>
           </DialogClose>
-          <Button variant="destructive" onClick={deleteCharacter}>
-            삭제
-          </Button>
+          {(type === null || type === "destructive") && (
+            <Button variant="destructive" onClick={deleteCharacter}>
+              삭제
+            </Button>
+          )}
+          {type === "success" && (
+            <Button variant="outline" onClick={onClose}>
+              닫기
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
