@@ -25,7 +25,6 @@ import { mockLearningOverview } from "./mock-learning-stats";
 
 export function Dashboard({ onNavigate }) {
   const overview = mockLearningOverview;
-  console.log(overview);
   const summaryData = [
     {
       title: "활동 학생",
@@ -131,7 +130,7 @@ export function Dashboard({ onNavigate }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="mb-2 text-3xl font-bold">한글 학습 관리 시스템</h1>
           <p className="text-muted-foreground">
@@ -185,7 +184,7 @@ export function Dashboard({ onNavigate }) {
               className="transition-shadow cursor-pointer hover:shadow-md"
               onClick={item.action}
             >
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardHeader className="flex flex-row justify-between items-center pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium">
                   {item.title}
                 </CardTitle>
@@ -322,7 +321,7 @@ export function Dashboard({ onNavigate }) {
       {/* 주요 통계 요약 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex gap-2 items-center">
             <Brain className="w-5 h-5" />
             주요 학습 통계 요약
           </CardTitle>

@@ -226,7 +226,7 @@ const CharacterCurriculumManagement = () => {
 
   useEffect(() => {
     if (selectedCharacter && selectedCharacter?.curriculum) {
-      const curriculum = selectedCharacter.curriculum || [];
+      const curriculum = selectedCharacter?.curriculum || [];
       const newConfigs = curriculum.reduce((ac, cu) => {
         const { chapterId, index, level, method, repeat, target } = cu;
         return { ...ac, [chapterId]: { index, level, method, repeat, target } };
@@ -261,10 +261,10 @@ const CharacterCurriculumManagement = () => {
               </Button>
               <div>
                 <h2 className="text-2xl font-bold">
-                  {selectedCharacter.nickname} - 커리큘럼 관리
+                  {selectedCharacter?.nickname} - 커리큘럼 관리
                 </h2>
                 <p className="mt-1 text-muted-foreground">
-                  {selectedCharacter.nickname} 캐릭터의 학습 커리큘럼을
+                  {selectedCharacter?.nickname} 캐릭터의 학습 커리큘럼을
                   관리합니다.
                 </p>
               </div>
@@ -276,12 +276,14 @@ const CharacterCurriculumManagement = () => {
             <CardHeader>
               <div className="flex gap-4 items-center">
                 <p className="mr-2 text-6xl rounded-full">
-                  {String.fromCodePoint(selectedCharacter.icon)}
+                  {selectedCharacter.icon && !isNaN(selectedCharacter.icon)
+                    ? String.fromCodePoint(selectedCharacter.icon)
+                    : "👤"}
                 </p>
                 <div>
-                  <CardTitle>{selectedCharacter.nickname}</CardTitle>
+                  <CardTitle>{selectedCharacter?.nickname}</CardTitle>
                   <p className="mt-1 text-muted-foreground">
-                    {selectedCharacter.memo} 캐릭터
+                    {selectedCharacter?.memo} 캐릭터
                   </p>
                   <div className="flex gap-4 items-center mt-2 text-sm text-muted-foreground">
                     <div className="flex gap-1 items-center">
@@ -296,14 +298,14 @@ const CharacterCurriculumManagement = () => {
                       <Calendar className="w-4 h-4" />
                       <span>
                         등록일:{" "}
-                        {dayjs(selectedCharacter.createdAt).format("LLL")}
+                        {dayjs(selectedCharacter?.createdAt).format("LLL")}
                       </span>
                     </div>
                     <div className="flex gap-1 items-center">
                       <Calendar className="w-4 h-4" />
                       <span>
                         수정일:{" "}
-                        {dayjs(selectedCharacter.updatedAt).format("LLL")}
+                        {dayjs(selectedCharacter?.updatedAt).format("LLL")}
                       </span>
                     </div>
                   </div>

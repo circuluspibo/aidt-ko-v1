@@ -13,6 +13,7 @@ export const AuthProvider = ({ children, user: userData }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isInitialized = useRef(false);
+  const hasLoggedOut = useRef(false);
 
   const login = async ({ token: t, ...data }) => {
     console.log("로그인 처리:", {
@@ -22,6 +23,7 @@ export const AuthProvider = ({ children, user: userData }) => {
     setUser({ ...data });
     setToken(t);
     isInitialized.current = true;
+    hasLoggedOut.current = false;
 
     const { role } = data;
     if (role === "student") {
@@ -38,6 +40,11 @@ export const AuthProvider = ({ children, user: userData }) => {
     setUser(null);
     setToken(null);
     isInitialized.current = false;
+    hasLoggedOut.current = true;
+
+    // 학습 세션 데이터만 정리
+    localStorage.removeItem("hangul_learning_session");
+
     navigate("/", { replace: true });
   };
 
@@ -48,7 +55,7 @@ export const AuthProvider = ({ children, user: userData }) => {
 
   // 1. 서버에서 받은 사용자 데이터로 초기화
   useEffect(() => {
-    if (!userData || isInitialized.current) {
+    if (!userData || isInitialized.current || hasLoggedOut.current) {
       return;
     }
 
