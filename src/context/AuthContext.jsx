@@ -3,7 +3,7 @@
 // src/context/AuthContext.jsx
 import { useLocalStorage } from "@/hook/useLocalStorage";
 import { createContext, useContext, useEffect, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const AuthContext = createContext(null);
 
@@ -11,8 +11,8 @@ export const AuthProvider = ({ children, user: userData }) => {
   const [user, setUser] = useLocalStorage("user", null);
   const [token, setToken] = useLocalStorage("token", null);
   const navigate = useNavigate();
+  const location = useLocation();
   const isInitialized = useRef(false);
-  // const { setData } = useNav();
 
   const login = async ({ token: t, ...data }) => {
     console.log("로그인 처리:", {
@@ -21,7 +21,8 @@ export const AuthProvider = ({ children, user: userData }) => {
     });
     setUser({ ...data });
     setToken(t);
-    isInitialized.current = true; // 로그인 시 초기화 플래그 설정
+    isInitialized.current = true;
+
     const { role } = data;
     if (role === "student") {
       const targetPath = `/learn/${data.characterId}`;
@@ -36,7 +37,7 @@ export const AuthProvider = ({ children, user: userData }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    isInitialized.current = false; // 로그아웃 시 초기화 플래그 리셋
+    isInitialized.current = false;
     navigate("/", { replace: true });
   };
 
@@ -45,17 +46,16 @@ export const AuthProvider = ({ children, user: userData }) => {
   const getUserId = () => user?.userId || null;
   const getName = () => user?.name || null;
 
+  // 1. 서버에서 받은 사용자 데이터로 초기화
   useEffect(() => {
-    // userData가 없거나 이미 초기화된 경우 무시
     if (!userData || isInitialized.current) {
       return;
     }
 
     const { token: newToken, ...rest } = userData;
 
-    // userData가 유효한 경우 localStorage에 저장
     if (newToken && rest.role) {
-      console.log("사용자 데이터 초기화:", {
+      console.log("서버 데이터로 초기화:", {
         role: rest.role,
         characterId: rest.characterId,
       });
@@ -63,8 +63,8 @@ export const AuthProvider = ({ children, user: userData }) => {
       setUser(rest);
       isInitialized.current = true;
 
-      // 현재 경로가 로그인 페이지나 홈페이지인 경우 역할에 맞는 페이지로 리다이렉트
-      const currentPath = window.location.pathname;
+      // 로그인 페이지나 홈페이지에 있다면 적절한 페이지로 리다이렉트
+      const currentPath = location.pathname;
       if (
         ["/", "/login", "/login/student", "/login/teacher"].includes(
           currentPath
@@ -72,36 +72,43 @@ export const AuthProvider = ({ children, user: userData }) => {
       ) {
         const targetPath =
           rest.role === "student" ? `/learn/${rest.characterId}` : "/manage";
-        console.log("리다이렉트:", { from: currentPath, to: targetPath });
+        console.log("초기화 후 리다이렉트:", {
+          from: currentPath,
+          to: targetPath,
+        });
         navigate(targetPath, { replace: true });
       }
     }
   }, [userData, navigate, setToken, setUser]);
 
+  // 2. 로그인된 사용자가 로그인 페이지나 홈페이지에 접근하는 것을 방지
   useEffect(() => {
-    // userData가 null이고 현재 사용자가 로그인된 상태인 경우 로그아웃 처리
-    // 단, 이미 초기화된 경우에는 처리하지 않음
-    // 또한 로그인 직후에는 처리하지 않음 (userData가 일시적으로 null이 될 수 있음)
-    if (!userData && user && !isInitialized.current) {
-      console.log("로그아웃 처리:", {
-        userData,
-        user,
-        isInitialized: isInitialized.current,
+    if (!user) {
+      return;
+    }
+
+    const currentPath = location.pathname;
+    const publicPaths = ["/", "/login", "/login/student", "/login/teacher"];
+
+    if (publicPaths.includes(currentPath)) {
+      console.log("로그인된 사용자가 공개 페이지 접근, 리다이렉트:", {
+        role: user.role,
+        currentPath,
       });
 
-      // 로그인 직후인지 확인 (localStorage에 유효한 토큰이 있는지)
-      const storedToken = localStorage.getItem("token");
-      if (storedToken) {
-        console.log("토큰이 존재하므로 로그아웃 처리하지 않음");
-        return;
-      }
+      const targetPath =
+        user.role === "student" ? `/learn/${user.characterId}` : "/manage";
+      navigate(targetPath, { replace: true });
+    }
+  }, [user, location.pathname, navigate]);
 
+  // 3. 서버에서 사용자 데이터가 null이고 로컬에 사용자 데이터가 있는 경우 (토큰 만료 등)
+  useEffect(() => {
+    if (userData === null && user && !isInitialized.current) {
+      console.log("서버에서 사용자 데이터가 null, 로그아웃 처리");
       setUser(null);
       setToken(null);
-      const currentPath = window.location.pathname;
-      if (currentPath !== "/" && currentPath !== "/login") {
-        navigate("/", { replace: true });
-      }
+      navigate("/", { replace: true });
     }
   }, [userData, user, navigate, setUser, setToken]);
 
@@ -118,6 +125,7 @@ export const AuthProvider = ({ children, user: userData }) => {
     }),
     [user, token]
   );
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

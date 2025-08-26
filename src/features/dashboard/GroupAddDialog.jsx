@@ -25,8 +25,10 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/context/AuthContext";
 
 const GroupAddDialog = ({ open, group, onOpenChange, onAction, onClose }) => {
+  const { getId } = useAuth();
   const [upsertError, setError] = useState(false);
   const form = useForm({
     mode: "onBlur",
@@ -58,7 +60,7 @@ const GroupAddDialog = ({ open, group, onOpenChange, onAction, onClose }) => {
   });
 
   const onSubmit = (data) => {
-    upsertGroup(data);
+    upsertGroup({ ...data, teacherId: getId() });
   };
 
   useEffect(() => {
@@ -66,7 +68,7 @@ const GroupAddDialog = ({ open, group, onOpenChange, onAction, onClose }) => {
     form.reset({
       name: group?.name || "",
       description: group?.description || "",
-      status: group?.status || null,
+      status: group?.status || 1,
     });
   }, [open, group]);
 
@@ -165,7 +167,7 @@ const GroupAddDialog = ({ open, group, onOpenChange, onAction, onClose }) => {
                     control={form.control}
                     name="status"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between w-full space-y-2">
+                      <FormItem className="flex justify-between items-center space-y-2 w-full">
                         <FormLabel>{field.value ? "활성" : "비활성"}</FormLabel>
                         <FormControl>
                           <div className="block">

@@ -23,6 +23,9 @@ const useGroupsQuery = ({ page: p, q, teacherId }) => {
         return { groups: list, total: response.data.total };
       }
     },
+    enabled: !!teacherId,
+    refetchOnMount: true, // 컴포넌트가 마운트될 때마다 refetch
+    staleTime: 0, // 데이터를 항상 stale로 간주하여 refetch 허용
   });
   return {
     data,

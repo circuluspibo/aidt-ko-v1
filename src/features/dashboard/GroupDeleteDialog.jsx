@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { useMutation } from "@tanstack/react-query";
 import { AlertCircleIcon, CheckCircle2Icon, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 const GroupDeleteDialog = ({
   open,
   group,
@@ -40,6 +40,11 @@ const GroupDeleteDialog = ({
       }
     },
   });
+
+  useEffect(() => {
+    setType(null);
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -81,9 +86,16 @@ const GroupDeleteDialog = ({
               취소
             </Button>
           </DialogClose>
-          <Button variant="destructive" onClick={deleteGroup}>
-            삭제
-          </Button>
+          {(type === null || type === "destructive") && (
+            <Button variant="destructive" onClick={deleteGroup}>
+              삭제
+            </Button>
+          )}
+          {type === "success" && (
+            <Button variant="outline" onClick={onClose}>
+              닫기
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

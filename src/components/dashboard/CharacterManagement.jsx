@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 
-import { Plus, Edit, ArrowLeft, ChevronRight, BookOpen } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  ArrowLeft,
+  ChevronRight,
+  BookOpen,
+  Trash2,
+} from "lucide-react";
 import { useNavigation } from "@/context/NavigationContext";
 import CharacterAddDialog from "@/features/dashboard/CharacterAddDialog";
 import useCharactersQuery from "@/hook/useCharactersQuery";
@@ -15,6 +22,15 @@ export function CharacterManagement() {
   const groupId = current?.groupId || "";
   const currentGroup = groupsById[groupId]?.name || "";
   const { data, refetch, isError, isPending } = useCharactersQuery({ groupId });
+
+  // 데이터가 없을 때 기본값 설정
+  const characters = data?.characters || [];
+  const total = data?.total || 0;
+
+  // 페이지 진입 시 데이터 refetch
+  useEffect(() => {
+    refetch();
+  }, [groupId, refetch]);
 
   const [addDialogOpen, setAddDialog] = useState(false);
   const [delDialogOpen, setDeleteDialog] = useState(false);
@@ -28,7 +44,6 @@ export function CharacterManagement() {
   };
 
   // 삭제 다이얼로그 오픈은 카드의 삭제 버튼에서 직접 처리합니다.
-
   const handleCloseDialog = () => {
     setAddDialog(false);
     setDeleteDialog(false);
@@ -83,11 +98,28 @@ export function CharacterManagement() {
           onClose={handleCloseDialog}
         />
       </div>
+
+      {/* 로딩 상태 */}
+      {isPending && (
+        <div className="py-8 text-center">
+          <p>캐릭터 목록을 불러오는 중...</p>
+        </div>
+      )}
+
+      {/* 에러 상태 */}
+      {isError && (
+        <div className="py-8 text-center">
+          <p className="text-red-500">캐릭터 목록을 불러오는데 실패했습니다.</p>
+          <Button onClick={() => refetch()} className="mt-2">
+            다시 시도
+          </Button>
+        </div>
+      )}
       {/* 캐릭터 카드 목록 */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
         {!isPending &&
           !isError &&
-          data?.characters.map((character) => {
+          characters.map((character) => {
             return (
               <Card
                 key={character._id}
@@ -96,7 +128,9 @@ export function CharacterManagement() {
                 <CardHeader className="pb-3">
                   <div className="flex gap-3 items-center">
                     <p className="mx-auto text-5xl rounded-full">
-                      {String.fromCodePoint(character.icon)}
+                      {character.icon && !isNaN(character.icon)
+                        ? String.fromCodePoint(character.icon)
+                        : "👤"}
                     </p>
                     <div className="flex-1">
                       <CardTitle className="text-lg">
@@ -125,14 +159,20 @@ export function CharacterManagement() {
 
                   <div>
                     <div className="text-xs text-muted-foreground">
-                      등록일: {dayjs(character.createdAt).format("LLL")}
+                      등록일:{" "}
+                      {character.createdAt
+                        ? dayjs(character.createdAt).format("LLL")
+                        : "알 수 없음"}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      수정일: {dayjs(character.updatedAt).format("LLL")}
+                      수정일:{" "}
+                      {character.updatedAt
+                        ? dayjs(character.updatedAt).format("LLL")
+                        : "알 수 없음"}
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       className="flex-1 gap-2"
                       onClick={() => handleCurriculumClick(character._id)}
@@ -155,7 +195,7 @@ export function CharacterManagement() {
                         setDeleteDialog(true);
                       }}
                     >
-                      삭제
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -171,7 +211,7 @@ export function CharacterManagement() {
         onClose={handleCloseDialog}
       />
 
-      {data?.total === 0 && (
+      {total === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">

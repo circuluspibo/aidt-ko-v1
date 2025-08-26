@@ -42,7 +42,7 @@ a {
   outline-offset: 0px !important;
 }
 
-input[type="number"]::-webkit-outer-spin-button,
+/* input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -50,7 +50,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 input[type="number"] {
   -moz-appearance: textfield;
-}
+} */
 input:focus,
 input.input:focus,
 textarea:focus,
@@ -266,6 +266,17 @@ button {
   font-family: "Nanum Gothic", sans-serif;
   font-weight: 800;
   font-style: normal;
+}
+
+/* 텍스트 드래그 시 배경색 설정 */
+::selection {
+  background-color: rgba(59, 130, 246, 0.3); /* 파란색 배경 */
+  color: inherit;
+}
+
+::-moz-selection {
+  background-color: rgba(59, 130, 246, 0.3); /* Firefox용 */
+  color: inherit;
 }
 .write-letter-consonant-1,
 .write-letter-vowel-1,
