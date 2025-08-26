@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Edit, Users, ChevronRight } from "lucide-react";
+import { Edit, Users, ChevronRight, Trash2 } from "lucide-react";
 import useGroupsQuery from "@/hook/useGroupsQuery";
 import { SpinningText } from "../magicui/spinning-text";
 import GroupAddDialog from "@/features/dashboard/GroupAddDialog";
@@ -17,6 +17,7 @@ export function GroupManagement() {
   const [addDialogOpen, setAddDialog] = useState(false);
   const [delDialogOpen, setDeleteDialog] = useState(false);
   const [editingGroup, setEditingGroup] = useState(null);
+  const [selectedGroupToDelete, setSelectedGroupToDelete] = useState(null);
   const [page] = useState(1);
   const [q] = useState("");
   const { data, refetch, isError, isPending } = useGroupsQuery({
@@ -35,10 +36,6 @@ export function GroupManagement() {
     setAddDialog(true);
   };
 
-  const handleDeleteGroup = () => {
-    setDeleteDialog(true);
-  };
-
   const handleEditGroup = (group) => {
     setEditingGroup(group);
     setAddDialog(true);
@@ -47,6 +44,7 @@ export function GroupManagement() {
   const handleCloseDialog = () => {
     setAddDialog(false);
     setDeleteDialog(false);
+    setSelectedGroupToDelete(null);
     refetch();
   };
 
@@ -59,7 +57,7 @@ export function GroupManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">학습 그룹 관리</h2>
           <p className="mt-1 text-muted-foreground">
@@ -82,19 +80,19 @@ export function GroupManagement() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="p-4 text-center rounded-lg bg-blue-50">
+            <div className="p-4 text-center bg-blue-50 rounded-lg">
               <div className="text-2xl font-bold text-blue-600">
                 {data?.total || 0}
               </div>
               <div className="text-sm text-blue-700">총 그룹 수</div>
             </div>
-            <div className="p-4 text-center rounded-lg bg-green-50">
+            <div className="p-4 text-center bg-green-50 rounded-lg">
               <div className="text-2xl font-bold text-green-600">
                 {data?.groups.filter((g) => g.status === "활성").length || 0}
               </div>
               <div className="text-sm text-green-700">활성 그룹</div>
             </div>
-            <div className="p-4 text-center rounded-lg bg-purple-50">
+            <div className="p-4 text-center bg-purple-50 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">
                 {data?.groups.reduce(
                   (total, group) => total + group.volume,
@@ -134,19 +132,19 @@ export function GroupManagement() {
               className="transition-shadow cursor-pointer hover:shadow-md"
             >
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between items-center">
                   <CardTitle className="text-lg">{group.name}</CardTitle>
                   <Badge className={statusColors[group.status]}>
                     {group.status}
                   </Badge>
                 </div>
-                <p className="overflow-hidden text-sm text-muted-foreground text-ellipsis whitespace-nowrap">
+                <p className="overflow-hidden text-sm whitespace-nowrap text-muted-foreground text-ellipsis">
                   {group.description}
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
+                  <div className="flex gap-2 items-center">
                     <Users className="w-4 h-4 text-muted-foreground" />
                     <span>{group.volume}명</span>
                   </div>
@@ -159,7 +157,7 @@ export function GroupManagement() {
                     수정일: {dayjs(group.updatedAt).format("LLL")}
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   <Button
                     className="flex-1 gap-2"
                     onClick={() => handleGroupClick(group)}
@@ -178,19 +176,28 @@ export function GroupManagement() {
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
-                  <GroupDeleteDialog
-                    open={delDialogOpen}
-                    group={group}
-                    onOpenChange={setDeleteDialog}
-                    onDelete={handleDeleteGroup}
-                    onClose={handleCloseDialog}
-                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedGroupToDelete(group);
+                      setDeleteDialog(true);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+      <GroupDeleteDialog
+        open={delDialogOpen}
+        group={selectedGroupToDelete}
+        onOpenChange={setDeleteDialog}
+        onClose={handleCloseDialog}
+      />
     </div>
   );
 }

@@ -7,20 +7,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogTrigger,
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
 import { useMutation } from "@tanstack/react-query";
-import { AlertCircleIcon, CheckCircle2Icon, Trash2 } from "lucide-react";
+import { AlertCircleIcon, CheckCircle2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
-const GroupDeleteDialog = ({
-  open,
-  group,
-  onOpenChange,
-  onDelete,
-  onClose,
-}) => {
+const GroupDeleteDialog = ({ open, group, onOpenChange, onClose }) => {
   const [type, setType] = useState(null);
   const { mutate: deleteGroup } = useMutation({
     mutationKey: ["learning", "group", "delete", group?._id],
@@ -35,7 +28,7 @@ const GroupDeleteDialog = ({
       } else {
         setType("success");
         setTimeout(() => {
-          onDelete();
+          onClose();
         }, 1500);
       }
     },
@@ -47,11 +40,6 @@ const GroupDeleteDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" onClick={onDelete}>
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>그룹 삭제</DialogTitle>
