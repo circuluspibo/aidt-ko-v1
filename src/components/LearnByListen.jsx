@@ -3,12 +3,11 @@ import React, { useState, useEffect } from "react";
 import { JOSA, TARGETS } from "@/utils/globals";
 import Options from "@/features/Options";
 import { Button } from "./ui/button";
-import LetterConsonant from "./LetterConsonant";
-import LetterVowel from "./LetterVowel";
 
 const LearnByListen = ({ data, item, target, onAnswer, currentItemIndex }) => {
   const [options, setOptions] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlayed, setPlayed] = useState(false);
   let startTime = null;
 
   const generateChoices = () => {
@@ -49,6 +48,7 @@ const LearnByListen = ({ data, item, target, onAnswer, currentItemIndex }) => {
       cancelled = true;
       window.speechSynthesis.cancel();
       setIsPlaying(false);
+      setPlayed(true);
       document.removeEventListener("stop-sound", stopHandler);
     };
     document.addEventListener("stop-sound", stopHandler);
@@ -68,6 +68,7 @@ const LearnByListen = ({ data, item, target, onAnswer, currentItemIndex }) => {
             }, 500);
           } else {
             setIsPlaying(false);
+            setPlayed(true);
             document.removeEventListener("stop-sound", stopHandler);
           }
         };
@@ -80,24 +81,25 @@ const LearnByListen = ({ data, item, target, onAnswer, currentItemIndex }) => {
   };
 
   useEffect(() => {
+    setPlayed(false);
     startTime = new Date().valueOf();
     document.dispatchEvent(new Event("stop-sound"));
     generateChoices();
   }, [currentItemIndex, target]);
 
   return (
-    <div className="grid h-full grid-cols-12 gap-4">
+    <div className="grid grid-cols-12 gap-4 h-full">
       <div className="col-span-9 grid grid-rows-[auto_1fr] gap-4">
-        <div className="w-full row-span-1 p-2 text-2xl font-bold text-center border rounded-lg shadow border-neutral-300 bg-teal-300/80">
+        <div className="row-span-1 p-2 w-full text-2xl font-bold text-center rounded-lg border shadow border-neutral-300 bg-teal-300/80">
           {`"소리 듣기"를 선택하여 들리는 소리와 같은 "${
             TARGETS[target]
           }"${JOSA().c(TARGETS[target], "을/를")} 선택하세요.`}
         </div>
-        <div className="grid w-full h-full grid-cols-9 row-span-2 gap-4">
+        <div className="grid grid-cols-9 row-span-2 gap-4 w-full h-full">
           {/* 힌트 영역 */}
-          <div className="flex items-center justify-center w-full h-full col-span-4 gap-4 bg-white border rounded-lg shadow">
+          <div className="flex col-span-4 gap-4 justify-center items-center w-full h-full bg-white rounded-lg border shadow">
             {target !== "letter" && (
-              <div className="flex items-center justify-center col-span-2 p-4 font-extrabold text-9xl">
+              <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold">
                 {target === "word" ? (
                   <img
                     src={`/images/words/${encodeURI(item.name).replace(
@@ -116,7 +118,7 @@ const LearnByListen = ({ data, item, target, onAnswer, currentItemIndex }) => {
               </div>
             )}
             {target === "letter" && (
-              <div className="flex items-center justify-center w-full pr-4 text-6xl font-extrabold">
+              <div className="flex justify-center items-center pr-4 w-full text-6xl font-extrabold">
                 {/* <LetterConsonant
                   letter={item.components[0]}
                   className="py-2 text-9xl"
@@ -124,13 +126,13 @@ const LearnByListen = ({ data, item, target, onAnswer, currentItemIndex }) => {
                 <img
                   src={`/images/${item.components[0].charCodeAt(0)}.png`}
                   alt={item.components[0]}
-                  className="flex-1 object-contain w-1/3 h-auto scale-75"
+                  className="object-contain flex-1 w-1/3 h-auto scale-75"
                 />
                 <span>+</span>
                 <img
                   src={`/images/${item.components[1].charCodeAt(0)}.png`}
                   alt={item.components[1]}
-                  className="flex-1 object-contain w-1/3 h-auto"
+                  className="object-contain flex-1 w-1/3 h-auto"
                 />
                 {/* <LetterVowel
                   letter={item.components[1]}
@@ -141,7 +143,7 @@ const LearnByListen = ({ data, item, target, onAnswer, currentItemIndex }) => {
             )}
           </div>
           {/* 문제-보기 영역 */}
-          <div className="flex flex-col items-center justify-center w-full h-full col-span-5 gap-2 bg-white border rounded-lg shadow">
+          <div className="flex flex-col col-span-5 gap-2 justify-center items-center w-full h-full bg-white rounded-lg border shadow">
             <Button
               onClick={playSound}
               disabled={isPlaying}
@@ -160,6 +162,7 @@ const LearnByListen = ({ data, item, target, onAnswer, currentItemIndex }) => {
       </div>
       {/* 보기 영역 */}
       <Options
+        enabled={isPlayed}
         correctAnswer={item.letter}
         options={options}
         onSelect={handleSelect}
