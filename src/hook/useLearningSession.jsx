@@ -4,10 +4,11 @@ import { FaceMesh } from "@mediapipe/face_mesh";
 import { Camera } from "@mediapipe/camera_utils";
 import { toast } from "sonner";
 import { Toast } from "@/components/Toast";
-import { METHODS } from "@/utils/globals";
+import { METHODS, TARGETS } from "@/utils/globals";
 import { useParams, useNavigate } from "react-router";
 import { useSessionStore } from "./useSessionStore";
 import useContentQuery from "./useContentQuery";
+import useCurriculumQuery from "./useCurriculumQuery";
 
 const useLearningSession = () => {
   // URL 파라미터 관리
@@ -25,28 +26,50 @@ const useLearningSession = () => {
   } = useContentQuery(character, chapter, method);
   const learningDataForTarget = data?.contents;
 
-  const [repeatSettings] = useState({
+  // Curriculum API 호출
+  const { curriculumData } = useCurriculumQuery(character);
+
+  const {
+    loadProgress,
+    saveProgress,
+    loadStats,
+    saveStats,
+    validateSessionData,
+  } = useSessionStore();
+
+  const [repeatSettings, setRepeatSettings] = useState({
     correct: data?.repeat || 1,
     incorrect: Math.round(data?.repeat * 1.5) || 2,
   });
-
-  const { loadProgress, saveProgress, loadStats, saveStats } =
-    useSessionStore();
-
-  const saved = loadProgress(data?.target, method);
-  const [currentItemIndex, setCurrentItemIndex] = useState(saved?.index ?? 0);
-  const [currentQuestionNo, setCurrentQuestion] = useState(
-    saved?.question ?? 1
-  );
-  const [currentLearningCount, setCurrentLearningCount] = useState(
-    saved?.learningCount ?? 1
-  );
+  const [curriculumIndex, setCurriculumIndex] = useState(0);
+  const [currentItemIndex, setCurrentItemIndex] = useState(0);
+  const [currentQuestionNo, setCurrentQuestion] = useState(1);
+  const [currentLearningCount, setCurrentLearningCount] = useState(1);
   const [timer, setTimer] = useState(0);
+
+  // data나 method가 변경될 때마다 saved를 업데이트하고 상태 초기화
+  useEffect(() => {
+    if (chapter && method && data) {
+      // data가 존재할 때만 실행
+      // chapter를 chapterId로 사용 (저장된 데이터 구조와 일치)
+      const savedProgress = loadProgress(chapter, method);
+
+      // 세션 데이터 검증
+      validateSessionData(chapter, method);
+
+      // saved 데이터가 있으면 상태 업데이트, 없으면 기본값 사용
+      setCurrentItemIndex(savedProgress?.index ?? 0);
+      setCurrentQuestion(savedProgress?.question ?? 1);
+      setCurrentLearningCount(savedProgress?.learningCount ?? 1);
+    }
+  }, [chapter, method, loadProgress, validateSessionData, data]);
+
   const [tutorMessage, setTutorMessage] = useState("학습을 시작해 주세요.");
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const [learningStats, setLearningStats] = useState(loadStats());
   const [focusLog, setFocusLog] = useState([]);
+  const [curriculum, setCurriculum] = useState(null);
 
   const videoRef = useRef(null);
   const timerRef = useRef(null);
@@ -55,36 +78,55 @@ const useLearningSession = () => {
   const faceMeshRef = useRef(null);
   const item = learningDataForTarget?.[currentItemIndex];
 
-  const NEXT_STEP = {
-    consonant: {
+  // Curriculum 데이터를 기반으로 동적으로 NEXT_STEP 생성
+  const getNextStep = () => {
+    if (!curriculumData || !data?.target) return null;
+
+    const currentChapter = curriculumData.find(
+      (item) => item.chapterId === chapter
+    );
+    if (!currentChapter) return null;
+
+    const currentIndex = curriculumData.findIndex(
+      (item) => item.chapterId === chapter
+    );
+    const nextChapter = curriculumData[currentIndex + 1];
+
+    if (!nextChapter) {
+      // 마지막 챕터인 경우
+      return {
+        title: `축하합니다!`,
+        description: [
+          `${TARGETS[data?.target || "unknown"]} ${
+            METHODS[method]
+          } 학습을 완료했습니다!`,
+        ],
+        next: `/learn/${character}`,
+      };
+    }
+
+    // 다음 챕터로 이동
+    const nextTarget = nextChapter.target;
+    return {
       title: `축하합니다!`,
       description: [
-        `자음 ${METHODS[method]} 학습을 완료했습니다!`,
-        "모음 학습을 시작합니다.",
+        `${TARGETS[data?.target || "unknown"]} ${
+          METHODS[method]
+        } 학습을 완료했습니다!`,
+        `${TARGETS[nextTarget]} 학습을 시작합니다.`,
       ],
-      next: `/${character}/vowel/${method}`,
-    },
-    vowel: {
-      title: `축하합니다!`,
-      description: [
-        `모음 ${METHODS[method]} 학습을 완료했습니다!`,
-        "글자 학습을 시작합니다.",
-      ],
-      next: `/${character}/syllable/${method}`,
-    },
-    syllable: {
-      title: `축하합니다!`,
-      description: [
-        `글자 ${METHODS[method]} 학습을 완료했습니다!`,
-        "낱말 학습을 시작합니다.",
-      ],
-      next: `/${character}/word/${method}`,
-    },
-    word: {
-      title: `축하합니다!`,
-      description: [`낱말 ${METHODS[method]} 학습을 완료했습니다!`],
-      next: `/${character}`,
-    },
+      next: `/learn/${character}/${nextChapter.chapterId}?target=${nextTarget}`,
+    };
+  };
+
+  // Method 페이지에서 사용할 methodData 반환 함수
+  const getMethodData = (targetChapter) => {
+    if (!curriculumData) return null;
+
+    const chapterData = curriculumData.find(
+      (item) => item.chapterId === targetChapter
+    );
+    return chapterData?.methods || null;
   };
 
   // 콘텐츠 리스트 핸들러
@@ -110,7 +152,15 @@ const useLearningSession = () => {
 
   const handleNextStep = () => {
     setLoading(true);
-    const { title, description, next } = NEXT_STEP[data?.target];
+    const nextStep = getNextStep();
+
+    if (!nextStep) {
+      // nextSteps 없는 경우 기본 동작
+      setLoading(false);
+      return;
+    }
+
+    const { title, description, next } = nextStep;
     const sound = document.getElementById("complete-audio");
     sound.currentTime = 0;
     sound.play();
@@ -239,12 +289,13 @@ const useLearningSession = () => {
     setLearningStats(updatedStats);
     saveStats(updatedStats);
     saveProgress(
-      chapter,
+      chapter, // chapter를 chapterId로 사용
       method,
       currentItemIndex,
       item.letter,
       currentQuestionNo,
-      currentLearningCount
+      currentLearningCount,
+      curriculumData[curriculumIndex]?.target?.name // 'consonant', 'vowel', 'letter', 'word' 중 하나
     );
   };
 
@@ -264,18 +315,34 @@ const useLearningSession = () => {
   };
 
   useEffect(() => {
+    if (data) {
+      // data가 존재할 때만 실행
+      setRepeatSettings({
+        correct: data?.repeat || 1,
+        incorrect: Math.round((data?.repeat || 1) * 1.5) || 2,
+      });
+      setCurriculumIndex(data?.index || 0);
+    }
+  }, [data]);
+
+  useEffect(() => {
     setTimer(0);
     setCurrentLearningCount(1);
     setCurrentQuestion(1);
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => setTimer((prev) => prev + 1), 1000);
-    setProgress(
-      Math.round(
-        ((currentItemIndex + 1) / learningDataForTarget?.length) * 100
-      ).toFixed(0)
-    );
+
+    // data가 존재할 때만 progress 계산
+    if (data?.contents && learningDataForTarget) {
+      setProgress(
+        Math.round(
+          ((currentItemIndex + 1) / learningDataForTarget?.length) * 100
+        ).toFixed(0)
+      );
+    }
+
     return () => clearInterval(timerRef.current);
-  }, [currentItemIndex, data?.target, learningDataForTarget]);
+  }, [currentItemIndex, data?.target, learningDataForTarget, data?.contents]);
 
   useEffect(() => {
     focusLogRef.current = focusLog;
@@ -391,6 +458,13 @@ const useLearningSession = () => {
     isDataLoading,
     isError,
     learningDataForTarget,
+
+    // 커리큘럼 관련
+    curriculumIndex,
+    curriculum,
+    setCurriculum,
+    curriculumData,
+    getMethodData,
 
     // 학습 세션 관련
     currentItemIndex,

@@ -14,8 +14,8 @@ export default function Main() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex items-center justify-center min-h-screen gap-6">
-      <Card className="transition-all shadow-2xl group bg-white/80 hover:bg-white">
+    <div className="flex gap-6 justify-center items-center min-h-screen">
+      <Card className="shadow-2xl transition-all group bg-white/80 hover:bg-white">
         <CardHeader>
           <img
             src="/teacher.png"
@@ -29,13 +29,13 @@ export default function Main() {
           </CardDescription>
         </CardContent>
         <CardFooter className="inline-flex justify-center w-full">
-          <Button className="w-full" onClick={() => navigate("login/teacher")}>
+          <Button className="w-full" onClick={() => navigate("/login/teacher")}>
             학습 관리 페이지로 이동
             <ChevronRight />
           </Button>
         </CardFooter>
       </Card>
-      <Card className="transition-all shadow-2xl group bg-white/80 hover:bg-white">
+      <Card className="shadow-2xl transition-all group bg-white/80 hover:bg-white">
         <CardHeader>
           <img
             src="/student.png"
@@ -49,7 +49,7 @@ export default function Main() {
           </CardDescription>
         </CardContent>
         <CardFooter className="inline-flex justify-center w-full">
-          <Button className="w-full" onClick={() => navigate("login/student")}>
+          <Button className="w-full" onClick={() => navigate("/login/student")}>
             학습 페이지로 이동
             <ChevronRight />
           </Button>
