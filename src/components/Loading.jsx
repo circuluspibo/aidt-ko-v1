@@ -8,7 +8,7 @@ export function Loading({ text, icon }) {
       {!text && icon && (
         <progress className="w-56 progress progress-primary"></progress>
       )}
-      {!text && !icon && <LoaderCircle className="w-56 h-56 animate-spin" />}
+      {!text && !icon && <LoaderCircle className="w-32 h-32 animate-spin" />}
     </div>
   );
 }

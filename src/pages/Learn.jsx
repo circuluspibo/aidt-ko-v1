@@ -17,6 +17,7 @@ import colors from "tailwindcss/colors";
 import LearnByListen from "@/components/LearnByListen";
 import TopContentList from "@/features/TopContentList";
 import { Loading } from "@/components/Loading";
+import { ChevronLeft } from "lucide-react";
 
 const Learn = () => {
   const {
@@ -52,28 +53,30 @@ const Learn = () => {
       </div>
     );
 
+  // data가 로딩 중이거나 없을 때 로딩 표시
+  if (isDataLoading || !data) return <Loading />;
+
   return (
     <>
-      {isDataLoading && <Loading />}
-      {!isDataLoading && !isError && (
-        <div className="grid grid-rows-[auto_1fr] md:gap-4 px-6 py-4 w-full h-full relative rounded-t-3xl overflow-hidden">
-          <TopContentList
-            open={openContentList}
-            color={COLORS[method]}
-            currentIndex={currentItemIndex}
-            data={data?.contents}
-            onSelect={handleContentSelect}
-            onClose={handleContentListClose}
-          />
-          <div className="flex justify-between items-center">
+      <div className="grid grid-rows-[auto_1fr] md:gap-4 px-6 py-4 w-full h-full relative rounded-t-3xl overflow-hidden">
+        <TopContentList
+          open={openContentList}
+          color={COLORS[method]}
+          currentIndex={currentItemIndex}
+          data={data?.contents}
+          onSelect={handleContentSelect}
+          onClose={handleContentListClose}
+        />
+        <div className="flex justify-between items-center">
+          <div className="inline-flex items-center">
+            <Link
+              className="p-1 mr-1 w-12 h-12 bg-transparent rounded-full opacity-65 hover:opacity-100 hover:bg-white/50"
+              to={`/learn/${character}/${chapter}?target=${target}`}
+            >
+              <ChevronLeft className="w-10 h-10" />
+            </Link>
             <Breadcrumb>
               <BreadcrumbList className="font-bold text-[2.5rem]">
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to={`/learn/${character}`}>홈</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink
                     asChild
@@ -116,98 +119,94 @@ const Learn = () => {
                 )}
               </BreadcrumbList>
             </Breadcrumb>
-            <div className="flex gap-8 items-center">
-              <div className="flex gap-2 items-center">
-                <span className="text-sm font-bold">반복</span>
-                <Stepper
-                  currentStep={currentRepeat}
-                  totalSteps={repeatSettings.correct}
-                  activeColor={`bg-${COLORS[method]}-500`}
-                  style={{ minWidth: `${repeatSettings.correct * 2.5}rem` }}
-                />
-              </div>
-              <div className="flex gap-2 items-center">
-                <span className="text-sm font-bold">진행</span>
-                <AnimatedCircularProgressBar
-                  className="w-12 h-12"
-                  max={data?.contents?.length || 0}
-                  min={1}
-                  value={currentItemIndex + 1}
-                  gaugePrimaryColor={
-                    COLORS[method] ? colors[COLORS[method]][500] : "#f59e42"
-                  }
-                  gaugeSecondaryColor={colors.gray["200"]}
-                />
-              </div>
+          </div>
+          <div className="flex gap-8 items-center">
+            <div className="flex gap-2 items-center">
+              <span className="text-sm font-bold">반복</span>
+              <Stepper
+                currentStep={currentRepeat}
+                totalSteps={repeatSettings.correct}
+                activeColor={`bg-${COLORS[method]}-500`}
+                style={{ minWidth: `${repeatSettings.correct * 2.5}rem` }}
+              />
+            </div>
+            <div className="flex gap-2 items-center">
+              <span className="text-sm font-bold">진행</span>
+              <AnimatedCircularProgressBar
+                className="w-12 h-12"
+                max={data?.contents?.length || 0}
+                min={1}
+                value={currentItemIndex + 1}
+                gaugePrimaryColor={
+                  COLORS[method] ? colors[COLORS[method]][500] : "#f59e42"
+                }
+                gaugeSecondaryColor={colors.gray["200"]}
+              />
             </div>
           </div>
-          {item && (
-            <>
-              {method === "read" && (
-                <LearnByRead
-                  {...{
-                    item,
-                    target,
-                    onAnswer,
-                    currentRepeat,
-                    currentItemIndex,
-                    data: data?.contents,
-                  }}
-                />
-              )}
-              {method === "listen" && (
-                <LearnByListen
-                  {...{
-                    item,
-                    target,
-                    onAnswer,
-                    currentRepeat,
-                    currentItemIndex,
-                    data: data?.contents,
-                  }}
-                />
-              )}
-              {method === "speak" && (
-                <LearnBySpeak
-                  {...{
-                    item,
-                    target,
-                    onAnswer,
-                    currentRepeat,
-                    currentItemIndex,
-                    data: data?.contents,
-                  }}
-                />
-              )}
-              {method === "write" && (
-                <LearnByWrite
-                  {...{
-                    item,
-                    target,
-                    onAnswer,
-                    currentRepeat,
-                    currentItemIndex,
-                    data: data?.contents,
-                  }}
-                />
-              )}
-            </>
-          )}
-          <audio id="correct-audio" src="/sounds/correct.mp3" preload="auto" />
-          <audio id="wrong-audio" src="/sounds/wrong.mp3" preload="auto" />
-          <audio
-            id="complete-audio"
-            src="/sounds/completed.mp3"
-            preload="auto"
-          />
-          {/* <video
+        </div>
+        {item && (
+          <>
+            {method === "read" && (
+              <LearnByRead
+                {...{
+                  item,
+                  target,
+                  onAnswer,
+                  currentRepeat,
+                  currentItemIndex,
+                  data: data?.contents,
+                }}
+              />
+            )}
+            {method === "listen" && (
+              <LearnByListen
+                {...{
+                  item,
+                  target,
+                  onAnswer,
+                  currentRepeat,
+                  currentItemIndex,
+                  data: data?.contents,
+                }}
+              />
+            )}
+            {method === "speak" && (
+              <LearnBySpeak
+                {...{
+                  item,
+                  target,
+                  onAnswer,
+                  currentRepeat,
+                  currentItemIndex,
+                  data: data?.contents,
+                }}
+              />
+            )}
+            {method === "write" && (
+              <LearnByWrite
+                {...{
+                  item,
+                  target,
+                  onAnswer,
+                  currentRepeat,
+                  currentItemIndex,
+                  data: data?.contents,
+                }}
+              />
+            )}
+          </>
+        )}
+        <audio id="correct-audio" src="/sounds/correct.mp3" preload="auto" />
+        <audio id="wrong-audio" src="/sounds/wrong.mp3" preload="auto" />
+        <audio id="complete-audio" src="/sounds/completed.mp3" preload="auto" />
+        {/* <video
         ref={videoRef}
         muted
         playsInline
         className="hidden w-full h-full"
       /> */}
-        </div>
-      )}
+      </div>
     </>
   );
 };

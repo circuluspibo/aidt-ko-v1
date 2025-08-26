@@ -1,15 +1,11 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Card } from "../components/ui/card";
-import { BlurFade } from "../components/magicui/blur-fade";
 import { TARGETS } from "../utils/globals";
 import StepDialog from "@/components/StepDialog";
-import { get } from "@/api";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import MenuCard from "@/components/MenuCard";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import useCurriculumQuery from "@/hook/useCurriculumQuery";
 
 function Target() {
   const { character } = useParams();
@@ -17,30 +13,18 @@ function Target() {
   const { logout } = useAuth();
   const [selected, setSelectedCard] = useState(null);
   const [open, setOpen] = useState(false);
-  const {
-    data: targetData,
-    error,
-    isPending,
-  } = useQuery({
-    queryKey: ["character", "target", character],
-    queryFn: async () => {
-      const result = await get(`character/${character}/curriculum`);
-      return result;
-    },
-    select: (response) => {
-      if (
-        response &&
-        "result" in response &&
-        response.result &&
-        response.data
-      ) {
-        return response.data.map((item) => ({
-          ...item.target,
-          chapterId: item.chapterId,
-        }));
-      }
-    },
-  });
+
+  // useCurriculumQuery에서 curriculumData 가져오기
+  const { curriculumData, isCurriculumLoading, isCurriculumError } =
+    useCurriculumQuery(character);
+
+  // curriculumData를 Target 페이지에 맞게 변환
+  const targetData =
+    curriculumData?.map((item) => ({
+      ...item.target,
+      chapterId: item.chapterId,
+    })) || [];
+
   const onCardClick = (name) => {
     setSelectedCard(name);
     setOpen(true);
@@ -64,23 +48,23 @@ function Target() {
 
   return (
     <>
-      <div className="grid grid-rows-[auto_auto_1fr] overflow-hidden md:gap-4 px-6 py-4 w-full h-full">
-        <header className="text-2xl font-extrabold col-span-full md:text-5xl text-start">
+      <div className="grid grid-rows-[auto_auto_1fr] overflow-hidden md:gap-4 w-full h-full">
+        <header className="col-span-full px-6 pt-4 text-2xl font-extrabold md:text-5xl text-start">
           <button
-            className="w-12 h-12 p-1 mr-1 bg-transparent rounded-full hover:bg-black/10"
+            className="p-1 mr-1 w-12 h-12 bg-transparent rounded-full hover:bg-black/10"
             onClick={handlePrev}
           >
             <LogOut className="w-8 h-8 -scale-x-100" />
           </button>
           📚 무엇을 배울까요?
         </header>
-        <p className="text-xl font-semibold col-span-full md:text-4xl">
+        <p className="col-span-full px-8 text-xl font-semibold md:text-4xl">
           배우고 싶은 한글을 선택해주세요.
         </p>
-        {!isPending && !error && (
-          <div className="flex flex-row w-full overflow-auto fcol-span-full whitespace-nowrap">
+        {!isCurriculumLoading && !isCurriculumError && (
+          <div className="flex overflow-auto flex-row col-span-full w-full whitespace-nowrap">
             <div
-              className={`flex h-full space-x-1 ${
+              className={`flex h-full space-x-1 px-6 pb-4 ${
                 targetData.length > 4 ? "w-max" : "w-full"
               }`}
             >
