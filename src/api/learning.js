@@ -1,14 +1,13 @@
+import { API_URL, VAPI_URL } from ".";
+
 export const fetchLearningDataByTarget = async (type) => {
   try {
-    const response = await fetch(
-      `http://localhost:59421/v1/content?type=${type}`
-    );
+    const response = await fetch(`${API_URL()}/content?type=${type}`);
 
     if (!response.ok) {
       throw new Error("학습 데이터를 불러오는 데 실패했습니다.");
     }
     const res = await response.json();
-    console.log(res);
     if (res?.result) {
       return res.data;
     }
@@ -16,5 +15,24 @@ export const fetchLearningDataByTarget = async (type) => {
   } catch (error) {
     console.log(error);
     return error;
+  }
+};
+
+export const fetchWriteOCR = async (isWord, body) => {
+  try {
+    const resp = await fetch(VAPI_URL(isWord), {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+      },
+      body,
+    });
+    const res = await resp.json();
+    if (res.result && res.data.length) {
+      return res.data[0];
+    }
+  } catch (error) {
+    console.error(error);
+    return null;
   }
 };

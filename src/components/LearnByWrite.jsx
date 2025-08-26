@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { Loader2Icon } from "lucide-react";
 import { JOSA } from "@/utils/globals";
+import { fetchWriteOCR } from "@/api/learning";
 
 let startTime = null;
 const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
@@ -17,21 +18,9 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
       const formData = new FormData();
       formData.append("uploadFile", blob, "test.png");
       try {
-        const resp = await fetch(
-          target === "word"
-            ? "https://s-vapi.circul.us/ocr2/ocr2"
-            : "https://o-vapi.circul.us/code/ocr?lang=ko",
-          {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-            },
-            body: formData,
-          }
-        );
-        const res = await resp.json();
-        if (res.result && res.data.length) {
-          const isCorrect = res.data[0].text === item.letter;
+        const data = await fetchWriteOCR(target === "word", formData);
+        if (data) {
+          const isCorrect = data.text === item.letter;
           const endTime = new Date().valueOf();
           const responseTime = (endTime - startTime) / 1000;
           const attempt = {
@@ -39,7 +28,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
             responseTime,
             isCorrect,
             correct: item.letter,
-            user: res.data[0].text,
+            user: data.text,
           };
           return attempt;
         }
@@ -145,12 +134,12 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
   }, []);
 
   return (
-    <div className="grid h-full grid-cols-12 gap-4">
+    <div className="grid grid-cols-12 gap-4 h-full">
       {/* 힌트 영역 */}
       <div className="grid-cols-2 col-span-4 gap-4">
-        <div className="flex items-center justify-center h-full p-4 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
+        <div className="flex justify-center items-center p-4 h-full text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
           {target !== "letter" && (
-            <div className="flex items-center justify-center col-span-2 p-4 font-extrabold text-9xl">
+            <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold">
               {target === "word" ? (
                 <img
                   src={`/images/words/${encodeURI(item.name).replace(
@@ -169,7 +158,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
             </div>
           )}
           {target === "letter" && (
-            <div className="flex items-center justify-center w-full pr-4 text-6xl font-extrabold">
+            <div className="flex justify-center items-center pr-4 w-full text-6xl font-extrabold">
               {/* <LetterConsonant
                   letter={item.components[0]}
                   className="py-2 text-9xl"
@@ -177,13 +166,13 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
               <img
                 src={`/images/write/${item.components[0].charCodeAt(0)}.png`}
                 alt={item.components[0]}
-                className="flex-1 object-contain w-1/2 h-auto scale-75"
+                className="object-contain flex-1 w-1/2 h-auto scale-75"
               />
               <span>+</span>
               <img
                 src={`/images/write/${item.components[1].charCodeAt(0)}.png`}
                 alt={item.components[1]}
-                className="flex-1 object-contain w-auto h-48"
+                className="object-contain flex-1 w-auto h-48"
               />
               {/* <LetterVowel
                   letter={item.components[1]}
@@ -196,12 +185,12 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
       </div>
       {/* 문제-보기 영역 */}
       <div className="col-span-8 grid grid-rows-[auto_1fr] gap-4">
-        <div className="w-full row-span-1 p-2 text-2xl font-bold text-center border rounded-lg shadow border-neutral-300 bg-rose-300/80">
+        <div className="row-span-1 p-2 w-full text-2xl font-bold text-center rounded-lg border shadow border-neutral-300 bg-rose-300/80">
           {`"${item.name}"${JOSA().c(item.name, "을/를")} 직접 써보세요.`}
         </div>
-        <div className="flex flex-col items-center justify-center w-full gap-10 p-2 text-center bg-white border rounded-lg shadow-sm">
+        <div className="flex flex-col gap-10 justify-center items-center p-2 w-full text-center bg-white rounded-lg border shadow-sm">
           <div className="grid grid-cols-[1fr_auto] gap-2 w-full h-full">
-            <div className="relative w-full h-full col-span-1" ref={parentRef}>
+            <div className="relative col-span-1 w-full h-full" ref={parentRef}>
               {hint && (
                 <div
                   className="absolute inset-0 z-0 w-full h-full font-extrabold cursor-default bg-black/10 text-black/20"
@@ -241,7 +230,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
               </Button>
               <Button
                 size="lg"
-                className="h-full p-4 text-6xl bg-white hover:bg-error/20 disabled:grayscale disabled:bg-black/20"
+                className="p-4 h-full text-6xl bg-white hover:bg-error/20 disabled:grayscale disabled:bg-black/20"
                 disabled={isPending}
                 onClick={clearCanvas}
               >
@@ -249,7 +238,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
               </Button>
               <Button
                 size="lg"
-                className="h-full p-4 text-6xl bg-white hover:bg-success/20 disabled:bg-black/20"
+                className="p-4 h-full text-6xl bg-white hover:bg-success/20 disabled:bg-black/20"
                 disabled={isPending}
                 onClick={handleSubmit}
               >

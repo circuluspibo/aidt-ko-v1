@@ -1,7 +1,12 @@
-const API_URL = () => {
-  return `http://localhost:59421/v1`;
-  // return import.meta.env.VITE_API_URL;
-};
+console.log(
+  import.meta.env.MODE,
+  import.meta.env.VITE_APP_ENV,
+  import.meta.env.VITE_API_URL
+);
+
+export const API_URL = () => import.meta.env.VITE_API_URL;
+export const VAPI_URL = (type) =>
+  type ? import.meta.env.VITE_VAPI_OCR2 : import.meta.env.VITE_VAPI_OCR;
 
 export const encodeGetParams = (p) =>
   Object.entries(p)
