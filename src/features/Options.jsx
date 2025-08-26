@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import colors from "tailwindcss/colors";
 
-const Options = ({ correctAnswer, options, onSelect, color }) => {
+const Options = ({ correctAnswer, options, onSelect, color, enabled }) => {
   const [selected, setSelected] = useState(null);
   const handleClick = (choice) => {
     setSelected(choice);
@@ -13,7 +13,7 @@ const Options = ({ correctAnswer, options, onSelect, color }) => {
   }, [options]);
 
   return (
-    <div className="grid h-full col-span-3 grid-rows-3 gap-4">
+    <div className="grid col-span-3 grid-rows-3 gap-4 h-full">
       {options.length > 0 &&
         options.map((choice, idx) => (
           <button
@@ -28,9 +28,9 @@ const Options = ({ correctAnswer, options, onSelect, color }) => {
                 ? choice === correctAnswer
                   ? `bg-${color}-500 text-white`
                   : "border-4 border-red-400 bg-red-50"
-                : `bg-${color}-50 border-neutral-300 hover:border-2 hover:bg-[--hover-bg] hover:border-[--hover-border]`
+                : `bg-${color}-50 border-neutral-300 hover:border-2 hover:bg-[--hover-bg] hover:border-[--hover-border] disabled:saturate-0`
             }`}
-            disabled={selected !== null}
+            disabled={enabled === undefined ? selected !== null : !enabled}
           >
             {choice}
           </button>
