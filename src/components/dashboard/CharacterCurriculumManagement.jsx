@@ -79,7 +79,7 @@ const CharacterCurriculumManagement = () => {
       "groups",
       "character",
       "curriculum",
-      selectedCharacter?.curriculum.length ? "update" : "add",
+      selectedCharacter?.curriculum?.length ? "update" : "add",
       characterId,
     ],
     mutationFn: async (data) => {
@@ -185,6 +185,8 @@ const CharacterCurriculumManagement = () => {
 
   const onRemove = (id) => {
     console.log(selectedOrder, id);
+    if (!selectedOrder) return;
+
     const removeIndex = selectedOrder.findIndex((item) => item.id === id);
     if (removeIndex < 0) return;
 
@@ -224,13 +226,14 @@ const CharacterCurriculumManagement = () => {
 
   useEffect(() => {
     if (selectedCharacter && selectedCharacter?.curriculum) {
-      const newConfigs = selectedCharacter.curriculum.reduce((ac, cu) => {
+      const curriculum = selectedCharacter.curriculum || [];
+      const newConfigs = curriculum.reduce((ac, cu) => {
         const { chapterId, index, level, method, repeat, target } = cu;
         return { ...ac, [chapterId]: { index, level, method, repeat, target } };
       }, {});
       setChapterConfigs(newConfigs);
       setSelectedOrder(
-        selectedCharacter.curriculum.map(({ chapterId, ...rest }) => ({
+        curriculum.map(({ chapterId, ...rest }) => ({
           id: chapterId,
           ...rest,
         }))
@@ -287,7 +290,7 @@ const CharacterCurriculumManagement = () => {
                     </div>
                     <div className="flex gap-1 items-center">
                       <BookOpen className="w-4 h-4" />
-                      <span>{selectedOrder.length}개 챕터</span>
+                      <span>{selectedOrder?.length || 0}개 챕터</span>
                     </div>
                     <div className="flex gap-1 items-center">
                       <Calendar className="w-4 h-4" />
@@ -318,7 +321,7 @@ const CharacterCurriculumManagement = () => {
                   <GripVertical className="w-4 h-4 text-muted-foreground" />
                   <h3 className="font-medium">현재 커리큘럼</h3>
                   <Badge variant="secondary" className="text-xs">
-                    {selectedOrder.length}개
+                    {selectedOrder?.length || 0}개
                   </Badge>
                   {isSaving && (
                     <span className="ml-2 text-sm text-muted-foreground">
@@ -360,12 +363,12 @@ const CharacterCurriculumManagement = () => {
                         : "bg-background"
                     }`}
                   >
-                    {selectedOrder.length === 0 && (
+                    {(!selectedOrder || selectedOrder.length === 0) && (
                       <div className="flex justify-center items-center w-full text-muted-foreground">
                         위의 챕터를 드래그하여 커리큘럼에 추가하세요.
                       </div>
                     )}
-                    {selectedOrder.map((curriculumChapter, index) => (
+                    {selectedOrder?.map((curriculumChapter, index) => (
                       <Draggable
                         key={curriculumChapter.id}
                         draggableId={curriculumChapter.id}
