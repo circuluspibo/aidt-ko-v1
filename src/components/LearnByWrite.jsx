@@ -142,8 +142,8 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
             <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold">
               {target === "word" ? (
                 <img
-                  src={`/images/words/${encodeURI(item.name).replace(
-                    /^%/g,
+                  src={`/images/words/${encodeURI(item.name).replaceAll(
+                    "%",
                     ""
                   )}.png`}
                   alt={item.letter}

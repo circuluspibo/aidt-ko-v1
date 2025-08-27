@@ -143,23 +143,23 @@ const LearnBySpeak = ({
   }, []);
 
   return (
-    <div className="grid h-full grid-cols-12 gap-4">
+    <div className="grid grid-cols-12 gap-4 h-full">
       <div className="col-span-9 grid grid-rows-[auto_1fr] gap-4">
-        <div className="w-full row-span-1 p-2 text-2xl font-bold text-center border rounded-lg shadow border-neutral-300 bg-blue-300/80">
+        <div className="row-span-1 p-2 w-full text-2xl font-bold text-center rounded-lg border shadow border-neutral-300 bg-blue-300/80">
           {`"말하기"를 선택하고 "${item.letter}"${JOSA().c(
             item.name,
             "을/를"
           )} 소리내어 말해보세요.`}
         </div>
-        <div className="grid w-full h-full grid-cols-9 row-span-2 gap-4">
+        <div className="grid grid-cols-9 row-span-2 gap-4 w-full h-full">
           {/* 힌트 영역 */}
-          <div className="flex items-center justify-center w-full h-full col-span-4 gap-4 bg-white border rounded-lg shadow">
+          <div className="flex col-span-4 gap-4 justify-center items-center w-full h-full bg-white rounded-lg border shadow">
             {target !== "letter" && (
-              <div className="flex items-center justify-center col-span-2 p-4 font-extrabold text-9xl">
+              <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold">
                 {target === "word" ? (
                   <img
-                    src={`/images/words/${encodeURI(item.name).replace(
-                      /^%/g,
+                    src={`/images/words/${encodeURI(item.name).replaceAll(
+                      "%",
                       ""
                     )}.png`}
                     alt={item.letter}
@@ -174,7 +174,7 @@ const LearnBySpeak = ({
               </div>
             )}
             {target === "letter" && (
-              <div className="flex items-center justify-center w-full pr-4 text-6xl font-extrabold">
+              <div className="flex justify-center items-center pr-4 w-full text-6xl font-extrabold">
                 {/* <LetterConsonant
                   letter={item.components[0]}
                   className="py-2 text-9xl"
@@ -182,13 +182,13 @@ const LearnBySpeak = ({
                 <img
                   src={`/images/hangul/{item.components[0].charCodeAt(0)}.png`}
                   alt={item.components[0]}
-                  className="flex-1 object-contain w-1/3 h-auto scale-75"
+                  className="object-contain flex-1 w-1/3 h-auto scale-75"
                 />
                 <span>+</span>
                 <img
                   src={`/images/hangul/${item.components[1].charCodeAt(0)}.png`}
                   alt={item.components[1]}
-                  className="flex-1 object-contain w-1/3 h-auto"
+                  className="object-contain flex-1 w-1/3 h-auto"
                 />
                 {/* <LetterVowel
                   letter={item.components[1]}
@@ -199,7 +199,7 @@ const LearnBySpeak = ({
             )}
           </div>
           {/* 문제-보기 영역 */}
-          <div className="flex flex-col items-center justify-center w-full h-full col-span-5 gap-2 bg-white border rounded-lg shadow">
+          <div className="flex flex-col col-span-5 gap-2 justify-center items-center w-full h-full bg-white rounded-lg border shadow">
             <div className="flex gap-2">
               {target !== "word" && (
                 <Letters
@@ -237,7 +237,7 @@ const LearnBySpeak = ({
           </div>
         </div>
       </div>
-      <div className="flex flex-col items-center justify-center w-full h-full col-span-3 grid-rows-3 gap-10 p-8 text-center bg-white border rounded-lg shadow-sm">
+      <div className="flex flex-col col-span-3 grid-rows-3 gap-10 justify-center items-center p-8 w-full h-full text-center bg-white rounded-lg border shadow-sm">
         <Button
           onClick={handleMicButton}
           size="lg"
