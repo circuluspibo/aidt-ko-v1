@@ -145,7 +145,6 @@ const CharacterCurriculumManagement = () => {
       const index = selectedOrder.findIndex((item) => item.id === id);
       if (index > -1) config.index = index;
     });
-    console.log(nextConfigs);
     return nextConfigs;
   };
 
@@ -165,28 +164,19 @@ const CharacterCurriculumManagement = () => {
     // 새로운 빈 챕터 생성
     const newChapter = {
       id,
+      characterId,
+      level: 0,
+      method: Object.keys(METHODS),
+      repeat: 3,
+      target: "vowel",
       name: "새 챕터",
-      difficulty: "보통",
-      description: "학습 내용을 설정해주세요.",
-      learningContents: [],
-      isPublished: true,
     };
 
     // 하단 커리큘럼에 바로 추가
     setSelectedOrder((prev) => [...prev, newChapter]);
-    setChapterConfigs((prev) => ({
-      ...prev,
-      [id]: {
-        target: "vowel",
-        method: Object.keys(METHODS),
-        repeat: 3,
-        level: 0,
-      },
-    }));
   };
 
   const onRemove = (id) => {
-    console.log(selectedOrder, id);
     if (!selectedOrder) return;
 
     const removeIndex = selectedOrder.findIndex((item) => item.id === id);
@@ -195,11 +185,6 @@ const CharacterCurriculumManagement = () => {
     const newSelectedOrder = [...selectedOrder];
     newSelectedOrder.splice(removeIndex, 1);
     setSelectedOrder(newSelectedOrder);
-    setChapterConfigs((prev) => {
-      delete prev[id];
-      return prev;
-    });
-    console.log(chapterConfigs, newSelectedOrder);
     if (id.indexOf("chapter") < 0) {
       deleteCurriculum(id);
     }
@@ -217,14 +202,17 @@ const CharacterCurriculumManagement = () => {
   };
 
   const updateChapterConfig = (chapterId, config) => {
-    setChapterConfigs((prev) => ({
-      ...prev,
-      [chapterId]: {
-        ...prev[chapterId],
-        ...config,
-        level: config?.target === "word" ? 1 : config?.level || 0,
-      },
-    }));
+    setSelectedOrder((prev) =>
+      prev.map((item) =>
+        item.id === chapterId
+          ? {
+              ...item,
+              ...config,
+              level: config?.target === "word" ? 1 : config?.level || 0,
+            }
+          : item
+      )
+    );
   };
 
   const handleBackToCharacterList = () => {
@@ -234,11 +222,6 @@ const CharacterCurriculumManagement = () => {
   useEffect(() => {
     if (selectedCharacter && selectedCharacter?.curriculum) {
       const curriculum = selectedCharacter?.curriculum || [];
-      const newConfigs = curriculum.reduce((ac, cu) => {
-        const { chapterId, index, level, method, repeat, target } = cu;
-        return { ...ac, [chapterId]: { index, level, method, repeat, target } };
-      }, {});
-      setChapterConfigs(newConfigs);
       setSelectedOrder(
         curriculum.map(({ chapterId, ...rest }) => ({
           id: chapterId,
@@ -248,9 +231,13 @@ const CharacterCurriculumManagement = () => {
     }
   }, [selectedCharacter]);
 
-  // useEffect(() => {
-  //   scheduleSave(chapterConfigs);
-  // }, [selectedOrder, chapterConfigs]);
+  useEffect(() => {
+    const newConfigs = selectedOrder.reduce((ac, cu, index) => {
+      const { id, level, method, repeat, target } = cu;
+      return { ...ac, [id]: { index, level, method, repeat, target } };
+    }, {});
+    setChapterConfigs(newConfigs);
+  }, [selectedOrder]);
 
   return (
     <>
