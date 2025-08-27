@@ -22,7 +22,8 @@ const useContentQuery = (characterId, chapterId, method) => {
       }
     },
     enabled: !!(characterId && chapterId), // target이 있을 때만 쿼리를 실행합니다.
-    staleTime: 1000 * 60 * 5, // 5분 동안 데이터를 fresh 상태로 유지 (API 호출 최소화)
+    refetchOnMount: true, // 컴포넌트가 마운트될 때마다 refetch
+    staleTime: 0, // 데이터를 항상 stale로 간주하여 refetch 허용
     // initialData: {
     //   target: "vowel",
     //   contents: [],

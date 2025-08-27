@@ -15,8 +15,8 @@ const useCurriculumQuery = (characterId) => {
       return [];
     },
     enabled: !!characterId,
-    staleTime: 1000 * 60 * 5, // 5분 동안 데이터를 fresh 상태로 유지
-    gcTime: 1000 * 60 * 10, // 10분 동안 캐시 유지
+    refetchOnMount: true, // 컴포넌트가 마운트될 때마다 refetch
+    staleTime: 0, // 데이터를 항상 stale로 간주하여 refetch 허용
   });
 
   return {

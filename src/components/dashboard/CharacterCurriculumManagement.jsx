@@ -68,6 +68,8 @@ const CharacterCurriculumManagement = () => {
       }
     },
     enabled: !!characterId,
+    refetchOnMount: true, // 컴포넌트가 마운트될 때마다 refetch
+    staleTime: 0, // 데이터를 항상 stale로 간주하여 refetch 허용
   });
   const {
     mutate: upsertCurriculum,
@@ -193,6 +195,11 @@ const CharacterCurriculumManagement = () => {
     const newSelectedOrder = [...selectedOrder];
     newSelectedOrder.splice(removeIndex, 1);
     setSelectedOrder(newSelectedOrder);
+    setChapterConfigs((prev) => {
+      delete prev[id];
+      return prev;
+    });
+    console.log(chapterConfigs, newSelectedOrder);
     if (id.indexOf("chapter") < 0) {
       deleteCurriculum(id);
     }
