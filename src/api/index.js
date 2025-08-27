@@ -5,7 +5,7 @@ console.log(
 );
 
 export const API_URL = () => import.meta.env.VITE_API_URL;
-export const VAPI_URL = () => import.meta.env.VITE_VAPI_OCR;
+export const VAPI_URL = () => import.meta.env.VITE_VAPI_URL;
 
 export const encodeGetParams = (p) =>
   Object.entries(p)
