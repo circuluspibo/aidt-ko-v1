@@ -134,7 +134,7 @@ export function CharacterManagement() {
                     </p>
                     <div className="flex-1">
                       <CardTitle className="text-lg">
-                        {character.nickname}
+                        {`${character.nickname} (${character.name})`}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground">
                         {character.memo}
