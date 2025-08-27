@@ -79,6 +79,7 @@ function Method() {
                 methodData.map((item, i) => (
                   <MenuCard
                     key={`method-${i}`}
+                    total={methodData.length}
                     index={i}
                     item={item}
                     className={

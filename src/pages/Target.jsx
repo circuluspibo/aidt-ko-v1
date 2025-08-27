@@ -72,6 +72,7 @@ function Target() {
                 targetData.map((item, i) => (
                   <MenuCard
                     key={`target-${i}`}
+                    total={targetData.length}
                     index={i}
                     item={item}
                     className={

@@ -1,10 +1,17 @@
 import { BlurFade } from "./magicui/blur-fade";
 import { Card } from "./ui/card";
 
-const MenuCard = ({ index, item, className, textcolor, onCardClick }) => {
+const MenuCard = ({
+  index,
+  item,
+  className,
+  textcolor,
+  onCardClick,
+  total,
+}) => {
   return (
     <BlurFade
-      delay={0.25 * index}
+      delay={total > 4 ? 0.1 * index : 0.25 * index}
       inView
       className="flex flex-col gap-2 justify-center items-center self-stretch w-full min-w-60 tl6:p-2"
     >
