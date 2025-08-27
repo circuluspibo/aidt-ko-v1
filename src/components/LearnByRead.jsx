@@ -78,13 +78,13 @@ const LearnByRead = ({ data, item, target, onAnswer, currentItemIndex }) => {
                   className="py-2 text-9xl"
                 /> */}
                 <img
-                  src={`/images/${item.components[0].charCodeAt(0)}.png`}
+                  src={`/images/hangul/${item.components[0].charCodeAt(0)}.png`}
                   alt={item.components[0]}
                   className="object-contain flex-1 w-1/3 h-auto scale-75"
                 />
                 <span>+</span>
                 <img
-                  src={`/images/${item.components[1].charCodeAt(0)}.png`}
+                  src={`/images/hangul/${item.components[1].charCodeAt(0)}.png`}
                   alt={item.components[1]}
                   className="object-contain flex-1 w-1/3 h-auto"
                 />
