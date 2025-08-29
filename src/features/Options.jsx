@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import colors from "tailwindcss/colors";
 
-const Options = ({ correctAnswer, options, onSelect, color, enabled }) => {
+const Options = ({
+  correctAnswer,
+  options,
+  onSelect,
+  color,
+  enabled,
+  currentItemIndex,
+}) => {
   const [selected, setSelected] = useState(null);
   const handleClick = (choice) => {
     setSelected(choice);
@@ -17,7 +24,7 @@ const Options = ({ correctAnswer, options, onSelect, color, enabled }) => {
       {options.length > 0 &&
         options.map((choice, idx) => (
           <button
-            key={`${new Date().valueOf()}-${idx}`}
+            key={`${choice}-${currentItemIndex}-${idx}`}
             onClick={() => handleClick(choice)}
             style={{
               "--hover-bg": colors[color]["200"],

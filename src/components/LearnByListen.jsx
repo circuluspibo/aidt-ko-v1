@@ -167,6 +167,7 @@ const LearnByListen = ({ data, item, target, onAnswer, currentItemIndex }) => {
         options={options}
         onSelect={handleSelect}
         color="teal"
+        currentItemIndex={currentItemIndex}
       />
     </div>
   );

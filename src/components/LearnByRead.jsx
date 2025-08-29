@@ -6,9 +6,15 @@ import LetterVowel from "./LetterVowel";
 import Letters from "./Letters";
 import { JOSA } from "@/utils/globals";
 
-const LearnByRead = ({ data, item, target, onAnswer, currentItemIndex }) => {
+const LearnByRead = ({
+  data,
+  item,
+  target,
+  onAnswer,
+  currentItemIndex,
+  submitAnswer, // 집중도 모니터링 함수
+}) => {
   const [options, setOptions] = useState([]);
-  let startTime = null;
 
   const generateChoices = () => {
     if (item) {
@@ -25,21 +31,23 @@ const LearnByRead = ({ data, item, target, onAnswer, currentItemIndex }) => {
   };
 
   const handleSelect = (choice) => {
-    const endTime = new Date().valueOf();
-    const responseTime = (endTime - startTime) / 1000;
     const isCorrect = choice === item.letter;
+
+    // 집중도 모니터링에 답변 기록
+    submitAnswer(choice, item.letter, isCorrect);
+
     const attempt = {
       timestamp: new Date(),
-      responseTime,
+      responseTime: 0, // 집중도 모니터에서 계산됨
       isCorrect,
       correct: item.letter,
       user: choice,
     };
+
     onAnswer(attempt, generateChoices);
   };
 
   useEffect(() => {
-    startTime = new Date().valueOf();
     generateChoices();
   }, [currentItemIndex, target]);
 
@@ -73,10 +81,6 @@ const LearnByRead = ({ data, item, target, onAnswer, currentItemIndex }) => {
             )}
             {target === "letter" && (
               <div className="flex justify-center items-center pr-4 w-full text-6xl font-extrabold">
-                {/* <LetterConsonant
-                  letter={item.components[0]}
-                  className="py-2 text-9xl"
-                /> */}
                 <img
                   src={`/images/hangul/${item.components[0].charCodeAt(0)}.png`}
                   alt={item.components[0]}
@@ -88,10 +92,6 @@ const LearnByRead = ({ data, item, target, onAnswer, currentItemIndex }) => {
                   alt={item.components[1]}
                   className="object-contain flex-1 w-1/3 h-auto"
                 />
-                {/* <LetterVowel
-                  letter={item.components[1]}
-                  className="py-2 text-9xl"
-                /> */}
                 <span>=</span>
               </div>
             )}
@@ -128,6 +128,7 @@ const LearnByRead = ({ data, item, target, onAnswer, currentItemIndex }) => {
         options={options}
         onSelect={handleSelect}
         color="amber"
+        currentItemIndex={currentItemIndex}
       />
     </div>
   );

@@ -1,0 +1,360 @@
+// 모든 집중도 데이터 통합 관리
+import { useState, useEffect, useRef } from "react";
+import { useConcentrationMonitor } from "./useConcentrationMonitor";
+import { useSpeechRecognitionMonitor } from "./useSpeechRecognitionMonitor";
+
+export const useIntegratedConcentrationMonitor = (
+  sessionId,
+  studentId,
+  activityType,
+  videoRef
+) => {
+  const [integratedData, setIntegratedData] = useState({
+    totalConcentrationIssues: 0,
+    concentrationLevel: "medium", // 초기값을 'medium'으로 변경
+    recommendations: [],
+    sessionQuality: 0,
+  });
+
+  // 로그 출력 제어를 위한 ref
+  const lastLogTime = useRef(0);
+
+  // 각 모니터링 훅 초기화
+  const concentrationMonitor = useConcentrationMonitor(
+    sessionId,
+    studentId,
+    videoRef
+  );
+  const speechMonitor = useSpeechRecognitionMonitor();
+
+  // 최종 집중도 점수 계산 (개선된 버전)
+  const calculateIntegratedScore = () => {
+    const concentrationData = concentrationMonitor.concentrationData;
+    const speechData = speechMonitor.speechData;
+
+    let issues = 0;
+    let absoluteWarnings = []; // 절대적 경고 메시지
+
+    // 1. 비정상적으로 빠른 응답 (가중치 감소)
+    issues += concentrationData.suspiciouslyFastAnswers * 0.5;
+
+    // 2. 연속 오답 패턴 (임계값 완화)
+    if (concentrationData.maxConsecutiveWrong > 8) {
+      issues += Math.floor(concentrationData.maxConsecutiveWrong / 5);
+    }
+
+    // 3. 비활성 시간 (3분 이상으로 완화)
+    const inactivityIssues = concentrationData.inactivityPeriods.length * 0.5;
+    issues += inactivityIssues;
+
+    // 4. 긴 휴식 (말하기 활동에서만)
+    if (activityType === "speak") {
+      issues += speechData.speechPatterns.longPauses * 0.5;
+    }
+
+    // 5. 카메라 기반 집중도 이슈 (더 엄격한 기준)
+    const focusData = concentrationData.focusData;
+    if (focusData.focusLog.length >= 20) {
+      // 30초에서 20초로 단축
+      const recentFocus = focusData.focusLog.slice(-20);
+      const focusRate = recentFocus.filter((x) => x).length / 20;
+
+      if (focusRate < 0.6) {
+        // 0.5에서 0.6으로 더 엄격하게 조정
+        issues += Math.floor((0.6 - focusRate) * 5);
+      }
+    }
+
+    // 절대적 기준 체크
+    if (!focusData.faceDetected) {
+      absoluteWarnings.push("카메라 앞에 앉아주세요");
+    }
+
+    if (concentrationData.inactivityPeriods.length > 0) {
+      absoluteWarnings.push("오랫동안 활동이 없습니다");
+    }
+
+    if (concentrationData.suspiciouslyFastAnswers > 3) {
+      absoluteWarnings.push("너무 빠른 응답이 많습니다");
+    }
+
+    if (concentrationData.maxConsecutiveWrong > 5) {
+      absoluteWarnings.push("연속으로 틀리는 문제가 많습니다");
+    }
+
+    if (focusData.focusLog.length >= 20) {
+      const recentFocus = focusData.focusLog.slice(-20);
+      const focusRate = recentFocus.filter((x) => x).length / 20;
+      if (focusRate < 0.3) {
+        absoluteWarnings.push("화면을 제대로 보고 있지 않습니다");
+      }
+    }
+
+    if (!focusData.faceDetected) {
+      issues += 2; // 얼굴 미감지 시 더 큰 페널티
+    }
+
+    const totalIssues = Math.min(issues, 8); // 최대 8점으로 감소
+
+    // 집중도 레벨 결정 (더 엄격한 기준으로 조정)
+    let concentrationLevel = "high";
+    if (totalIssues > 4) {
+      // 6에서 4로 엄격하게 조정
+      concentrationLevel = "low";
+    } else if (totalIssues > 1) {
+      // 3에서 1로 엄격하게 조정
+      concentrationLevel = "medium";
+    }
+
+    // 권장사항 생성
+    const recommendations = generateRecommendations({
+      totalIssues,
+      concentrationLevel,
+      focusData,
+    });
+
+    // 세션 품질 점수 (0-100)
+    const sessionQuality = Math.max(100 - totalIssues * 10, 0);
+
+    const result = {
+      totalIssues,
+      concentrationLevel,
+      recommendations,
+      sessionQuality,
+      absoluteWarnings,
+    };
+
+    // 최종 집중도 점수 로그 출력
+    const now = Date.now();
+    if (now - lastLogTime.current > 5000) {
+      console.log("🎯 최종 집중도 점수:", {
+        totalIssues,
+        concentrationLevel,
+        sessionQuality,
+        absoluteWarnings,
+        details: {
+          fastAnswers: concentrationData.suspiciouslyFastAnswers,
+          consecutiveWrong: concentrationData.maxConsecutiveWrong,
+          inactivityPeriods: concentrationData.inactivityPeriods.length,
+          faceDetected: focusData.faceDetected,
+          focusRate: focusData.focusRate?.toFixed(1) + "%",
+        },
+      });
+      lastLogTime.current = now;
+    }
+
+    return result;
+  };
+
+  // 권장사항 생성 (단순화된 버전)
+  const generateRecommendations = (data) => {
+    const recommendations = [];
+
+    if (data.totalIssues > 6) {
+      recommendations.push("휴식을 취하고 다시 시작해보세요.");
+    }
+
+    if (data.concentrationLevel === "low") {
+      recommendations.push("학습 환경을 조용하게 만들어보세요.");
+    }
+
+    if (!data.focusData.faceDetected) {
+      recommendations.push("카메라 앞에 앉아주세요.");
+    }
+
+    return recommendations;
+  };
+
+  // 통합 데이터 업데이트
+  useEffect(() => {
+    const integratedScore = calculateIntegratedScore();
+    setIntegratedData(integratedScore);
+
+    // 집중도 레벨이 변경될 때만 로그 출력
+    if (
+      integratedScore.concentrationLevel !== integratedData.concentrationLevel
+    ) {
+      console.log("🎯 집중도 레벨 변경:", {
+        timestamp: new Date().toLocaleTimeString(),
+        from: integratedData.concentrationLevel,
+        to: integratedScore.concentrationLevel,
+        totalIssues: integratedScore.totalIssues,
+        focusRate:
+          concentrationMonitor.concentrationData.focusData.focusRate?.toFixed(
+            1
+          ) + "%",
+        faceDetected:
+          concentrationMonitor.concentrationData.focusData.faceDetected,
+      });
+    }
+
+    // 5초마다 한 번씩만 로그 출력
+    const now = Date.now();
+    if (now - lastLogTime.current > 5000) {
+      console.log("🔍 집중도 계산:", {
+        level: integratedScore.concentrationLevel,
+        issues: integratedScore.totalIssues,
+        focusRate:
+          concentrationMonitor.concentrationData.focusData.focusRate?.toFixed(
+            1
+          ) + "%",
+        faceDetected:
+          concentrationMonitor.concentrationData.focusData.faceDetected,
+      });
+      lastLogTime.current = now;
+    }
+  }, [concentrationMonitor.concentrationData, speechMonitor.speechData]);
+
+  // 사용자 활동 감지 시 집중도 상태 즉시 업데이트
+  useEffect(() => {
+    const handleUserActivity = () => {
+      // 사용자 활동 시 집중도 상태를 즉시 개선
+      setTimeout(() => {
+        const currentScore = calculateIntegratedScore();
+
+        // 절대적 경고가 있으면 즉시 제거
+        const hasAbsoluteWarnings = currentScore.absoluteWarnings.length > 0;
+
+        if (
+          hasAbsoluteWarnings ||
+          (currentScore.totalIssues <= 1 &&
+            currentScore.concentrationLevel !== "high")
+        ) {
+          // 절대적 경고가 있거나 이슈가 적으면 즉시 개선
+          const improvedScore = {
+            ...currentScore,
+            concentrationLevel: "high",
+            totalIssues: Math.max(0, currentScore.totalIssues - 1), // 이슈 더 많이 감소
+            absoluteWarnings: [], // 절대적 경고 즉시 제거
+          };
+          setIntegratedData(improvedScore);
+          console.log("✅ 사용자 활동으로 집중도 개선:", {
+            timestamp: new Date().toLocaleTimeString(),
+            from: currentScore.concentrationLevel,
+            to: "high",
+            totalIssues: improvedScore.totalIssues,
+            warningsRemoved: hasAbsoluteWarnings,
+            inactivityPeriods:
+              concentrationMonitor.concentrationData.inactivityPeriods.length,
+          });
+        }
+      }, 500);
+    };
+
+    // 사용자 활동 이벤트 리스너
+    const events = [
+      "mousemove",
+      "click",
+      "keydown",
+      "scroll",
+      "touchstart",
+      "touchmove",
+    ];
+    events.forEach((event) => {
+      document.addEventListener(event, handleUserActivity, { passive: true });
+    });
+
+    return () => {
+      events.forEach((event) => {
+        document.removeEventListener(event, handleUserActivity);
+      });
+    };
+  }, []);
+
+  // 문제 시작 시 호출
+  const startQuestion = () => {
+    concentrationMonitor.startQuestionTimer();
+    if (activityType === "speak") {
+      speechMonitor.startRecognition();
+    }
+  };
+
+  // 답변 제출 시 호출
+  const submitAnswer = (userAnswer, correctAnswer, isCorrect) => {
+    // 각 모니터링 시스템에 데이터 전달
+    concentrationMonitor.endQuestionTimer(isCorrect);
+
+    if (activityType === "speak") {
+      if (isCorrect) {
+        speechMonitor.recordSuccessfulRecognition(userAnswer, 0.8);
+      } else {
+        speechMonitor.recordFailedRecognition({ error: "incorrect-answer" });
+      }
+    }
+
+    // 답변 제출 시 즉시 집중도 상태 업데이트 (절대적 경고 제거)
+    setTimeout(() => {
+      const integratedScore = calculateIntegratedScore();
+      const improvedScore = {
+        ...integratedScore,
+        absoluteWarnings: [], // 답변 제출 시 절대적 경고 즉시 제거
+      };
+      setIntegratedData(improvedScore);
+      console.log("📝 답변 제출 - 경고 메시지 제거:", {
+        timestamp: new Date().toLocaleTimeString(),
+        userAnswer,
+        isCorrect,
+        warningsRemoved: integratedScore.absoluteWarnings.length > 0,
+        inactivityPeriods:
+          concentrationMonitor.concentrationData.inactivityPeriods.length,
+      });
+    }, 100);
+  };
+
+  // 세션 종료 시 데이터 수집
+  const getSessionSummary = () => {
+    return {
+      sessionId,
+      studentId,
+      activityType,
+      duration: concentrationMonitor.getSessionData().duration,
+      concentrationData: {
+        timeBased: concentrationMonitor.concentrationData,
+        speechData: speechMonitor.speechData,
+        focusData: concentrationMonitor.concentrationData.focusData,
+      },
+      integratedScore: integratedData,
+      recommendations: integratedData.recommendations,
+    };
+  };
+
+  // 실시간 집중도 상태
+  const getConcentrationStatus = () => {
+    return {
+      level: integratedData.concentrationLevel,
+      score: integratedData.sessionQuality,
+      issues: integratedData.totalConcentrationIssues,
+      recommendations: integratedData.recommendations,
+      absoluteWarnings: integratedData.absoluteWarnings || [],
+      focusRate: concentrationMonitor.concentrationData.focusData.focusRate,
+      faceDetected:
+        concentrationMonitor.concentrationData.focusData.faceDetected,
+    };
+  };
+
+  return {
+    // 모니터링 시작/종료
+    startQuestion,
+    submitAnswer,
+    getSessionSummary,
+
+    // 실시간 상태
+    getConcentrationStatus,
+
+    // 개별 모니터링 데이터
+    concentrationData: concentrationMonitor.concentrationData,
+    speechData: speechMonitor.speechData,
+    focusData: concentrationMonitor.concentrationData.focusData,
+
+    // 통합 데이터
+    integratedData,
+
+    // 비디오 요소 참조
+    videoRef: concentrationMonitor.videoRef,
+
+    // 음성 인식 관련 함수들
+    recordSpeechFailure: speechMonitor.recordFailedRecognition,
+    recordSpeechSuccess: speechMonitor.recordSuccessfulRecognition,
+    recordCorrectionAttempt: speechMonitor.recordCorrectionAttempt,
+  };
+};

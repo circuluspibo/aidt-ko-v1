@@ -1,7 +1,7 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+// ✅ 학습 세션 관리 (진행률, 타이머, 문제 이동 등)
+// ✅ 학습 통계 관리
+// ✅ 커리큘럼 관리
 import { useState, useEffect, useRef } from "react";
-import { FaceMesh } from "@mediapipe/face_mesh";
-import { Camera } from "@mediapipe/camera_utils";
 import { toast } from "sonner";
 import { Toast } from "@/components/Toast";
 import { METHODS, TARGETS } from "@/utils/globals";
@@ -29,13 +29,8 @@ const useLearningSession = () => {
   // Curriculum API 호출
   const { curriculumData } = useCurriculumQuery(character);
 
-  const {
-    loadProgress,
-    saveProgress,
-    loadStats,
-    saveStats,
-    validateSessionData,
-  } = useSessionStore();
+  const { loadProgress, saveProgress, loadStats, saveStats } =
+    useSessionStore();
 
   const [repeatSettings, setRepeatSettings] = useState({
     correct: data?.repeat || 1,
@@ -54,28 +49,20 @@ const useLearningSession = () => {
       // chapter를 chapterId로 사용 (저장된 데이터 구조와 일치)
       const savedProgress = loadProgress(chapter, method);
 
-      // 세션 데이터 검증
-      validateSessionData(chapter, method);
-
       // saved 데이터가 있으면 상태 업데이트, 없으면 기본값 사용
       setCurrentItemIndex(savedProgress?.index ?? 0);
       setCurrentQuestion(savedProgress?.question ?? 1);
       setCurrentLearningCount(savedProgress?.learningCount ?? 1);
     }
-  }, [chapter, method, loadProgress, validateSessionData, data]);
+  }, [chapter, method, loadProgress, data]);
 
   const [tutorMessage, setTutorMessage] = useState("학습을 시작해 주세요.");
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const [learningStats, setLearningStats] = useState(loadStats());
-  const [focusLog, setFocusLog] = useState([]);
   const [curriculum, setCurriculum] = useState(null);
 
-  const videoRef = useRef(null);
   const timerRef = useRef(null);
-  const focusLogRef = useRef([]);
-  const cameraRef = useRef(null);
-  const faceMeshRef = useRef(null);
   const item = learningDataForTarget?.[currentItemIndex];
 
   // Curriculum 데이터를 기반으로 동적으로 NEXT_STEP 생성
@@ -191,7 +178,6 @@ const useLearningSession = () => {
           };
           setLearningStats(resetStats);
           saveStats(resetStats);
-          setFocusLog([]);
           setLoading(false);
         },
       }
@@ -299,21 +285,6 @@ const useLearningSession = () => {
     );
   };
 
-  const onResults = (results) => {
-    if (results.multiFaceLandmarks?.length > 0) {
-      const lm = results.multiFaceLandmarks[0];
-      const dx = (lm[468].x + lm[473].x) / 2 - (lm[33].x + lm[263].x) / 2;
-      const focused = Math.abs(dx) < 0.015;
-      setFocusLog((prev) =>
-        (prev.length > 90 ? prev.slice(-89) : prev).concat(focused)
-      );
-    } else {
-      setFocusLog((prev) =>
-        (prev.length > 90 ? prev.slice(-89) : prev).concat(false)
-      );
-    }
-  };
-
   useEffect(() => {
     if (data) {
       // data가 존재할 때만 실행
@@ -343,102 +314,6 @@ const useLearningSession = () => {
 
     return () => clearInterval(timerRef.current);
   }, [currentItemIndex, data?.target, learningDataForTarget, data?.contents]);
-
-  useEffect(() => {
-    focusLogRef.current = focusLog;
-  }, [focusLog]);
-
-  useEffect(() => {
-    let initInterval;
-    let focusInterval;
-    function tryInit() {
-      if (videoRef.current) {
-        if (cameraRef.current) {
-          cameraRef.current.stop();
-          cameraRef.current = null;
-        }
-        if (faceMeshRef.current) {
-          faceMeshRef.current = null;
-        }
-
-        try {
-          const faceMesh = new FaceMesh({
-            locateFile: (file) =>
-              `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
-          });
-          faceMesh.setOptions({
-            maxNumFaces: 1,
-            refineLandmarks: true,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5,
-          });
-          faceMesh.onResults(onResults);
-          faceMeshRef.current = faceMesh;
-
-          const camera = new Camera(videoRef.current, {
-            onFrame: async () => {
-              await faceMesh.send({ image: videoRef.current });
-            },
-            width: 640,
-            height: 480,
-          });
-          camera.start();
-          cameraRef.current = camera;
-          clearInterval(initInterval);
-        } catch (error) {
-          console.error(error);
-        }
-      }
-    }
-    function focusCheck() {
-      if (focusLogRef.current.length >= 30) {
-        const recent = focusLogRef.current.slice(-30);
-        const focusRate = recent.filter((x) => x).length / 30;
-        console.log(`집중도: ${(focusRate * 100).toFixed(1)}%`);
-        if (focusRate < 0.5) {
-          toast.custom(
-            () => (
-              <Toast
-                title="집중도가 낮아요!"
-                description="화면을 잘 보고 집중해 주세요 👀"
-                type="warning"
-              />
-            ),
-            {
-              position: "bottom-center",
-              duration: 2500,
-              onAutoClose: () => {
-                setLearningStats((prev) => {
-                  const updated = {
-                    ...prev,
-                    totalFocusLack: prev.totalFocusLack + 1,
-                  };
-                  saveStats(updated);
-                  return updated;
-                });
-              },
-            }
-          );
-        }
-      }
-    }
-    initInterval = setInterval(tryInit, 100);
-    focusInterval = setInterval(focusCheck, 3000);
-    return () => {
-      clearInterval(focusInterval);
-      clearInterval(initInterval);
-      if (videoRef.current) {
-        videoRef.current = null;
-      }
-      if (cameraRef.current) {
-        cameraRef.current.stop();
-        cameraRef.current = null;
-      }
-      if (faceMeshRef.current) {
-        faceMeshRef.current = null;
-      }
-    };
-  }, []);
 
   return {
     // URL 파라미터
@@ -475,7 +350,6 @@ const useLearningSession = () => {
     progress,
     loading,
     item,
-    videoRef,
     onAnswer: handleAnswer,
     setTutorMessage,
     setCurrentItemIndex,
