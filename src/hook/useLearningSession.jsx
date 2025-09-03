@@ -37,9 +37,9 @@ const useLearningSession = () => {
     incorrect: Math.round(data?.repeat * 1.5) || 2,
   });
   const [curriculumIndex, setCurriculumIndex] = useState(0);
-  const [currentItemIndex, setCurrentItemIndex] = useState(0);
-  const [currentQuestionNo, setCurrentQuestion] = useState(1);
-  const [currentLearningCount, setCurrentLearningCount] = useState(1);
+  const [currentItemIndex, setCurrentItemIndex] = useState(0); // 현재 학습 중인 콘텐츠(문자/단어)의 인덱스 (0부터 시작)
+  const [currentQuestionNo, setCurrentQuestion] = useState(1); // 현재 콘텐츠에 대한 반복 학습 횟수 (1부터 시작, repeatSettings.correct까지)
+  const [currentLearningCount, setCurrentLearningCount] = useState(1); // 현재 콘텐츠를 학습한 총 횟수 (정답/오답 모두 포함)
   const [timer, setTimer] = useState(0);
 
   // data나 method가 변경될 때마다 saved를 업데이트하고 상태 초기화
