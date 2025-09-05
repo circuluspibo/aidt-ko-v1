@@ -183,7 +183,7 @@ const LearnByWrite = ({
       {/* 문제-보기 영역 */}
       <div className="col-span-8 grid grid-rows-[auto_1fr] gap-4">
         <div className="row-span-1 p-2 w-full text-2xl font-bold text-center rounded-lg border shadow border-neutral-300 bg-rose-300/80">
-          {`"${item.name}"${JOSA().c(item.letter, "을/를")} 직접 써보세요.`}
+          {`"${item.letter}"${JOSA().c(item.letter, "을/를")} 직접 써보세요.`}
         </div>
         <div className="flex flex-col gap-10 justify-center items-center p-2 w-full text-center bg-white rounded-lg border shadow-sm">
           <div className="grid grid-cols-[1fr_auto] gap-2 w-full h-full">
