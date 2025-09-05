@@ -20,11 +20,41 @@ import {
   Clock,
   Target,
   Brain,
+  Loader2,
 } from "lucide-react";
-import { mockLearningOverview } from "./mock-learning-stats";
+import { useLearningOverview } from "@/hook/useStudentAnalytics";
+import { transformOverview } from "@/utils/dataTransformers";
+import { useAuth } from "@/context/AuthContext";
 
 export function Dashboard({ onNavigate }) {
-  const overview = mockLearningOverview;
+  const { user } = useAuth();
+
+  const {
+    data: rawOverview,
+    isPending,
+    isError,
+  } = useLearningOverview(user?._id, {});
+
+  // API 응답을 Mock 데이터 구조로 변환 (API 데이터가 없으면 Mock 데이터 사용)
+  const overview = transformOverview(rawOverview, "api");
+
+  if (isPending) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <span className="ml-2">학습 데이터를 불러오는 중...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex justify-center items-center h-64 text-red-500">
+        <span>학습 데이터를 불러올 수 없습니다.</span>
+      </div>
+    );
+  }
+
   const summaryData = [
     {
       title: "활동 학생",
@@ -88,7 +118,7 @@ export function Dashboard({ onNavigate }) {
     },
   ];
 
-  // 최근 2주간 일일 활동 데이터
+  // 최근 2주간 일일 활동 데이터 (LegacyDashboard와 동일)
   const recentActivityData = overview.dailyActivity.slice(-7).map((day) => ({
     날짜: new Date(day.date).toLocaleDateString("ko-KR", {
       month: "short",
@@ -99,14 +129,14 @@ export function Dashboard({ onNavigate }) {
     정답률: Math.round(day.averageAccuracy),
   }));
 
-  // 콘텐츠 타입별 정답률 데이터
+  // 콘텐츠 타입별 정답률 데이터 (LegacyDashboard와 동일)
   const contentAccuracyData = overview.contentTypeDistribution.map((item) => ({
     타입: item.contentType,
     정답률: Math.round(item.averageAccuracy),
     문제수: Math.round(item.questionsAttempted / 100), // 스케일 조정
   }));
 
-  // 활동 타입별 데이터
+  // 활동 타입별 데이터 (LegacyDashboard와 동일)
   const activityTypeData = overview.activityTypeDistribution.map((item) => ({
     name: item.activityType,
     value: Math.round(item.averageAccuracy),
@@ -121,7 +151,7 @@ export function Dashboard({ onNavigate }) {
         : "#ef4444",
   }));
 
-  // 난이도별 성과 데이터
+  // 난이도별 성과 데이터 (LegacyDashboard와 동일)
   const difficultyData = overview.difficultyDistribution.map((item) => ({
     난이도: item.difficulty,
     정답률: Math.round(item.accuracy),
