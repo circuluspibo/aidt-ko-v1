@@ -52,6 +52,7 @@ export const AuthProvider = ({ children, user: userData }) => {
   const getId = () => user?._id || null;
   const getUserId = () => user?.userId || null;
   const getName = () => user?.name || null;
+  const publicPaths = ["/", "/login", "/login/student", "/login/teacher"];
 
   // 1. 서버에서 받은 사용자 데이터로 초기화
   useEffect(() => {
@@ -95,7 +96,6 @@ export const AuthProvider = ({ children, user: userData }) => {
     }
 
     const currentPath = location.pathname;
-    const publicPaths = ["/", "/login", "/login/student", "/login/teacher"];
 
     if (publicPaths.includes(currentPath)) {
       console.log("로그인된 사용자가 공개 페이지 접근, 리다이렉트:", {
@@ -111,7 +111,13 @@ export const AuthProvider = ({ children, user: userData }) => {
 
   // 3. 서버에서 사용자 데이터가 null이고 로컬에 사용자 데이터가 있는 경우 (토큰 만료 등)
   useEffect(() => {
-    if (userData === null && user && !isInitialized.current) {
+    const currentPath = location.pathname;
+
+    if (
+      !publicPaths.includes(currentPath) &&
+      userData === null &&
+      !isInitialized.current
+    ) {
       console.log("서버에서 사용자 데이터가 null, 로그아웃 처리");
       setUser(null);
       setToken(null);

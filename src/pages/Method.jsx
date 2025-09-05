@@ -10,10 +10,10 @@ import { COLORS, TARGETS, METHODS, getPrevPath } from "../utils/globals";
 import StepDialog from "@/components/StepDialog";
 import MenuCard from "@/components/MenuCard";
 import { ChevronLeft } from "lucide-react";
-import useLearningSession from "@/hook/useLearningSession";
+import { useSessionContext } from "@/context/SessionContext";
 
 function Method() {
-  const { curriculumData, getMethodData } = useLearningSession();
+  const { curriculumData, getMethodData } = useSessionContext();
   const location = useLocation();
   const navigate = useNavigate();
   const { character, chapter } = useParams();
@@ -22,8 +22,6 @@ function Method() {
   const [selected, setSelected] = useState(null);
   const [open, setOpen] = useState(false);
   const [methodData, setMethodData] = useState(null);
-
-  // useLearningSession 훅 사용
 
   const onCardClick = (item) => {
     setSelected(item.name);
@@ -47,7 +45,6 @@ function Method() {
   useEffect(() => {
     if (curriculumData) {
       const data = getMethodData(chapter);
-      console.log(data);
       setMethodData(data);
     }
   }, [curriculumData, chapter]);

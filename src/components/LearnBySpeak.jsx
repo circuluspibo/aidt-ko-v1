@@ -6,16 +6,16 @@ import { JOSA, TARGETS } from "@/utils/globals";
 import { Alert, AlertDescription } from "./ui/alert";
 import { AlertCircle, AudioLines, Square } from "lucide-react";
 
-let startTime = null;
-
 const getSR = () => window.SpeechRecognition || window.webkitSpeechRecognition;
 
 const LearnBySpeak = ({
+  data,
   item,
   target,
   onAnswer,
   currentRepeat,
   currentItemIndex,
+  currentLearningCount,
 }) => {
   const [[type, message], setAlert] = useState(["", ""]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -159,19 +159,7 @@ const LearnBySpeak = ({
   };
 
   const checkPronunciation = () => {
-    const correct = item.name;
-    const isCorrect = (transcript || "").includes(correct);
-    const endTime = Date.now();
-    const responseTime = (endTime - startTime) / 1000;
-
-    onAnswer({
-      timestamp: new Date(),
-      responseTime,
-      isCorrect,
-      correct,
-      user: transcript,
-    });
-
+    onAnswer(transcript, item.name);
     stopMicButton(); // ★ 실제 정지 호출(괄호 누락 수정)
   };
 
@@ -217,20 +205,12 @@ const LearnBySpeak = ({
 
   // 전환/반복/언마운트 시 정리 (원본 의도 유지)
   useEffect(() => {
-    startTime = Date.now();
     document.dispatchEvent(new Event("stop-sound"));
     forceStopRef.current = true;
     stopRecognition({ uiOnly: false });
     setTranscript("");
     setAlert(["", ""]);
-  }, [currentItemIndex, target]);
-
-  useEffect(() => {
-    setAlert(["", ""]);
-    forceStopRef.current = true;
-    stopRecognition({ uiOnly: false });
-    setTranscript("");
-  }, [currentRepeat]);
+  }, [currentItemIndex, target, currentRepeat, currentLearningCount]);
 
   useEffect(() => {
     return () => {

@@ -6,8 +6,14 @@ import { Loader2Icon } from "lucide-react";
 import { JOSA } from "@/utils/globals";
 import { fetchWriteOCR } from "@/api/learning";
 
-let startTime = null;
-const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
+const LearnByWrite = ({
+  item,
+  target,
+  onAnswer,
+  currentRepeat,
+  currentItemIndex,
+  currentLearningCount,
+}) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [hint, setHint] = useState(true);
   const canvasRef = useRef(null);
@@ -19,29 +25,17 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
       formData.append("uploadFile", blob, "test.png");
       try {
         const data = await fetchWriteOCR(target === "word", formData);
+        console.log("data", data, item);
         if (data) {
-          const isCorrect = data.text === item.letter;
-          const endTime = new Date().valueOf();
-          const responseTime = (endTime - startTime) / 1000;
-          const attempt = {
-            timestamp: new Date(),
-            responseTime,
-            isCorrect,
-            correct: item.letter,
-            user: data.text,
-          };
-          return attempt;
+          return [data.text, item.letter];
         }
       } catch (error) {
         console.error("채점 요청 오류:", error);
         return false;
       }
     },
-    onSuccess: (data) => {
-      onAnswer(data, () => {
-        clearCanvas();
-        setHint(true);
-      });
+    onSuccess: ([userAnswer, correctAnswer]) => {
+      onAnswer(userAnswer, correctAnswer);
     },
     onError: (error) => {
       console.error("채점 요청 오류:", error);
@@ -119,8 +113,11 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
   };
 
   useEffect(() => {
-    startTime = new Date().valueOf();
-  }, [currentRepeat]);
+    if (ctxRef && ctxRef.current) {
+      clearCanvas();
+      setHint(true);
+    }
+  }, [currentItemIndex, target, currentRepeat, currentLearningCount]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -186,7 +183,7 @@ const LearnByWrite = ({ item, target, onAnswer, currentRepeat }) => {
       {/* 문제-보기 영역 */}
       <div className="col-span-8 grid grid-rows-[auto_1fr] gap-4">
         <div className="row-span-1 p-2 w-full text-2xl font-bold text-center rounded-lg border shadow border-neutral-300 bg-rose-300/80">
-          {`"${item.name}"${JOSA().c(item.name, "을/를")} 직접 써보세요.`}
+          {`"${item.name}"${JOSA().c(item.letter, "을/를")} 직접 써보세요.`}
         </div>
         <div className="flex flex-col gap-10 justify-center items-center p-2 w-full text-center bg-white rounded-lg border shadow-sm">
           <div className="grid grid-cols-[1fr_auto] gap-2 w-full h-full">

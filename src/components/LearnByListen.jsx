@@ -4,11 +4,18 @@ import { JOSA, TARGETS } from "@/utils/globals";
 import Options from "@/features/Options";
 import { Button } from "./ui/button";
 
-const LearnByListen = ({ data, item, target, onAnswer, currentItemIndex }) => {
+const LearnByListen = ({
+  data,
+  item,
+  target,
+  onAnswer,
+  currentRepeat,
+  currentItemIndex,
+  currentLearningCount,
+}) => {
   const [options, setOptions] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayed, setPlayed] = useState(false);
-  let startTime = null;
 
   const generateChoices = () => {
     const correct = item.letter;
@@ -24,17 +31,7 @@ const LearnByListen = ({ data, item, target, onAnswer, currentItemIndex }) => {
 
   const handleSelect = (choice) => {
     document.dispatchEvent(new Event("stop-sound"));
-    const endTime = new Date().valueOf();
-    const responseTime = (endTime - startTime) / 1000;
-    const isCorrect = choice === item.letter;
-    const attempt = {
-      timestamp: new Date(),
-      responseTime,
-      isCorrect,
-      correct: item.letter,
-      user: choice,
-    };
-    onAnswer(attempt, generateChoices);
+    onAnswer(choice, item.letter);
   };
 
   const playSound = () => {
@@ -82,10 +79,9 @@ const LearnByListen = ({ data, item, target, onAnswer, currentItemIndex }) => {
 
   useEffect(() => {
     setPlayed(false);
-    startTime = new Date().valueOf();
     document.dispatchEvent(new Event("stop-sound"));
     generateChoices();
-  }, [currentItemIndex, target]);
+  }, [currentItemIndex, target, currentRepeat, currentLearningCount]);
 
   return (
     <div className="grid grid-cols-12 gap-4 h-full">

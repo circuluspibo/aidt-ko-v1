@@ -5,7 +5,7 @@ import StepDialog from "@/components/StepDialog";
 import MenuCard from "@/components/MenuCard";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import useCurriculumQuery from "@/hook/useCurriculumQuery";
+import { useSessionContext } from "@/context/SessionContext";
 
 function Target() {
   const { character } = useParams();
@@ -16,7 +16,7 @@ function Target() {
 
   // useCurriculumQuery에서 curriculumData 가져오기
   const { curriculumData, isCurriculumLoading, isCurriculumError } =
-    useCurriculumQuery(character);
+    useSessionContext();
 
   // curriculumData를 Target 페이지에 맞게 변환
   const targetData =

@@ -1,8 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
 import Options from "@/features/Options";
-import LetterConsonant from "./LetterConsonant";
-import LetterVowel from "./LetterVowel";
 import Letters from "./Letters";
 import { JOSA } from "@/utils/globals";
 
@@ -11,8 +9,9 @@ const LearnByRead = ({
   item,
   target,
   onAnswer,
+  currentRepeat,
   currentItemIndex,
-  submitAnswer, // 집중도 모니터링 함수
+  currentLearningCount,
 }) => {
   const [options, setOptions] = useState([]);
 
@@ -31,25 +30,12 @@ const LearnByRead = ({
   };
 
   const handleSelect = (choice) => {
-    const isCorrect = choice === item.letter;
-
-    // 집중도 모니터링에 답변 기록
-    submitAnswer(choice, item.letter, isCorrect);
-
-    const attempt = {
-      timestamp: new Date(),
-      responseTime: 0, // 집중도 모니터에서 계산됨
-      isCorrect,
-      correct: item.letter,
-      user: choice,
-    };
-
-    onAnswer(attempt, generateChoices);
+    onAnswer(choice, item.letter);
   };
 
   useEffect(() => {
     generateChoices();
-  }, [currentItemIndex, target]);
+  }, [currentItemIndex, target, currentRepeat, currentLearningCount]);
 
   return (
     <div className="grid grid-cols-12 gap-4 h-full">

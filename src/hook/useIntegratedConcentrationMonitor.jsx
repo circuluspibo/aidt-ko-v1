@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // 모든 집중도 데이터 통합 관리
 import { useState, useEffect, useRef } from "react";
 import { useConcentrationMonitor } from "./useConcentrationMonitor";
@@ -10,7 +11,7 @@ export const useIntegratedConcentrationMonitor = (
   videoRef
 ) => {
   const [integratedData, setIntegratedData] = useState({
-    totalConcentrationIssues: 0,
+    totalIssues: 0,
     concentrationLevel: "medium", // 초기값을 'medium'으로 변경
     recommendations: [],
     sessionQuality: 0,
@@ -169,40 +170,6 @@ export const useIntegratedConcentrationMonitor = (
   useEffect(() => {
     const integratedScore = calculateIntegratedScore();
     setIntegratedData(integratedScore);
-
-    // 집중도 레벨이 변경될 때만 로그 출력
-    if (
-      integratedScore.concentrationLevel !== integratedData.concentrationLevel
-    ) {
-      console.log("🎯 집중도 레벨 변경:", {
-        timestamp: new Date().toLocaleTimeString(),
-        from: integratedData.concentrationLevel,
-        to: integratedScore.concentrationLevel,
-        totalIssues: integratedScore.totalIssues,
-        focusRate:
-          concentrationMonitor.concentrationData.focusData.focusRate?.toFixed(
-            1
-          ) + "%",
-        faceDetected:
-          concentrationMonitor.concentrationData.focusData.faceDetected,
-      });
-    }
-
-    // 5초마다 한 번씩만 로그 출력
-    const now = Date.now();
-    if (now - lastLogTime.current > 5000) {
-      console.log("🔍 집중도 계산:", {
-        level: integratedScore.concentrationLevel,
-        issues: integratedScore.totalIssues,
-        focusRate:
-          concentrationMonitor.concentrationData.focusData.focusRate?.toFixed(
-            1
-          ) + "%",
-        faceDetected:
-          concentrationMonitor.concentrationData.focusData.faceDetected,
-      });
-      lastLogTime.current = now;
-    }
   }, [concentrationMonitor.concentrationData, speechMonitor.speechData]);
 
   // 사용자 활동 감지 시 집중도 상태 즉시 업데이트
@@ -228,15 +195,15 @@ export const useIntegratedConcentrationMonitor = (
             absoluteWarnings: [], // 절대적 경고 즉시 제거
           };
           setIntegratedData(improvedScore);
-          console.log("✅ 사용자 활동으로 집중도 개선:", {
-            timestamp: new Date().toLocaleTimeString(),
-            from: currentScore.concentrationLevel,
-            to: "high",
-            totalIssues: improvedScore.totalIssues,
-            warningsRemoved: hasAbsoluteWarnings,
-            inactivityPeriods:
-              concentrationMonitor.concentrationData.inactivityPeriods.length,
-          });
+          // console.log("✅ 사용자 활동으로 집중도 개선:", {
+          //   timestamp: new Date().toLocaleTimeString(),
+          //   from: currentScore.concentrationLevel,
+          //   to: "high",
+          //   totalIssues: improvedScore.totalIssues,
+          //   warningsRemoved: hasAbsoluteWarnings,
+          //   inactivityPeriods:
+          //     concentrationMonitor.concentrationData.inactivityPeriods.length,
+          // });
         }
       }, 500);
     };
@@ -270,9 +237,44 @@ export const useIntegratedConcentrationMonitor = (
   };
 
   // 답변 제출 시 호출
-  const submitAnswer = (userAnswer, correctAnswer, isCorrect) => {
-    // 각 모니터링 시스템에 데이터 전달
-    concentrationMonitor.endQuestionTimer(isCorrect);
+  const submitAnswer = (userAnswer, correctAnswer) => {
+    const isCorrect =
+      activityType === "speak"
+        ? (userAnswer || "").includes(correctAnswer)
+        : userAnswer === correctAnswer;
+
+    // 1️⃣ 먼저 문제 풀이 시간 계산 (endQuestionTimer에서 반환)
+    const solvingTime = concentrationMonitor.endQuestionTimer(isCorrect);
+    // 한 번만 계산
+    const integratedScore = calculateIntegratedScore();
+
+    // ① 실측 스냅샷 (한 번만!)
+    const fd = concentrationMonitor.concentrationData?.focusData ?? {};
+    console.log("**fd**", fd);
+    const focusLog = Array.isArray(fd.focusLog) ? fd.focusLog : [];
+    const recent = focusLog.slice(-20);
+    const snapshotRate = recent.length
+      ? (recent.filter(Boolean).length / recent.length) * 100
+      : null;
+    const focusRate =
+      Number.isFinite(fd.focusRate) && fd.focusRate > 0
+        ? fd.focusRate
+        : snapshotRate ?? 0;
+    const attentionScore = Number.isFinite(fd.attentionScore)
+      ? fd.attentionScore
+      : Number.isFinite(focusRate)
+      ? Math.min(1, Math.max(0, focusRate / 100))
+      : 0;
+
+    const concentrationData = {
+      solvingTime,
+      attentionScore, // 0~1
+      focusStatus: attentionScore > 0.5,
+      faceDetected: !!fd.faceDetected,
+      concentrationLevel: integratedScore.concentrationLevel,
+      focusRate, // 0~100
+      isCorrect,
+    };
 
     if (activityType === "speak") {
       if (isCorrect) {
@@ -284,21 +286,23 @@ export const useIntegratedConcentrationMonitor = (
 
     // 답변 제출 시 즉시 집중도 상태 업데이트 (절대적 경고 제거)
     setTimeout(() => {
-      const integratedScore = calculateIntegratedScore();
       const improvedScore = {
         ...integratedScore,
         absoluteWarnings: [], // 답변 제출 시 절대적 경고 즉시 제거
       };
       setIntegratedData(improvedScore);
-      console.log("📝 답변 제출 - 경고 메시지 제거:", {
-        timestamp: new Date().toLocaleTimeString(),
-        userAnswer,
-        isCorrect,
-        warningsRemoved: integratedScore.absoluteWarnings.length > 0,
-        inactivityPeriods:
-          concentrationMonitor.concentrationData.inactivityPeriods.length,
-      });
+      // console.log("📝 답변 제출 - 경고 메시지 제거:", {
+      //   timestamp: new Date().toLocaleTimeString(),
+      //   userAnswer,
+      //   isCorrect,
+      //   warningsRemoved: integratedScore.absoluteWarnings.length > 0,
+      //   inactivityPeriods:
+      //     concentrationMonitor.concentrationData.inactivityPeriods.length,
+      // });
     }, 100);
+
+    // 집중도 데이터 즉시 반환
+    return concentrationData;
   };
 
   // 세션 종료 시 데이터 수집
@@ -323,7 +327,7 @@ export const useIntegratedConcentrationMonitor = (
     return {
       level: integratedData.concentrationLevel,
       score: integratedData.sessionQuality,
-      issues: integratedData.totalConcentrationIssues,
+      issues: integratedData.totalIssues,
       recommendations: integratedData.recommendations,
       absoluteWarnings: integratedData.absoluteWarnings || [],
       focusRate: concentrationMonitor.concentrationData.focusData.focusRate,

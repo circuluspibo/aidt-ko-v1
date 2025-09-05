@@ -28,6 +28,7 @@ export const fetchWriteOCR = async (isWord, body) => {
       body,
     });
     const res = await resp.json();
+    console.log("res", res);
     if (res.result && res.data.length) {
       return res.data[0];
     }

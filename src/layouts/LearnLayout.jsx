@@ -3,7 +3,7 @@ import { Outlet } from "react-router-dom";
 
 const LearnLayout = () => {
   return (
-    <div className="flex items-center justify-center w-full h-full">
+    <div className="flex justify-center items-center w-full h-full">
       <div
         className={`flex flex-col flex-grow justify-center items-center w-full h-full shadow-2xl backdrop-blur-sm tb-lg:rounded-3xl bg-white/90 tb-lg:h-[800px] tb-lg:max-w-[1200px]`}
       >
@@ -22,6 +22,9 @@ const LearnLayout = () => {
           },
         }}
       />
+      <audio id="correct-audio" src="/sounds/correct.mp3" preload="auto" />
+      <audio id="wrong-audio" src="/sounds/wrong.mp3" preload="auto" />
+      <audio id="complete-audio" src="/sounds/completed.mp3" preload="auto" />
     </div>
   );
 };

@@ -1,15 +1,14 @@
 import ResumeLearningModal from "@/components/ResumeLearningModal";
-import { Outlet, useParams, useLocation } from "react-router-dom";
+import { SessionProvider } from "@/context/SessionContext";
+import { Outlet, useParams } from "react-router-dom";
 
 const ProgressLayout = () => {
   const { character, chapter, method } = useParams();
-  const location = useLocation();
+  // const location = useLocation();
 
   // 현재 경로에 따라 모달 매개변수 결정
   const getModalProps = () => {
-    const pathSegments = location.pathname.split("/").filter(Boolean);
-    console.log("Current path segments:", pathSegments);
-    console.log("Params:", { character, chapter, method });
+    // const pathSegments = location.pathname.split("/").filter(Boolean);
 
     // /learn/:character/:chapter/:method (Learn 페이지)
     // if (character && chapter && method) {
@@ -24,7 +23,6 @@ const ProgressLayout = () => {
 
     // /learn/:character/:chapter (Method 페이지)
     if (character && chapter && !method) {
-      console.log("Method page - showing chapter modal");
       return {
         characterId: character,
         chapterId: chapter,
@@ -34,24 +32,22 @@ const ProgressLayout = () => {
 
     // /learn/:character (Target 페이지)
     if (character && !chapter && !method) {
-      console.log("Target page - showing character modal");
       return {
         characterId: character,
         autoShow: true,
       };
     }
 
-    console.log("No modal props - invalid route");
     return null;
   };
 
   const modalProps = getModalProps();
 
   return (
-    <>
+    <SessionProvider>
       <Outlet />
       {modalProps && <ResumeLearningModal {...modalProps} />}
-    </>
+    </SessionProvider>
   );
 };
 

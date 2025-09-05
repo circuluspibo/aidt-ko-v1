@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Link } from "react-router-dom";
 import LearnByRead from "@/components/LearnByRead";
 import LearnBySpeak from "@/components/LearnBySpeak";
@@ -10,7 +11,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { TARGETS, METHODS, COLORS } from "@/utils/globals";
-import useLearningSession from "@/hook/useLearningSession";
 import Stepper from "@/components/ui/stepper";
 import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
 import colors from "tailwindcss/colors";
@@ -20,6 +20,7 @@ import { Loading } from "@/components/Loading";
 import { ChevronLeft } from "lucide-react";
 import { useRef, useEffect } from "react";
 import { useIntegratedConcentrationMonitor } from "@/hook/useIntegratedConcentrationMonitor";
+import { useSessionContext } from "@/context/SessionContext";
 
 const Learn = () => {
   // 비디오 요소 ref 생성
@@ -41,49 +42,92 @@ const Learn = () => {
     // 데이터 관련
     data,
     isDataLoading,
+    loading,
     isError,
 
     // 학습 세션 관련
     currentItemIndex,
     currentRepeat,
+    currentLearningCount,
     repeatSettings,
     onAnswer,
     item,
-  } = useLearningSession();
-
+  } = useSessionContext();
   // 집중도 모니터링 초기화 (Learn.jsx에서 관리)
   const sessionId = `${character}-${chapter}-${method}`;
   const studentId = "student_1"; // 실제로는 사용자 ID를 사용해야 함
-
   const concentrationMonitor = useIntegratedConcentrationMonitor(
     sessionId,
     studentId,
     method,
     videoRef
   );
+  // 실시간 집중도 상태 확인
+  const concentrationStatus = concentrationMonitor.getConcentrationStatus();
+
+  const handleAnswer = (userAnswer, correctAnswer) => {
+    // 집중도 데이터 수집 (카메라 기반 시선 추적, 얼굴 감지, 문제 풀이 시간 등)
+    const concentrationData = concentrationMonitor.submitAnswer(
+      userAnswer,
+      correctAnswer
+    );
+
+    console.log("**concentrationData**", concentrationData);
+
+    // 집중도 데이터를 포함한 attempt 객체 생성
+    const attempt = {
+      responseTime: concentrationData.solvingTime, // 문제 풀이 시간 (초)
+      isCorrect: concentrationData.isCorrect, // 정답 여부
+      correct: correctAnswer, // 정답
+      user: userAnswer, // 사용자 답안
+      repeat: currentRepeat, // 반복 횟수
+      // 집중도 관련 데이터
+      concentration: {
+        level: concentrationData.concentrationLevel ?? null,
+        focusRate:
+          typeof concentrationData?.focusRate === "number"
+            ? Math.max(0, Math.min(100, Number(concentrationData.focusRate)))
+            : null,
+        faceDetected: !!concentrationData?.faceDetected,
+        attentionScore:
+          typeof concentrationData?.attentionScore === "number"
+            ? Math.max(
+                0,
+                Math.min(100, Number(concentrationData.attentionScore))
+              )
+            : null,
+      },
+    };
+
+    // 학습 세션에 전달 (백엔드로 Attempt 데이터 전송)
+    onAnswer(attempt);
+  };
 
   // 문제 변경 시 집중도 모니터링 시작
   useEffect(() => {
     if (item) {
       concentrationMonitor.startQuestion();
     }
-  }, [currentItemIndex, item]);
+  }, [currentItemIndex, currentLearningCount, item]);
 
-  // 실시간 집중도 상태 확인
-  const concentrationStatus = concentrationMonitor.getConcentrationStatus();
+  useEffect(() => {
+    console.log("**currentItemIndex**", currentItemIndex);
+    console.log("**currentRepeat**", currentRepeat);
+    console.log("**currentLearningCount**", currentLearningCount);
+  }, [currentItemIndex, currentRepeat, currentLearningCount]);
 
   // 집중도 상태 변화 감지 및 로그 출력 (레벨 변경 시에만)
-  useEffect(() => {
-    // 레벨이 변경될 때만 간단하게 로그 출력
-    console.log(
-      "🎯 집중도:",
-      concentrationStatus.level,
-      concentrationStatus.focusRate
-        ? `(${concentrationStatus.focusRate.toFixed(1)}%)`
-        : "",
-      concentrationStatus.faceDetected ? "" : " - 얼굴 미감지"
-    );
-  }, [concentrationStatus.level]);
+  // useEffect(() => {
+  //   // 레벨이 변경될 때만 간단하게 로그 출력
+  //   console.log(
+  //     "🎯 집중도:",
+  //     concentrationStatus.level,
+  //     concentrationStatus.focusRate
+  //       ? `(${concentrationStatus.focusRate.toFixed(1)}%)`
+  //       : "",
+  //     concentrationStatus.faceDetected ? "" : " - 얼굴 미감지"
+  //   );
+  // }, [concentrationStatus.level]);
 
   if (isError)
     return (
@@ -93,7 +137,7 @@ const Learn = () => {
     );
 
   // data가 로딩 중이거나 없을 때 로딩 표시
-  if (isDataLoading || !data) return <Loading />;
+  if (isDataLoading || loading || !data) return <Loading />;
 
   return (
     <>
@@ -101,7 +145,7 @@ const Learn = () => {
         {/* 숨겨진 비디오 요소 - 모든 학습 컴포넌트에서 공유 */}
         <video
           ref={videoRef}
-          className="hidden"
+          className="w-[1px] h-[1px] opacity-0 fixed -left-[9999px] -top-[9999px] pointer-events-none"
           autoPlay
           muted
           playsInline
@@ -136,11 +180,11 @@ const Learn = () => {
             )}
 
             {/* 일반 정보 표시 */}
-            {concentrationStatus.focusRate !== undefined && (
+            {/* {concentrationStatus.focusRate !== undefined && (
               <div className="text-sm">
                 시선 집중도: {concentrationStatus.focusRate.toFixed(1)}%
               </div>
-            )}
+            )} */}
             {!concentrationStatus.faceDetected &&
               concentrationStatus.absoluteWarnings.length === 0 && (
                 <div className="text-sm text-red-600">
@@ -252,11 +296,11 @@ const Learn = () => {
                 {...{
                   item,
                   target,
-                  onAnswer,
+                  onAnswer: handleAnswer,
                   currentRepeat,
                   currentItemIndex,
+                  currentLearningCount,
                   data: data?.contents,
-                  submitAnswer: concentrationMonitor.submitAnswer,
                 }}
               />
             )}
@@ -265,11 +309,11 @@ const Learn = () => {
                 {...{
                   item,
                   target,
-                  onAnswer,
+                  onAnswer: handleAnswer,
                   currentRepeat,
                   currentItemIndex,
+                  currentLearningCount,
                   data: data?.contents,
-                  submitAnswer: concentrationMonitor.submitAnswer,
                 }}
               />
             )}
@@ -278,11 +322,10 @@ const Learn = () => {
                 {...{
                   item,
                   target,
-                  onAnswer,
+                  onAnswer: handleAnswer,
                   currentRepeat,
                   currentItemIndex,
-                  data: data?.contents,
-                  submitAnswer: concentrationMonitor.submitAnswer,
+                  currentLearningCount,
                 }}
               />
             )}
@@ -291,20 +334,17 @@ const Learn = () => {
                 {...{
                   item,
                   target,
-                  onAnswer,
+                  onAnswer: handleAnswer,
                   currentRepeat,
                   currentItemIndex,
-                  data: data?.contents,
-                  submitAnswer: concentrationMonitor.submitAnswer,
+                  currentLearningCount,
                 }}
               />
             )}
           </>
         )}
-        <audio id="correct-audio" src="/sounds/correct.mp3" preload="auto" />
-        <audio id="wrong-audio" src="/sounds/wrong.mp3" preload="auto" />
-        <audio id="complete-audio" src="/sounds/completed.mp3" preload="auto" />
       </div>
+      {isDataLoading || loading || !data}
     </>
   );
 };
