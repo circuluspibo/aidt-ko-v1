@@ -533,14 +533,14 @@ const CharacterCurriculumManagement = () => {
                                             <SelectValue />
                                           </SelectTrigger>
                                           <SelectContent>
+                                            <SelectItem value={0}>
+                                              쉬움
+                                            </SelectItem>
                                             <SelectItem value={1}>
-                                              하
+                                              보통
                                             </SelectItem>
                                             <SelectItem value={2}>
-                                              중
-                                            </SelectItem>
-                                            <SelectItem value={3}>
-                                              상
+                                              어려움
                                             </SelectItem>
                                           </SelectContent>
                                         </Select>

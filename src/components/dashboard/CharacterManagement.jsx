@@ -120,6 +120,7 @@ export function CharacterManagement() {
         {!isPending &&
           !isError &&
           characters.map((character) => {
+            console.log(character);
             return (
               <Card
                 key={character._id}
@@ -134,7 +135,7 @@ export function CharacterManagement() {
                     </p>
                     <div className="flex-1">
                       <CardTitle className="text-lg">
-                        {`${character.nickname} (${character.name})`}
+                        {`${character.nickname} (${character.studentName})`}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground">
                         {character.memo}

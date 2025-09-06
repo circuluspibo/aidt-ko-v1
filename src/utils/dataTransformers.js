@@ -126,9 +126,12 @@ export const transformStudentList = (students, source = "api") => {
         memo: student.memo,
         use: student.use,
         stats: student.stats || {},
+        curriculum: student.curriculum || [],
         // Mock 데이터와 호환성을 위한 추가 필드
         studentId: student._id,
-        studentName: student.nickname,
+        studentName: student.name,
+        updatedAt: student.updatedAt,
+        createdAt: student.createdAt,
         characterId: student._id,
         totalQuestionsAttempted: student.stats?.totalQuestions || 0,
         totalCorrectAnswers: student.stats?.totalCorrect || 0,
@@ -176,11 +179,12 @@ export const transformOverview = (overview, source = "api") => {
       totalQuestionsAttempted: overview.totalQuestionsAttempted || 0,
       averageAccuracy: overview.averageAccuracy || 0,
       totalStudyHours: overview.totalStudyHours || 0,
+      totalStudyMinutes: overview.totalStudyMinutes || 0,
       dailyActivity: overview.dailyActivity || [],
       activityTypeDistribution: overview.activityTypeDistribution || [],
       contentTypeDistribution: overview.contentTypeDistribution || [],
-      // Mock 데이터와 호환성을 위한 추가 필드
-      difficultyDistribution: [], // API에서 제공되지 않음
+      // API에서 제공되는 난이도별 분포 데이터
+      difficultyDistribution: overview.difficultyDistribution || [],
     };
   } else {
     // Mock 데이터는 그대로 반환
