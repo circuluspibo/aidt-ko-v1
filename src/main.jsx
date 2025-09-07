@@ -26,7 +26,7 @@ import ProgressLayout from "./layouts/ProgressLayout";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { GroupManagement } from "./components/dashboard/GroupManagement";
 import { CharacterManagement } from "./components/dashboard/CharacterManagement";
-import { StudentManagement } from "./components/dashboard/StudentManagement";
+
 import DashboardLayout from "./layouts/DashboardLayout";
 import Main from "./pages/dashboard";
 import CharacterCurriculumManagement from "./components/dashboard/CharacterCurriculumManagement";
@@ -34,6 +34,9 @@ import CharacterCurriculumManagement from "./components/dashboard/CharacterCurri
 import LoginPage from "./pages/Login";
 import { getUserData } from "./api";
 import AuthLayout from "./layouts/AuthLayout";
+import { LegacyDashboard } from "./components/dashboard/LegacyDashboard";
+import { LegacyStudentManagement } from "./components/dashboard/LegacyStudentManagement";
+import { StudentManagement } from "./components/dashboard/StudentManagement";
 
 dayjs.locale("ko");
 dayjs.extend(objectSupport);
@@ -66,6 +69,9 @@ const router = createBrowserRouter(
         <Route path="students" element={<StudentManagement />} />
         <Route path="*" element={<NotFound />} />
       </Route>
+
+      <Route path="legacy" element={<LegacyDashboard />} />
+      <Route path="legacy/students" element={<LegacyStudentManagement />} />
 
       {/* 학생 전용: /learn */}
       <Route path="learn" element={<LearnLayout />}>

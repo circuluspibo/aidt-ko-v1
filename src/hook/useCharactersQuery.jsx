@@ -6,8 +6,15 @@ const useCharactersQuery = ({ groupId }) => {
   const { data, error, isPending, refetch } = useQuery({
     queryKey: ["learning", "groups", "characters", groupId],
     queryFn: async () => {
-      const result = await get(`characters`, { groupId });
-      return result;
+      // groupId가 있으면 characters API, 없으면 student-management API 호출
+      if (groupId) {
+        const params = { groupId };
+        const result = await get("characters", params);
+        return result;
+      } else {
+        const result = await get("student-management");
+        return result;
+      }
     },
     select: (response) => {
       if (
@@ -24,11 +31,12 @@ const useCharactersQuery = ({ groupId }) => {
         return {
           characters: transformedCharacters,
           total: response.data.total || 0,
+          overallStats: response.data.overallStats || null,
         };
       }
-      return { characters: [], total: 0 };
+      return { characters: [], total: 0, overallStats: null };
     },
-    enabled: !!groupId,
+    enabled: true, // groupId가 null이어도 전체 캐릭터 조회 허용
     refetchOnMount: true, // 컴포넌트가 마운트될 때마다 refetch
     staleTime: 0, // 데이터를 항상 stale로 간주하여 refetch 허용
   });

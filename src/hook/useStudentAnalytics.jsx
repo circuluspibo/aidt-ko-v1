@@ -1,10 +1,6 @@
 import { get } from "@/api";
 import { useQuery } from "@tanstack/react-query";
-import {
-  transformApiToMock,
-  transformOverview,
-  autoTransform,
-} from "@/utils/dataTransformers";
+import { transformApiToMock } from "@/utils/dataTransformers";
 
 // 학생별 상세 학습 분석 데이터를 가져오는 훅
 const useStudentAnalytics = (characterId, dateRange = {}) => {

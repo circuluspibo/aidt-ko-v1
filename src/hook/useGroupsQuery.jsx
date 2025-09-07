@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 
 const useGroupsQuery = ({ page: p, q, teacherId }) => {
   const { data, error, isPending, refetch } = useQuery({
-    queryKey: ["learning", "groups", p, q],
+    queryKey: ["learning", "groups", p],
     queryFn: async () => {
       const page = p || 1;
-      const result = await get("groups", { teacherId, page, q });
+      const result = await get("groups", { teacherId, page, q: q || "" });
       return result;
     },
     select: (response) => {

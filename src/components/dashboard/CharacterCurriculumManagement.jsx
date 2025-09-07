@@ -208,7 +208,7 @@ const CharacterCurriculumManagement = () => {
           ? {
               ...item,
               ...config,
-              level: config?.target === "word" ? 1 : config?.level || 0,
+              level: config?.target === "word" ? 0 : config?.level || 0,
             }
           : item
       )
@@ -520,7 +520,7 @@ const CharacterCurriculumManagement = () => {
                                           defaultValue={
                                             getChapterConfig(
                                               curriculumChapter.id
-                                            )?.level || 1
+                                            )?.level || 0
                                           }
                                           onValueChange={(value) =>
                                             updateChapterConfig(

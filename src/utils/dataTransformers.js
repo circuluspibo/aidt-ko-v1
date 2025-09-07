@@ -127,30 +127,22 @@ export const transformStudentList = (students, source = "api") => {
         use: student.use,
         stats: student.stats || {},
         curriculum: student.curriculum || [],
+        groupId: student.groupId,
         // Mock 데이터와 호환성을 위한 추가 필드
         studentId: student._id,
-        studentName: student.name,
+        studentName: student.studentName || student.name,
         updatedAt: student.updatedAt,
         createdAt: student.createdAt,
         characterId: student._id,
-        totalQuestionsAttempted: student.stats?.totalQuestions || 0,
-        totalCorrectAnswers: student.stats?.totalCorrect || 0,
-        totalIncorrectAnswers:
-          (student.stats?.totalQuestions || 0) -
-          (student.stats?.totalCorrect || 0),
-        averageAccuracy:
-          student.stats?.totalQuestions > 0
-            ? Math.round(
-                (student.stats.totalCorrect / student.stats.totalQuestions) *
-                  100 *
-                  10
-              ) / 10
-            : 0,
-        totalStudyTimeMinutes: student.stats?.totalStudyTimeMinutes || 0,
-        totalConcentrationIssues: student.stats?.totalFocusLack || 0,
-        currentConsecutiveCorrect: student.stats?.currentStreak || 0,
-        maxConsecutiveCorrect: student.stats?.bestStreak || 0,
-        lastActivity: student.stats?.lastActivity || new Date().toISOString(),
+        totalQuestionsAttempted: student.totalQuestionsAttempted || 0,
+        totalCorrectAnswers: student.totalCorrectAnswers || 0,
+        totalIncorrectAnswers: student.totalIncorrectAnswers || 0,
+        averageAccuracy: student.averageAccuracy || 0,
+        totalStudyTimeMinutes: student.totalStudyTimeMinutes || 0,
+        totalConcentrationIssues: student.totalConcentrationIssues || 0,
+        currentConsecutiveCorrect: 0, // API에서 제공되지 않음
+        maxConsecutiveCorrect: 0, // API에서 제공되지 않음
+        lastActivity: student.updatedAt,
         weeklyProgress: [],
         activityBreakdown: [],
         contentTypeProgress: [],
