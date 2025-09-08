@@ -2,13 +2,11 @@ import { get } from "@/api";
 import { useQuery } from "@tanstack/react-query";
 import { transformStudentList } from "@/utils/dataTransformers";
 
-const useCharactersQuery = ({ groupId }) => {
+const useStudentManageQuery = ({ teacherId }) => {
   const { data, error, isPending, refetch } = useQuery({
-    queryKey: ["learning", "groups", "characters", groupId],
+    queryKey: ["student", "management", teacherId],
     queryFn: async () => {
-      // groupId가 있으면 characters API, 없으면 student-management API 호출
-      const params = { groupId };
-      const result = await get("characters", params);
+      const result = await get("student-management", { teacherId });
       return result;
     },
     select: (response) => {
@@ -26,11 +24,12 @@ const useCharactersQuery = ({ groupId }) => {
         return {
           characters: transformedCharacters,
           total: response.data.total || 0,
+          overallStats: response.data.overallStats || null,
         };
       }
-      return { characters: [], total: 0 };
+      return { characters: [], total: 0, overallStats: null };
     },
-    enabled: !!groupId, // groupId가 null이어도 전체 캐릭터 조회 허용
+    enabled: !!teacherId, // groupId가 null이어도 전체 캐릭터 조회 허용
     refetchOnMount: true, // 컴포넌트가 마운트될 때마다 refetch
     staleTime: 0, // 데이터를 항상 stale로 간주하여 refetch 허용
   });
@@ -42,5 +41,4 @@ const useCharactersQuery = ({ groupId }) => {
   };
 };
 
-export { useCharactersQuery };
-export default useCharactersQuery;
+export default useStudentManageQuery;

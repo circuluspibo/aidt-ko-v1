@@ -42,19 +42,18 @@ import {
   Bar,
 } from "recharts";
 import { IEPReport } from "./IEPReport";
-import { useCharactersQuery } from "@/hook/useCharactersQuery";
 import { useStudentAnalytics } from "@/hook/useStudentAnalytics";
+import useStudentManageQuery from "@/hook/useStudentManageQuery";
+import { useAuth } from "@/context/AuthContext";
 
 export function StudentManagement() {
+  const { getId } = useAuth();
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isIEPOpen, setIsIEPOpen] = useState(false);
-
   // 전체 캐릭터 데이터 조회 (그룹 선택 없이)
   const { data: charactersData, isPending: charactersLoading } =
-    useCharactersQuery({
-      groupId: null, // 모든 그룹의 캐릭터 조회
-    });
+    useStudentManageQuery({ teacherId: getId() });
 
   // 선택된 학생의 분석 데이터 조회
   const { data: studentAnalytics, isPending: analyticsLoading } =
@@ -89,11 +88,15 @@ export function StudentManagement() {
     return "개선필요";
   };
 
-  // 전체 평균 정답률을 기반으로 성취도 분포 계산
+  // 전체 평균 정답률을 기반으로 성취도 분포 계산 - 항상 세 가지 항목 표시
   const overallAccuracy = charactersData?.overallStats?.averageAccuracy || 0;
+  const totalStudents = charactersData?.characters?.length || 0;
+  const currentGrade = getGradeFromAccuracy(overallAccuracy);
+
   const gradeDistribution = {
-    [getGradeFromAccuracy(overallAccuracy)]:
-      charactersData?.characters?.length || 0,
+    우수: currentGrade === "우수" ? totalStudents : 0,
+    보통: currentGrade === "보통" ? totalStudents : 0,
+    개선필요: currentGrade === "개선필요" ? totalStudents : 0,
   };
 
   return (
@@ -185,7 +188,7 @@ export function StudentManagement() {
               <Loader2 className="w-6 h-6 animate-spin" />
               <span className="ml-2">학생 데이터를 불러오는 중...</span>
             </div>
-          ) : (
+          ) : charactersData?.characters?.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow className="h-9">
@@ -288,6 +291,17 @@ export function StudentManagement() {
                 })}
               </TableBody>
             </Table>
+          ) : (
+            <div className="flex flex-col justify-center items-center h-64 text-gray-500">
+              <div className="text-center">
+                <div className="mb-4 text-6xl">👥</div>
+                <h3 className="mb-2 text-lg font-medium">
+                  등록된 학생이 없습니다
+                </h3>
+                <p className="text-sm">아직 등록된 학생이 없습니다.</p>
+                <p className="text-sm">그룹을 생성하고 학생을 추가해주세요.</p>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
