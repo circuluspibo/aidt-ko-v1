@@ -239,10 +239,9 @@ export const useIntegratedConcentrationMonitor = (
   // 답변 제출 시 호출
   const submitAnswer = (userAnswer, correctAnswer) => {
     const isCorrect =
-      activityType === "speak"
-        ? (userAnswer || "").includes(correctAnswer)
+      activityType === "speak" || activityType === "write"
+        ? (userAnswer || []).includes(correctAnswer)
         : userAnswer === correctAnswer;
-
     // 1️⃣ 먼저 문제 풀이 시간 계산 (endQuestionTimer에서 반환)
     const solvingTime = concentrationMonitor.endQuestionTimer(isCorrect);
     // 한 번만 계산
