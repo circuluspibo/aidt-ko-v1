@@ -6,7 +6,6 @@ const useCharactersQuery = ({ groupId }) => {
   const { data, error, isPending, refetch } = useQuery({
     queryKey: ["learning", "groups", "characters", groupId],
     queryFn: async () => {
-      // groupId가 있으면 characters API, 없으면 student-management API 호출
       const params = { groupId };
       const result = await get("characters", params);
       return result;

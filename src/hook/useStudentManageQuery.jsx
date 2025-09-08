@@ -6,7 +6,7 @@ const useStudentManageQuery = ({ teacherId }) => {
   const { data, error, isPending, refetch } = useQuery({
     queryKey: ["student", "management", teacherId],
     queryFn: async () => {
-      const result = await get("student-management", { teacherId });
+      const result = await get("analytics/learning", { teacherId });
       return result;
     },
     select: (response) => {

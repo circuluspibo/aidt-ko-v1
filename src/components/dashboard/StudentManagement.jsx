@@ -74,6 +74,8 @@ export function StudentManagement() {
   };
 
   const getConcentrationLevel = (issues) => {
+    if (issues === null)
+      return { level: "미측정", color: "bg-gray-100 text-gray-800" };
     if (issues < 10)
       return { level: "우수", color: "bg-green-100 text-green-800" };
     if (issues < 20)
@@ -209,8 +211,11 @@ export function StudentManagement() {
                     charactersData?.overallStats?.averageAccuracy || 0
                   ); */
                   }
+                  console.log(character);
                   const concentration = getConcentrationLevel(
-                    character.totalConcentrationIssues || 0
+                    character.totalStudyTimeMinutes
+                      ? character.totalConcentrationIssues || 0
+                      : null
                   );
 
                   return (
@@ -296,10 +301,12 @@ export function StudentManagement() {
               <div className="text-center">
                 <div className="mb-4 text-6xl">👥</div>
                 <h3 className="mb-2 text-lg font-medium">
-                  등록된 학생이 없습니다
+                  아직 등록된 학생이 없거나 학습기록이 없습니다.
                 </h3>
-                <p className="text-sm">아직 등록된 학생이 없습니다.</p>
-                <p className="text-sm">그룹을 생성하고 학생을 추가해주세요.</p>
+                <p className="text-sm">
+                  아직 등록된 학생이 없거나 학습기록이 없습니다.
+                </p>
+                <p className="text-sm">학생을 추가하고 학습을 시작해주세요.</p>
               </div>
             </div>
           )}
