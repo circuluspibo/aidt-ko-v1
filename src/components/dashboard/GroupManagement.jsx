@@ -10,6 +10,7 @@ import GroupAddDialog from "@/features/dashboard/GroupAddDialog";
 import GroupDeleteDialog from "@/features/dashboard/GroupDeleteDialog";
 import { useNavigation } from "@/context/NavigationContext";
 import { useAuth } from "@/context/AuthContext";
+import { Loading } from "../Loading";
 
 export function GroupManagement() {
   const { getId } = useAuth();
@@ -105,11 +106,7 @@ export function GroupManagement() {
         </CardContent>
       </Card>
       {/* 그룹 카드 목록 */}
-      {isPending && (
-        <div>
-          <SpinningText>또박한글 • 또박한글 • 또박한글 •</SpinningText>
-        </div>
-      )}
+      {isPending && <Loading />}
       {isError && (
         <Alert variant="destructive">
           <AlertCircleIcon />

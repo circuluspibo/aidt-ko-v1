@@ -1,4 +1,4 @@
-import { LoaderCircle } from "lucide-react";
+import { SpinningText } from "./magicui/spinning-text";
 
 export function Loading({ text, icon }) {
   return (
@@ -8,7 +8,11 @@ export function Loading({ text, icon }) {
       {!text && icon && (
         <progress className="w-56 progress progress-primary"></progress>
       )}
-      {!text && !icon && <LoaderCircle className="w-32 h-32 animate-spin" />}
+      {!text && !icon && (
+        <SpinningText className="font-bold text-primary">
+          또 박 한 글 • 또 박 한 글 • 또 박 한 글 •
+        </SpinningText>
+      )}
     </div>
   );
 }

@@ -21,6 +21,7 @@ import { ChevronLeft } from "lucide-react";
 import { useRef, useEffect } from "react";
 import { useIntegratedConcentrationMonitor } from "@/hook/useIntegratedConcentrationMonitor";
 import { useSessionContext } from "@/context/SessionContext";
+import ConcetrationAlert from "@/features/ConcetrationAlert";
 
 const Learn = () => {
   // 비디오 요소 ref 생성
@@ -72,8 +73,6 @@ const Learn = () => {
       correctAnswer
     );
 
-    console.log("**concentrationData**", concentrationData);
-
     // 집중도 데이터를 포함한 attempt 객체 생성
     const attempt = {
       responseTime: concentrationData.solvingTime, // 문제 풀이 시간 (초)
@@ -110,25 +109,6 @@ const Learn = () => {
     }
   }, [currentItemIndex, currentLearningCount, item]);
 
-  useEffect(() => {
-    console.log("**currentItemIndex**", currentItemIndex);
-    console.log("**currentRepeat**", currentRepeat);
-    console.log("**currentLearningCount**", currentLearningCount);
-  }, [currentItemIndex, currentRepeat, currentLearningCount]);
-
-  // 집중도 상태 변화 감지 및 로그 출력 (레벨 변경 시에만)
-  // useEffect(() => {
-  //   // 레벨이 변경될 때만 간단하게 로그 출력
-  //   console.log(
-  //     "🎯 집중도:",
-  //     concentrationStatus.level,
-  //     concentrationStatus.focusRate
-  //       ? `(${concentrationStatus.focusRate.toFixed(1)}%)`
-  //       : "",
-  //     concentrationStatus.faceDetected ? "" : " - 얼굴 미감지"
-  //   );
-  // }, [concentrationStatus.level]);
-
   if (isError)
     return (
       <div className="flex justify-center items-center h-full">
@@ -149,59 +129,10 @@ const Learn = () => {
           autoPlay
           muted
           playsInline
-          onLoadedMetadata={() => console.log("✅ 비디오 메타데이터 로드됨")}
-          onError={(e) => console.error("❌ 비디오 에러:", e)}
         />
 
         {/* 집중도 상태 표시 */}
-        {(concentrationStatus.level !== "high" ||
-          concentrationStatus.absoluteWarnings.length > 0) && (
-          <div
-            className={`fixed bottom-4 left-4 p-3 rounded-lg shadow-lg z-50 transition-all duration-300 ${
-              concentrationStatus.absoluteWarnings.length > 0 ||
-              concentrationStatus.level === "low"
-                ? "bg-red-100 border border-red-300 text-red-800"
-                : "bg-yellow-100 border border-yellow-300 text-yellow-800"
-            }`}
-          >
-            <div className="font-semibold">
-              집중도: {concentrationStatus.level === "low" ? "낮음" : "보통"}
-            </div>
-
-            {/* 절대적 경고 메시지 우선 표시 */}
-            {concentrationStatus.absoluteWarnings.length > 0 && (
-              <div className="mt-1">
-                {concentrationStatus.absoluteWarnings.map((warning, index) => (
-                  <div key={index} className="text-sm font-medium text-red-600">
-                    ⚠️ {warning}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* 일반 정보 표시 */}
-            {/* {concentrationStatus.focusRate !== undefined && (
-              <div className="text-sm">
-                시선 집중도: {concentrationStatus.focusRate.toFixed(1)}%
-              </div>
-            )} */}
-            {!concentrationStatus.faceDetected &&
-              concentrationStatus.absoluteWarnings.length === 0 && (
-                <div className="text-sm text-red-600">
-                  ⚠️ 카메라 앞에 앉아주세요
-                </div>
-              )}
-            {concentrationStatus.recommendations.length > 0 &&
-              concentrationStatus.absoluteWarnings.length === 0 && (
-                <div className="mt-1 text-sm">
-                  💡 {concentrationStatus.recommendations[0]}
-                </div>
-              )}
-            <div className="mt-1 text-xs text-gray-500">
-              💡 문제에 답하거나 화면을 터치하면 집중도가 개선됩니다
-            </div>
-          </div>
-        )}
+        <ConcetrationAlert {...concentrationStatus} />
 
         <TopContentList
           open={openContentList}

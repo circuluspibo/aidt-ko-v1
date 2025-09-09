@@ -34,16 +34,15 @@ export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
   const faceMeshRef = useRef(null);
   const focusLogRef = useRef([]);
   const noFaceFrameCount = useRef(0);
-  // 히스테리시스 & 디바운스용 ref
-  const HYST_LOW = 60; // 낮음 트리거
-  const HYST_HIGH = 75; // 해제 트리거
-  const HOLD_EVALS = 3; // 같은 방향 3회 연속일 때만 변경 (checkFocusLevel 주기가 1초면 ≈3초)
-  const MIN_ALERT_MS = 2000; // 알림 최소 유지시간
+  const LOW = 60; // 낮음 트리거 임계 (%)
+  const HIGH = 75; // 정상 해제 임계 (%)
+  const CONSEC = 2; // 같은 방향 연속 횟수
+  const MIN_HOLD = 1500; // 전환 후 최소 유지(ms)
 
-  const belowStreak = useRef(0);
-  const aboveStreak = useRef(0);
-  const alertStatus = useRef("normal"); // "normal" | "low"
-  const lastAlertChangeAt = useRef(0);
+  const belowStreakRef = useRef(0);
+  const aboveStreakRef = useRef(0);
+  const alertRef = useRef("normal"); // "normal" | "low"
+  const lastFlipAtRef = useRef(0);
 
   // 비활성 시간 감지
   const detectInactivity = () => {
@@ -327,75 +326,51 @@ export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
   // 실시간 집중도 체크
   const checkFocusLevel = () => {
     if (focusLogRef.current.length < 20) return;
-    // EMA 결과(0~100)를 쓰자. onFaceMeshResults에서 이미 갱신됨.
-    const frSmooth = concentrationData.focusData.smoothedFocusRate ?? 0;
+    const fr = concentrationData.focusData.focusRate ?? 0; // 0~100
     const now = Date.now();
 
-    // 연속 판정 누적
-    if (frSmooth < HYST_LOW) {
-      belowStreak.current += 1;
-      aboveStreak.current = 0;
-    } else if (frSmooth > HYST_HIGH) {
-      aboveStreak.current += 1;
-      belowStreak.current = 0;
+    // 연속 판정 카운팅
+    if (fr < LOW) {
+      belowStreakRef.current += 1;
+      aboveStreakRef.current = 0;
+    } else if (fr > HIGH) {
+      aboveStreakRef.current += 1;
+      belowStreakRef.current = 0;
     } else {
-      // 중간 영역이면 둘 다 리셋
-      belowStreak.current = 0;
-      aboveStreak.current = 0;
+      // 중간 밴드에서는 리셋
+      belowStreakRef.current = 0;
+      aboveStreakRef.current = 0;
     }
 
-    // 디바운스: 최소 표시시간 충족 시에만 상태 전환
-    const canFlip = now - (lastAlertChangeAt.current || 0) > MIN_ALERT_MS;
+    const canFlip = now - (lastFlipAtRef.current || 0) > MIN_HOLD;
 
+    // 상태 전환(알림 on/off) — 한 번의 setState로 원자적으로
     setConcentrationData((prev) => {
       let issues = prev.concentrationIssues;
       let flipped = false;
 
       if (
-        alertStatus.current === "normal" &&
-        belowStreak.current >= HOLD_EVALS &&
+        alertRef.current === "normal" &&
+        belowStreakRef.current >= CONSEC &&
         canFlip
       ) {
-        // 낮음으로 전환
-        alertStatus.current = "low";
-        lastAlertChangeAt.current = now;
-        flipped = true;
+        alertRef.current = "low";
+        lastFlipAtRef.current = now;
         issues = issues + 1; // 정책에 맞게 조정
+        flipped = true;
       } else if (
-        alertStatus.current === "low" &&
-        aboveStreak.current >= HOLD_EVALS &&
+        alertRef.current === "low" &&
+        aboveStreakRef.current >= CONSEC &&
         canFlip
       ) {
-        // 정상으로 해제
-        alertStatus.current = "normal";
-        lastAlertChangeAt.current = now;
+        alertRef.current = "normal";
+        lastFlipAtRef.current = now;
+        issues = Math.max(0, issues - 0.3);
         flipped = true;
-        issues = Math.max(0, issues - 0.3); // 정책에 맞게 조정
       }
 
-      if (!flipped) return prev; // 상태 변동 없으면 리렌더 억제
-      return { ...prev, concentrationIssues: issues };
+      return flipped ? { ...prev, concentrationIssues: issues } : prev;
     });
-
-    // 집중도가 낮으면 이슈 추가 (더 엄격한 기준)
-    if (frSmooth < 0.6) {
-      setConcentrationData((prev) => {
-        const newData = {
-          ...prev,
-          concentrationIssues: prev.concentrationIssues + 1,
-        };
-        return newData;
-      });
-    } else if (frSmooth > 0.85) {
-      // 집중도가 매우 좋을 때만 이슈 감소 (0.8에서 0.85로 더 엄격하게)
-      setConcentrationData((prev) => {
-        const newData = {
-          ...prev,
-          concentrationIssues: Math.max(0, prev.concentrationIssues - 0.3),
-        };
-        return newData;
-      });
-    }
   };
 
   // 세션 종료 시 데이터 반환
@@ -453,7 +428,7 @@ export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
     requestCameraPermission();
 
     // 1초마다 집중도 체크 (더 빠른 반응)
-    const focusCheckInterval = setInterval(checkFocusLevel, 3000);
+    const focusCheckInterval = setInterval(checkFocusLevel, 1000);
 
     return () => {
       if (inactivityTimer.current) {
