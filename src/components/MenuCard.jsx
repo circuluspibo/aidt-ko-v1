@@ -8,6 +8,7 @@ const MenuCard = ({
   textcolor,
   onCardClick,
   total,
+  disabled,
 }) => {
   return (
     <BlurFade
@@ -16,8 +17,9 @@ const MenuCard = ({
       className="flex flex-col gap-2 justify-center items-center self-stretch w-full min-w-60 tl6:p-2"
     >
       <Card
-        className={`flex flex-col flex-grow gap-2 justify-center items-center self-stretch p-2 shadow-xl cursor-pointer ${className}`}
-        onClick={() => onCardClick(item)}
+        className={`flex relative flex-col flex-grow gap-2 justify-center items-center self-stretch p-2 shadow-xl cursor-pointer ${className} ${
+          disabled ? "opacity-70 saturate-50 blur-[1px]" : ""}`}
+        onClick={() => !disabled && onCardClick(item)}
       >
         <div className="flex flex-grow gap-2 justify-center items-center self-stretch p-2">
           <div className="grid flex-grow grid-rows-3 py-2 space-y-4 md:py-6">
@@ -42,6 +44,16 @@ const MenuCard = ({
           </div>
         </div>
       </Card>
+      {disabled && (
+        <div className="absolute right-5 bottom-8 w-1/2 -rotate-[16deg]">
+          {/* <div className="absolute inset-0 w-full h-full bg-primary mask-complete"></div> */}
+          <img
+            src="/thumbs-up_filled.png"
+            alt="완료"
+            className="w-full h-full drop-shadow-lg"
+          />
+        </div>
+      )}
     </BlurFade>
   );
 };

@@ -22,6 +22,7 @@ function Target() {
   const targetData =
     curriculumData?.map((item) => ({
       ...item.target,
+      status: item.status,
       chapterId: item.chapterId,
     })) || [];
 
@@ -83,6 +84,7 @@ function Target() {
                     textcolor={`mix-blend-difference text-${item.name}/95`}
                     onCardClick={onCardClick}
                     selected={selected}
+                    disabled={item.status}
                   />
                 ))}
             </div>

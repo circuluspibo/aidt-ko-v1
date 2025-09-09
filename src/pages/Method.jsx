@@ -91,6 +91,7 @@ function Method() {
                     textcolor={`text-${COLORS[item.name]}-500`}
                     onCardClick={onCardClick}
                     selected={selected}
+                    disabled={item?.session?.status === "ended" || false}
                   />
                 ))}
             </div>
