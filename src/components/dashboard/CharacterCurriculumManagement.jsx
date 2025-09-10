@@ -492,7 +492,7 @@ const CharacterCurriculumManagement = () => {
                                         type="number"
                                         min={1}
                                         max={10}
-                                        defaultValue={
+                                        value={
                                           getChapterConfig(curriculumChapter.id)
                                             .repeat
                                         }
