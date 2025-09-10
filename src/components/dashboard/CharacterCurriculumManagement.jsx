@@ -191,14 +191,14 @@ const CharacterCurriculumManagement = () => {
   };
 
   const getChapterConfig = (chapterId) => {
-    return (
-      chapterConfigs[chapterId] || {
-        target: "vowel",
-        method: Object.keys(METHODS),
-        repeat: 3,
-        level: 0,
-      }
-    );
+    if (chapterConfigs && chapterConfigs[chapterId])
+      return chapterConfigs[chapterId];
+    return {
+      target: "vowel",
+      method: Object.keys(METHODS),
+      repeat: 3,
+      level: 0,
+    };
   };
 
   const updateChapterConfig = (chapterId, config) => {
@@ -457,7 +457,13 @@ const CharacterCurriculumManagement = () => {
                                         updateChapterConfig(
                                           curriculumChapter.id,
                                           {
-                                            method: value,
+                                            method: value.sort(
+                                              (a, b) =>
+                                                Object.keys(METHODS).indexOf(
+                                                  a
+                                                ) -
+                                                Object.keys(METHODS).indexOf(b)
+                                            ),
                                           }
                                         )
                                       }
