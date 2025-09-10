@@ -1,7 +1,18 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // 모든 집중도 데이터 통합 관리
 import { useState, useEffect, useRef } from "react";
-import { useConcentrationMonitor } from "./useConcentrationMonitor";
+import {
+  FACE_ABSENCE_PENALTY,
+  FAST_ANSWER_WEIGHT,
+  FOCUS_LOW_THRESHOLD,
+  FOCUS_PENALTY_MULTIPLIER,
+  FOCUS_SEVERE_THRESHOLD,
+  FOCUS_WINDOW_FRAMES,
+  INACTIVITY_WEIGHT,
+  MAX_ISSUES_CAP,
+  SPEECH_LONG_PAUSE_WEIGHT,
+  useConcentrationMonitor,
+} from "./useConcentrationMonitor";
 import { useSpeechRecognitionMonitor } from "./useSpeechRecognitionMonitor";
 
 export const useIntegratedConcentrationMonitor = (
@@ -37,32 +48,39 @@ export const useIntegratedConcentrationMonitor = (
     let absoluteWarnings = []; // 절대적 경고 메시지
 
     // 1. 비정상적으로 빠른 응답 (가중치 감소)
-    issues += concentrationData.suspiciouslyFastAnswers * 0.5;
+    issues += concentrationData.suspiciouslyFastAnswers * FAST_ANSWER_WEIGHT;
 
     // 2. 연속 오답 패턴 (임계값 완화)
-    if (concentrationData.maxConsecutiveWrong > 8) {
+    if (concentrationData.maxConsecutiveWrong > MAX_ISSUES_CAP) {
       issues += Math.floor(concentrationData.maxConsecutiveWrong / 5);
     }
 
     // 3. 비활성 시간 (3분 이상으로 완화)
-    const inactivityIssues = concentrationData.inactivityPeriods.length * 0.5;
+    const inactivityIssues =
+      concentrationData.inactivityPeriods.length * INACTIVITY_WEIGHT;
     issues += inactivityIssues;
 
     // 4. 긴 휴식 (말하기 활동에서만)
     if (activityType === "speak") {
-      issues += speechData.speechPatterns.longPauses * 0.5;
+      const lp = speechData?.speechPatterns?.longPauses || 0;
+      issues += lp * SPEECH_LONG_PAUSE_WEIGHT;
     }
 
     // 5. 카메라 기반 집중도 이슈 (더 엄격한 기준)
     const focusData = concentrationData.focusData;
-    if (focusData.focusLog.length >= 20) {
+    if (focusData.focusLog.length >= FOCUS_WINDOW_FRAMES) {
       // 30초에서 20초로 단축
-      const recentFocus = focusData.focusLog.slice(-20);
-      const focusRate = recentFocus.filter((x) => x).length / 20;
-
-      if (focusRate < 0.6) {
-        // 0.5에서 0.6으로 더 엄격하게 조정
-        issues += Math.floor((0.6 - focusRate) * 5);
+      const recent = focusData.focusLog.slice(-1 * FOCUS_WINDOW_FRAMES);
+      const focusRate = recent.filter(Boolean).length / FOCUS_WINDOW_FRAMES;
+      if (focusRate < FOCUS_LOW_THRESHOLD) {
+        issues += Math.floor(
+          (FOCUS_LOW_THRESHOLD - focusRate) * FOCUS_PENALTY_MULTIPLIER
+        );
+      }
+      if (focusRate < FOCUS_SEVERE_THRESHOLD) {
+        if (!absoluteWarnings.includes("화면을 제대로 보고 있지 않습니다")) {
+          absoluteWarnings.push("화면을 제대로 보고 있지 않습니다");
+        }
       }
     }
 
@@ -83,19 +101,13 @@ export const useIntegratedConcentrationMonitor = (
       absoluteWarnings.push("연속으로 틀리는 문제가 많습니다");
     }
 
-    if (focusData.focusLog.length >= 20) {
-      const recentFocus = focusData.focusLog.slice(-20);
-      const focusRate = recentFocus.filter((x) => x).length / 20;
-      if (focusRate < 0.3) {
-        absoluteWarnings.push("화면을 제대로 보고 있지 않습니다");
-      }
-    }
+    // ↑ 위와 내용이 겹치는 하드코딩 블록은 삭제 (중복 경고 방지)
 
     if (!focusData.faceDetected) {
-      issues += 2; // 얼굴 미감지 시 더 큰 페널티
+      issues += FACE_ABSENCE_PENALTY; // 얼굴 미감지 시 더 큰 페널티
     }
 
-    const totalIssues = Math.min(issues, 8); // 최대 8점으로 감소
+    const totalIssues = Math.min(issues, MAX_ISSUES_CAP); // 최대 8점으로 감소
 
     // 집중도 레벨 결정 (더 엄격한 기준으로 조정)
     let concentrationLevel = "high";

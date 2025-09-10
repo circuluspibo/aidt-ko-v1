@@ -4,6 +4,29 @@ import { useState, useEffect, useRef } from "react";
 import { FaceMesh } from "@mediapipe/face_mesh";
 import { Camera } from "@mediapipe/camera_utils";
 
+// 비활성 기록 발생 기준(실측): 현재는 2분. 주석/코멘트와 일치 필요.
+export const FAST_ANSWER_SECONDS = 2; // 2초 미만 = 너무 빠름
+export const SLOW_ANSWER_SECONDS = 60; // 60초 초과 = 너무 느림(현재 issues엔 미반영)
+
+export const FAST_ANSWER_WEIGHT = 0.5; // 빠른 응답 1건당 가산
+export const INACTIVITY_WEIGHT = 0.5; // 비활성 1건당 가산
+export const FACE_ABSENCE_PENALTY = 2; // 얼굴 미감지 페널티
+
+export const FOCUS_WINDOW_FRAMES = 20; // 최근 20프레임으로 집계
+export const FOCUS_LOW_THRESHOLD = 0.6; // 0.6 미만이면 이슈 가산(0~1 스케일)
+export const FOCUS_SEVERE_THRESHOLD = 0.3; // 0.3 미만이면 절대 경고(absoluteWarnings)
+
+export const MAX_ISSUES_CAP = 8; // 이슈 상한
+export const LEVEL_LOW_MIN = 5; // totalIssues > 4 → low
+export const LEVEL_MEDIUM_MIN = 2; // 2~4 → medium, 0~1 → high
+
+// 비활성 기록 발생 기준(실측): 현재는 2분. 주석/코멘트와 일치 필요.
+export const INACTIVITY_MS_THRESHOLD = 120000; // 2분
+
+export const FOCUS_PENALTY_MULTIPLIER = 5;
+
+export const SPEECH_LONG_PAUSE_WEIGHT = 0.5;
+
 export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
   const [concentrationData, setConcentrationData] = useState({
     questionSolvingTimes: [],
@@ -49,7 +72,7 @@ export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
     const currentTime = Date.now();
     const inactiveTime = currentTime - lastActivityTime.current;
 
-    if (inactiveTime > 120000) {
+    if (inactiveTime > INACTIVITY_MS_THRESHOLD) {
       // 2분 이상 비활성 (태블릿 환경 고려)
       setConcentrationData((prev) => ({
         ...prev,
@@ -79,12 +102,11 @@ export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
       let newSuspiciouslyFast = prev.suspiciouslyFastAnswers;
       let newSuspiciouslySlow = prev.suspiciouslySlowAnswers;
 
-      if (solvingTime < 2) {
-        newSuspiciouslyFast += 1; // 2초 미만 응답 - 집중도 부족 의심
-        console.log("⚡ 빠른 응답:", solvingTime.toFixed(1) + "초");
-      } else if (solvingTime > 60) {
-        newSuspiciouslySlow += 1; // 60초 초과 응답 - 집중도 부족 의심
-        console.log("🐌 느린 응답:", solvingTime.toFixed(1) + "초");
+      // 2초 미만 응답 - 집중도 부족 의심 / 60초 초과 응답 - 집중도 부족 의심
+      if (solvingTime < FAST_ANSWER_SECONDS) {
+        newSuspiciouslyFast += 1;
+      } else if (solvingTime > SLOW_ANSWER_SECONDS) {
+        newSuspiciouslySlow += 1;
       }
 
       // 연속 오답 패턴 분석 - 학습 집중도 저하 지표
@@ -285,42 +307,40 @@ export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
   // 집중도 점수 계산 (개선된 버전)
   const calculateConcentrationScore = () => {
     const {
-      suspiciouslyFastAnswers,
-      maxConsecutiveWrong,
-      inactivityPeriods,
-      focusData,
+      // suspiciouslyFastAnswers = 0,
+      maxConsecutiveWrong = 0,
+      inactivityPeriods = [],
+      focusData = {},
     } = concentrationData;
 
     let issues = 0;
 
-    // 1. 비정상적으로 빠른 응답 (가중치 감소)
-    issues += suspiciouslyFastAnswers * 0.5;
+    // 1) 빠른 응답 (한 번만)
+    // issues += suspiciouslyFastAnswers * FAST_ANSWER_WEIGHT;
 
-    // 2. 연속 오답 패턴 (임계값 완화)
+    // 2) 연속 오답
     if (maxConsecutiveWrong > 8) {
       issues += Math.floor(maxConsecutiveWrong / 5);
     }
 
-    // 3. 비활성 시간 (가중치 감소)
-    issues += inactivityPeriods.length * 0.5;
+    // 3) 비활성
+    issues += inactivityPeriods.length * INACTIVITY_WEIGHT;
 
-    // 4. 카메라 기반 집중도 이슈 (더 관대한 기준)
-    if (focusData.focusLog.length >= 20) {
-      // 30초에서 20초로 단축
-      const recentFocus = focusData.focusLog.slice(-20);
-      const focusRate = recentFocus.filter((x) => x).length / 20;
-
-      if (focusRate < 0.3) {
-        // 0.5에서 0.3으로 완화
-        issues += Math.floor((0.3 - focusRate) * 5);
+    // 4) 포커스
+    if ((focusData.focusLog?.length || 0) >= FOCUS_WINDOW_FRAMES) {
+      const recent = focusData.focusLog.slice(-1 * FOCUS_WINDOW_FRAMES);
+      const focusRate = recent.filter(Boolean).length / FOCUS_WINDOW_FRAMES;
+      if (focusRate < FOCUS_LOW_THRESHOLD) {
+        issues += Math.floor(
+          (FOCUS_LOW_THRESHOLD - focusRate) * FOCUS_PENALTY_MULTIPLIER
+        );
       }
     }
 
-    if (!focusData.faceDetected) {
-      issues += 2; // 얼굴 미감지 시 더 큰 페널티
-    }
+    // 5) 얼굴 미감지
+    if (!focusData.faceDetected) issues += FACE_ABSENCE_PENALTY;
 
-    return Math.min(issues, 8); // 최대 8점으로 감소
+    return Math.min(issues, MAX_ISSUES_CAP);
   };
 
   // 실시간 집중도 체크
