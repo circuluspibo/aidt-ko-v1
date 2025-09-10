@@ -158,7 +158,7 @@ const LearnByListen = ({
       </div>
       {/* 보기 영역 */}
       <Options
-        key={`${currentItemIndex}-${currentLearningCount}-${currentRepeat}-${target}`}
+        id={`${currentItemIndex}-${currentLearningCount}-${currentRepeat}-${target}`}
         enabled={isPlayed}
         correctAnswer={item.letter}
         options={options}

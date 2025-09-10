@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import colors from "tailwindcss/colors";
 
 const Options = ({
-  key,
+  id,
   correctAnswer,
   options,
   onSelect,
@@ -27,10 +27,11 @@ const Options = ({
 
   return (
     <div className="grid col-span-3 grid-rows-3 gap-4 h-full">
-      {options.length > 0 &&
+      {id &&
+        options.length > 0 &&
         options.map((choice, idx) => (
           <button
-            key={`${key}-${idx}`}
+            key={`${id}-${idx}`}
             onClick={() => handleClick(choice)}
             style={{
               "--hover-bg": colors[color]["200"],
