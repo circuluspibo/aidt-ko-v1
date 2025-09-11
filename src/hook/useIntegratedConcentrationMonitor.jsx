@@ -18,8 +18,7 @@ import { useSpeechRecognitionMonitor } from "./useSpeechRecognitionMonitor";
 export const useIntegratedConcentrationMonitor = (
   sessionId,
   studentId,
-  activityType,
-  videoRef
+  activityType
 ) => {
   const [integratedData, setIntegratedData] = useState({
     totalIssues: 0,
@@ -32,11 +31,7 @@ export const useIntegratedConcentrationMonitor = (
   const lastLogTime = useRef(0);
 
   // 각 모니터링 훅 초기화
-  const concentrationMonitor = useConcentrationMonitor(
-    sessionId,
-    studentId,
-    videoRef
-  );
+  const concentrationMonitor = useConcentrationMonitor(sessionId, studentId);
   const speechMonitor = useSpeechRecognitionMonitor();
 
   // 최종 집중도 점수 계산 (개선된 버전)
@@ -85,7 +80,7 @@ export const useIntegratedConcentrationMonitor = (
     }
 
     // 절대적 기준 체크
-    if (!focusData.faceDetected) {
+    if (focusData.faceDetected === false) {
       absoluteWarnings.push("카메라 앞에 앉아주세요");
     }
 
@@ -171,9 +166,9 @@ export const useIntegratedConcentrationMonitor = (
       recommendations.push("학습 환경을 조용하게 만들어보세요.");
     }
 
-    if (!data.focusData.faceDetected) {
-      recommendations.push("카메라 앞에 앉아주세요.");
-    }
+    // if (!data.focusData.faceDetected) {
+    //   recommendations.push("카메라 앞에 앉아주세요.");
+    // }
 
     return recommendations;
   };
@@ -191,31 +186,26 @@ export const useIntegratedConcentrationMonitor = (
       setTimeout(() => {
         const currentScore = calculateIntegratedScore();
 
-        // 절대적 경고가 있으면 즉시 제거
-        const hasAbsoluteWarnings = currentScore.absoluteWarnings.length > 0;
-
+        const filtered = (currentScore.absoluteWarnings || []).filter(
+          (w) => w !== "오랫동안 활동이 없습니다"
+        );
         if (
-          hasAbsoluteWarnings ||
+          filtered.length !== currentScore.absoluteWarnings.length ||
           (currentScore.totalIssues <= 1 &&
             currentScore.concentrationLevel !== "high")
         ) {
-          // 절대적 경고가 있거나 이슈가 적으면 즉시 개선
-          const improvedScore = {
+          setIntegratedData({
             ...currentScore,
-            concentrationLevel: "high",
-            totalIssues: Math.max(0, currentScore.totalIssues - 1), // 이슈 더 많이 감소
-            absoluteWarnings: [], // 절대적 경고 즉시 제거
-          };
-          setIntegratedData(improvedScore);
-          // console.log("✅ 사용자 활동으로 집중도 개선:", {
-          //   timestamp: new Date().toLocaleTimeString(),
-          //   from: currentScore.concentrationLevel,
-          //   to: "high",
-          //   totalIssues: improvedScore.totalIssues,
-          //   warningsRemoved: hasAbsoluteWarnings,
-          //   inactivityPeriods:
-          //     concentrationMonitor.concentrationData.inactivityPeriods.length,
-          // });
+            concentrationLevel:
+              currentScore.totalIssues <= 1
+                ? "high"
+                : currentScore.concentrationLevel,
+            totalIssues:
+              currentScore.totalIssues <= 1
+                ? Math.max(0, currentScore.totalIssues - 1)
+                : currentScore.totalIssues,
+            absoluteWarnings: filtered,
+          });
         }
       }, 500);
     };

@@ -18,15 +18,12 @@ import LearnByListen from "@/components/LearnByListen";
 import TopContentList from "@/features/TopContentList";
 import { Loading } from "@/components/Loading";
 import { ChevronLeft } from "lucide-react";
-import { useRef, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useIntegratedConcentrationMonitor } from "@/hook/useIntegratedConcentrationMonitor";
 import { useSessionContext } from "@/context/SessionContext";
-import ConcetrationAlert from "@/features/ConcetrationAlert";
+import ConcentrationAlert from "@/features/ConcentrationAlert";
 
 const Learn = () => {
-  // 비디오 요소 ref 생성
-  const videoRef = useRef(null);
-
   const {
     // URL 파라미터
     chapter,
@@ -54,24 +51,20 @@ const Learn = () => {
     onAnswer,
     item,
   } = useSessionContext();
+  const [videoClass, setVideo] = useState(
+    "w-[1px] h-[1px] opacity-0 fixed -left-[9999px] -top-[9999px] pointer-events-none"
+  );
   // 집중도 모니터링 초기화 (Learn.jsx에서 관리)
   const sessionId = `${character}-${chapter}-${method}`;
   const studentId = "student_1"; // 실제로는 사용자 ID를 사용해야 함
-  const concentrationMonitor = useIntegratedConcentrationMonitor(
-    sessionId,
-    studentId,
-    method,
-    videoRef
-  );
+  const { videoRef, getConcentrationStatus, submitAnswer, startQuestion } =
+    useIntegratedConcentrationMonitor(sessionId, studentId, method);
   // 실시간 집중도 상태 확인
-  const concentrationStatus = concentrationMonitor.getConcentrationStatus();
+  const concentrationStatus = getConcentrationStatus();
 
   const handleAnswer = (userAnswer, correctAnswer) => {
     // 집중도 데이터 수집 (카메라 기반 시선 추적, 얼굴 감지, 문제 풀이 시간 등)
-    const concentrationData = concentrationMonitor.submitAnswer(
-      userAnswer,
-      correctAnswer
-    );
+    const concentrationData = submitAnswer(userAnswer, correctAnswer);
 
     // 집중도 데이터를 포함한 attempt 객체 생성
     const attempt = {
@@ -105,7 +98,7 @@ const Learn = () => {
   // 문제 변경 시 집중도 모니터링 시작
   useEffect(() => {
     if (item) {
-      concentrationMonitor.startQuestion();
+      startQuestion();
     }
   }, [currentItemIndex, currentLearningCount, item]);
 
@@ -125,14 +118,22 @@ const Learn = () => {
         {/* 숨겨진 비디오 요소 - 모든 학습 컴포넌트에서 공유 */}
         <video
           ref={videoRef}
-          className="w-[1px] h-[1px] opacity-0 fixed -left-[9999px] -top-[9999px] pointer-events-none"
+          // className="w-[1px] h-[1px] opacity-0 fixed -left-[9999px] -top-[9999px] pointer-events-none"
+          className={videoClass}
+          onLoadedMetadata={() => console.log("✅ 비디오 메타데이터 로드됨")}
+          onError={(e) => console.error("❌ 비디오 에러:", e)}
           autoPlay
           muted
           playsInline
+          onClick={() =>
+            setVideo(
+              "w-[1px] h-[1px] opacity-0 fixed -left-[9999px] -top-[9999px] pointer-events-none"
+            )
+          }
         />
 
         {/* 집중도 상태 표시 */}
-        <ConcetrationAlert {...concentrationStatus} />
+        <ConcentrationAlert {...concentrationStatus} />
 
         <TopContentList
           open={openContentList}
@@ -206,7 +207,14 @@ const Learn = () => {
               />
             </div>
             <div className="flex gap-2 items-center">
-              <span className="text-sm font-bold">진행</span>
+              <span
+                className="text-sm font-bold"
+                onClick={() =>
+                  setVideo("w-[200px] h-[200px] fixed right-0 top-0 z-[9999]")
+                }
+              >
+                진행
+              </span>
               <AnimatedCircularProgressBar
                 className="w-12 h-12"
                 max={data?.contents?.length || 0}

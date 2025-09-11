@@ -1,8 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // 시간 기반 + 카메라 기반 집중도 감지
 import { useState, useEffect, useRef } from "react";
-import { FaceMesh } from "@mediapipe/face_mesh";
-import { Camera } from "@mediapipe/camera_utils";
+import { FACE_BASE, getCameraCtor, getFaceMeshCtor } from "@/utils/mediapipe";
 
 // 비활성 기록 발생 기준(실측): 현재는 2분. 주석/코멘트와 일치 필요.
 export const FAST_ANSWER_SECONDS = 2; // 2초 미만 = 너무 빠름
@@ -27,7 +26,9 @@ export const FOCUS_PENALTY_MULTIPLIER = 5;
 
 export const SPEECH_LONG_PAUSE_WEIGHT = 0.5;
 
-export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
+export const useConcentrationMonitor = (sessionId, studentId) => {
+  const videoRef = useRef(null);
+
   const [concentrationData, setConcentrationData] = useState({
     questionSolvingTimes: [],
     suspiciouslyFastAnswers: 0,
@@ -40,7 +41,7 @@ export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
     focusData: {
       focusLog: [],
       focusRate: 0,
-      faceDetected: false,
+      faceDetected: null,
       eyeTrackingData: [],
       headPoseData: [],
       attentionScore: 0,
@@ -244,7 +245,7 @@ export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
 
   // 카메라 초기화
   const initializeCamera = async () => {
-    if (!videoRef.current) {
+    if (!videoRef?.current) {
       console.error("❌ videoRef가 없습니다");
       return;
     }
@@ -260,9 +261,9 @@ export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
       }
 
       // FaceMesh 초기화
-      const faceMesh = new FaceMesh({
-        locateFile: (file) =>
-          `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
+      const FaceMeshCtor = await getFaceMeshCtor();
+      const faceMesh = new FaceMeshCtor({
+        locateFile: (file) => FACE_BASE + file, // wasm/data 경로 고정
       });
 
       faceMesh.setOptions({
@@ -277,28 +278,24 @@ export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
       console.log("✅ FaceMesh 초기화 완료");
 
       // 카메라 초기화
-      const camera = new Camera(videoRef.current, {
+      const CameraCtor = await getCameraCtor();
+      const camera = new CameraCtor(videoRef.current, {
         onFrame: async () => {
-          if (faceMeshRef.current) {
-            await faceMeshRef.current.send({ image: videoRef.current });
-          }
+          await faceMesh.send({ image: videoRef.current });
         },
         width: 640,
         height: 480,
       });
-
       await camera.start();
       cameraRef.current = camera;
       console.log("✅ 카메라 시작 완료");
 
       // 카메라 권한 확인
-      setTimeout(() => {
-        if (videoRef.current && videoRef.current.readyState >= 2) {
-          console.log("✅ 비디오 스트림 활성화됨");
-        } else {
-          console.log("❌ 비디오 스트림이 활성화되지 않음");
-        }
-      }, 2000);
+      if (videoRef.current && videoRef.current.readyState >= 2) {
+        console.log("✅ 비디오 스트림 활성화됨");
+      } else {
+        console.log("❌ 비디오 스트림이 활성화되지 않음");
+      }
     } catch (error) {
       console.error("❌ 카메라 초기화 실패:", error);
     }
@@ -467,6 +464,10 @@ export const useConcentrationMonitor = (sessionId, studentId, videoRef) => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    initializeCamera();
+  }, [videoRef?.current]);
 
   return {
     startQuestionTimer,
