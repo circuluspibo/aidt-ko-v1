@@ -2,14 +2,21 @@
 // 모든 집중도 데이터 통합 관리
 import { useState, useEffect, useRef } from "react";
 import {
+  computeRecentResponseStats,
   FACE_ABSENCE_PENALTY,
+  FAST_ANSWER_SECONDS,
   FAST_ANSWER_WEIGHT,
+  FAST_RECENT_TOLERANCE,
   FOCUS_LOW_THRESHOLD,
   FOCUS_PENALTY_MULTIPLIER,
   FOCUS_SEVERE_THRESHOLD,
   FOCUS_WINDOW_FRAMES,
   INACTIVITY_WEIGHT,
   MAX_ISSUES_CAP,
+  RECENT_RESP_WINDOW,
+  SLOW_ANSWER_SECONDS,
+  SLOW_ANSWER_WEIGHT,
+  SLOW_RECENT_TOLERANCE,
   SPEECH_LONG_PAUSE_WEIGHT,
   useConcentrationMonitor,
 } from "./useConcentrationMonitor";
@@ -43,7 +50,20 @@ export const useIntegratedConcentrationMonitor = (
     let absoluteWarnings = []; // 절대적 경고 메시지
 
     // 1. 비정상적으로 빠른 응답 (가중치 감소)
-    issues += concentrationData.suspiciouslyFastAnswers * FAST_ANSWER_WEIGHT;
+    const { fast: recentFast, slow: recentSlow } = computeRecentResponseStats(
+      concentrationData.questionSolvingTimes || [],
+      RECENT_RESP_WINDOW,
+      FAST_ANSWER_SECONDS,
+      SLOW_ANSWER_SECONDS
+    );
+
+    // 초과분만 페널티 (허용치 FAST_RECENT_TOLERANCE 초과한 개수 × 가중치)
+    const fastOver = Math.max(0, recentFast - FAST_RECENT_TOLERANCE);
+    issues += fastOver * FAST_ANSWER_WEIGHT;
+
+    // (선택) 느린 응답도 점수에 반영하려면 아래 주석 해제
+    const slowOver = Math.max(0, recentSlow - SLOW_RECENT_TOLERANCE);
+    issues += slowOver * SLOW_ANSWER_WEIGHT;
 
     // 2. 연속 오답 패턴 (임계값 완화)
     if (concentrationData.maxConsecutiveWrong > MAX_ISSUES_CAP) {
@@ -88,8 +108,19 @@ export const useIntegratedConcentrationMonitor = (
       absoluteWarnings.push("오랫동안 활동이 없습니다");
     }
 
-    if (concentrationData.suspiciouslyFastAnswers > 3) {
+    if (
+      recentFast >= 3 &&
+      !absoluteWarnings.includes("너무 빠른 응답이 많습니다")
+    ) {
       absoluteWarnings.push("너무 빠른 응답이 많습니다");
+    }
+
+    // (선택) 느린 응답 경고도 원하면
+    if (
+      recentSlow >= 3 &&
+      !absoluteWarnings.includes("너무 느린 응답이 많습니다")
+    ) {
+      absoluteWarnings.push("너무 느린 응답이 많습니다");
     }
 
     if (concentrationData.maxConsecutiveWrong > 5) {

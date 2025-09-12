@@ -6,6 +6,10 @@ import { FACE_BASE, getCameraCtor, getFaceMeshCtor } from "@/utils/mediapipe";
 // 비활성 기록 발생 기준(실측): 현재는 2분. 주석/코멘트와 일치 필요.
 export const FAST_ANSWER_SECONDS = 2; // 2초 미만 = 너무 빠름
 export const SLOW_ANSWER_SECONDS = 60; // 60초 초과 = 너무 느림(현재 issues엔 미반영)
+export const RECENT_RESP_WINDOW = 10; // 최근 10문항으로 판정
+export const FAST_RECENT_TOLERANCE = 2; // 최근 창에서 2개까지는 허용
+export const SLOW_RECENT_TOLERANCE = 2;
+export const SLOW_ANSWER_WEIGHT = 0.5;
 
 export const FAST_ANSWER_WEIGHT = 0.5; // 빠른 응답 1건당 가산
 export const INACTIVITY_WEIGHT = 0.5; // 비활성 1건당 가산
@@ -25,6 +29,19 @@ export const INACTIVITY_MS_THRESHOLD = 120000; // 2분
 export const FOCUS_PENALTY_MULTIPLIER = 5;
 
 export const SPEECH_LONG_PAUSE_WEIGHT = 0.5;
+
+// 최근 N문항에서 fast/slow 개수를 계산
+export function computeRecentResponseStats(
+  times = [],
+  windowSize,
+  fastSec,
+  slowSec
+) {
+  const recent = times.slice(-windowSize);
+  const fast = recent.filter((t) => t < fastSec).length;
+  const slow = recent.filter((t) => t > slowSec).length;
+  return { fast, slow };
+}
 
 export const useConcentrationMonitor = (sessionId, studentId) => {
   const videoRef = useRef(null);
@@ -104,9 +121,12 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
       let newSuspiciouslySlow = prev.suspiciouslySlowAnswers;
 
       // 2초 미만 응답 - 집중도 부족 의심 / 60초 초과 응답 - 집중도 부족 의심
-      if (solvingTime < FAST_ANSWER_SECONDS) {
+      const isFast = solvingTime < FAST_ANSWER_SECONDS;
+      const isSlow = solvingTime > SLOW_ANSWER_SECONDS;
+      if (isFast) {
         newSuspiciouslyFast += 1;
-      } else if (solvingTime > SLOW_ANSWER_SECONDS) {
+      }
+      if (isSlow) {
         newSuspiciouslySlow += 1;
       }
 
@@ -313,7 +333,20 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
     let issues = 0;
 
     // 1) 빠른 응답 (한 번만)
-    // issues += suspiciouslyFastAnswers * FAST_ANSWER_WEIGHT;
+    const { fast: recentFast, slow: recentSlow } = computeRecentResponseStats(
+      concentrationData.questionSolvingTimes || [],
+      RECENT_RESP_WINDOW,
+      FAST_ANSWER_SECONDS,
+      SLOW_ANSWER_SECONDS
+    );
+
+    // 초과분만 페널티 (허용치 FAST_RECENT_TOLERANCE 초과한 개수 × 가중치)
+    const fastOver = Math.max(0, recentFast - FAST_RECENT_TOLERANCE);
+    issues += fastOver * FAST_ANSWER_WEIGHT;
+
+    // (선택) 느린 응답도 점수에 반영하려면 아래 주석 해제
+    const slowOver = Math.max(0, recentSlow - SLOW_RECENT_TOLERANCE);
+    issues += slowOver * SLOW_ANSWER_WEIGHT;
 
     // 2) 연속 오답
     if (maxConsecutiveWrong > 8) {
