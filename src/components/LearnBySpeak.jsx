@@ -5,6 +5,7 @@ import Letters from "./Letters";
 import { JOSA, TARGETS } from "@/utils/globals";
 import { Alert, AlertDescription } from "./ui/alert";
 import { AlertCircle, AudioLines, Square } from "lucide-react";
+import { getAsset } from "@/api";
 
 const getSR = () => window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -19,6 +20,7 @@ const LearnBySpeak = ({
 }) => {
   const [[type, message], setAlert] = useState(["", ""]);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlayed, setPlayed] = useState(false);
 
   // ★ 낙관적 시작 로딩 + UI용 상태
   const [starting, setStarting] = useState(false); // 클릭→onstart 사이
@@ -27,6 +29,11 @@ const LearnBySpeak = ({
 
   const recogRef = useRef(null);
   const forceStopRef = useRef(false); // 사용자가 정지/제출 눌렀는지
+
+  // 오디오 엘리먼트 및 상태
+  const audioRef = useRef(null);
+  const repeatRef = useRef(0);
+  const cancelledRef = useRef(false);
 
   // 안내 메시지 (원래 로직 유지 + 네이티브로 대체)
   useEffect(() => {
@@ -163,108 +170,130 @@ const LearnBySpeak = ({
     stopMicButton(); // ★ 실제 정지 호출(괄호 누락 수정)
   };
 
+  const stopPlayback = () => {
+    cancelledRef.current = true;
+    const audio = audioRef.current;
+    if (audio) {
+      audio.onended = null;
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    setIsPlaying(false);
+    setPlayed(true);
+  };
+
   // 발음 예시 TTS (원본 유지)
-  const playSound = () => {
+  const playSound = async () => {
+    // 중복 클릭 방지
+    if (isPlaying) return;
+
     setIsPlaying(true);
-    window.speechSynthesis.cancel();
+    setPlayed(false);
+    repeatRef.current = 0;
+    cancelledRef.current = false;
 
-    let repeatCount = 0;
-    let cancelled = false;
-
+    // 정지 이벤트 리스너
     const stopHandler = () => {
-      cancelled = true;
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
       document.removeEventListener("stop-sound", stopHandler);
+      stopPlayback();
     };
     document.addEventListener("stop-sound", stopHandler);
 
-    const speakName = () => {
-      if (cancelled) return;
-      try {
-        const utterance = new SpeechSynthesisUtterance(item.name);
-        utterance.lang = "ko-KR";
-        utterance.rate = 0.6;
-        utterance.pitch = 1.2;
-        utterance.onend = () => {
-          repeatCount += 1;
-          if (repeatCount < 3 && !cancelled) {
-            setTimeout(speakName, 500);
-          } else {
-            setIsPlaying(false);
-            document.removeEventListener("stop-sound", stopHandler);
-          }
-        };
-        window.speechSynthesis.speak(utterance);
-      } catch (error) {
-        console.error(error);
-      }
+    // MP3 URL 확보
+    let url;
+    try {
+      url = await getAsset({ content: item.letter, type: "sound" });
+      if (!url) throw new Error("음원 URL을 가져오지 못했습니다.");
+    } catch (err) {
+      console.error(err);
+      stopPlayback();
+      return;
+    }
+
+    // 재생 함수
+    const playOnce = () => {
+      if (cancelledRef.current) return;
+      const audio = new Audio(url);
+      audioRef.current = audio;
+
+      // iOS/모바일 대비: 자동 재생 실패 예외 처리
+      audio.play().catch((e) => {
+        console.error("오디오 재생 실패:", e);
+        stopPlayback();
+      });
+
+      audio.onended = () => {
+        repeatRef.current += 1;
+        if (repeatRef.current < 3 && !cancelledRef.current) {
+          // 반복 간 간격
+          setTimeout(() => playOnce(), 500);
+        } else {
+          // 재생 종료
+          stopPlayback();
+          document.removeEventListener("stop-sound", stopHandler);
+        }
+      };
     };
-    speakName();
+
+    playOnce();
   };
 
   // 전환/반복/언마운트 시 정리 (원본 의도 유지)
   useEffect(() => {
+    setPlayed(false);
     document.dispatchEvent(new Event("stop-sound"));
     forceStopRef.current = true;
     stopRecognition({ uiOnly: false });
     setTranscript("");
     setAlert(["", ""]);
+    // 언마운트/문항 변경 시 정리
+    return () => {
+      document.dispatchEvent(new Event("stop-sound"));
+    };
   }, [currentItemIndex, target, currentRepeat, currentLearningCount]);
 
   useEffect(() => {
     return () => {
       forceStopRef.current = true;
       stopRecognition({ uiOnly: false });
-      window.speechSynthesis?.cancel?.();
+      document.dispatchEvent(new Event("stop-sound"));
     };
   }, []);
 
   return (
-    <div className="grid grid-cols-12 gap-4 h-full">
+    <div className="grid h-full grid-cols-12 gap-4">
       <div className="col-span-9 grid grid-rows-[auto_1fr] gap-4">
-        <div className="row-span-1 p-2 w-full text-2xl font-bold text-center rounded-lg border shadow border-neutral-300 bg-blue-300/80">
+        <div className="w-full row-span-1 p-2 text-2xl font-bold text-center border rounded-lg shadow border-neutral-300 bg-blue-300/80">
           {`"말하기"를 선택하고 "${item.letter}"${JOSA().c(
             item.name,
             "을/를"
           )} 소리내어 말해보세요.`}
         </div>
 
-        <div className="grid grid-cols-9 row-span-2 gap-4 w-full h-full">
+        <div className="grid w-full h-full grid-cols-9 row-span-2 gap-4">
           {/* 힌트 영역 */}
-          <div className="flex col-span-4 gap-4 justify-center items-center w-full h-full bg-white rounded-lg border shadow">
+          <div className="flex items-center justify-center w-full h-full col-span-4 gap-4 bg-white border rounded-lg shadow">
             {target !== "letter" && (
-              <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold">
-                {target === "word" ? (
-                  <img
-                    src={`/images/words/${encodeURI(item.name).replaceAll(
-                      "%",
-                      ""
-                    )}.png`}
-                    alt={item.letter}
-                    className="p-2 aspect-square"
-                  />
-                ) : (
-                  <img
-                    src={`/images/hangul/${item.letter.charCodeAt(0)}.png`}
-                    alt={item.letter}
-                  />
-                )}
+              <div className="flex items-center justify-center col-span-2 p-4 font-extrabold text-9xl">
+                <img
+                  src={getAsset({ content: item.letter })}
+                  alt={item.letter}
+                  className={target === "word" && "p-2 aspect-square"}
+                />
               </div>
             )}
             {target === "letter" && (
-              <div className="flex justify-center items-center pr-4 w-full text-6xl font-extrabold">
-                {/* ★ 원본 버그 수정: 템플릿 리터럴 올바르게 */}
+              <div className="flex items-center justify-center w-full pr-4 text-6xl font-extrabold">
                 <img
-                  src={`/images/hangul/${item.components[0].charCodeAt(0)}.png`}
+                  src={getAsset({ content: item.components[0] })}
                   alt={item.components[0]}
-                  className="object-contain flex-1 w-1/3 h-auto scale-75"
+                  className="flex-1 object-contain w-1/3 h-auto scale-75"
                 />
                 <span>+</span>
                 <img
-                  src={`/images/hangul/${item.components[1].charCodeAt(0)}.png`}
+                  src={getAsset({ content: item.components[1] })}
                   alt={item.components[1]}
-                  className="object-contain flex-1 w-1/3 h-auto"
+                  className="flex-1 object-contain w-1/3 h-auto"
                 />
                 <span>=</span>
               </div>
@@ -272,7 +301,7 @@ const LearnBySpeak = ({
           </div>
 
           {/* 문제-보기 영역 */}
-          <div className="flex flex-col col-span-5 gap-2 justify-center items-center w-full h-full bg-white rounded-lg border shadow">
+          <div className="flex flex-col items-center justify-center w-full h-full col-span-5 gap-2 bg-white border rounded-lg shadow">
             <div className="flex gap-2">
               {target !== "word" && (
                 <Letters
@@ -313,12 +342,12 @@ const LearnBySpeak = ({
       </div>
 
       {/* 우측 컨트롤: starting/ listening 상태 표시 */}
-      <div className="flex flex-col col-span-3 grid-rows-3 gap-10 justify-center items-center p-8 w-full h-full text-center bg-white rounded-lg border shadow-sm">
+      <div className="flex flex-col items-center justify-center w-full h-full col-span-3 grid-rows-3 gap-10 p-8 text-center bg-white border rounded-lg shadow-sm">
         {!listening && !starting && (
           <Button
             onClick={handleMicButton}
             size="lg"
-            className="flex flex-col gap-10 justify-center pt-12 pb-6 text-2xl font-bold bg-blue-500 animate-focus hover:bg-blue-600 h-fit max-w-48"
+            className="flex flex-col justify-center gap-10 pt-12 pb-6 text-2xl font-bold bg-blue-500 animate-focus hover:bg-blue-600 h-fit max-w-48"
           >
             <p className="text-9xl">🎙️</p>
             <p className="max-w-fit text-wrap">말하기</p>
@@ -326,8 +355,8 @@ const LearnBySpeak = ({
         )}
 
         {!listening && starting && (
-          <div className="flex flex-col gap-4 items-center text-blue-600">
-            <div className="w-10 h-10 rounded-full border-4 border-blue-300 animate-spin border-t-transparent" />
+          <div className="flex flex-col items-center gap-4 text-blue-600">
+            <div className="w-10 h-10 border-4 border-blue-300 rounded-full animate-spin border-t-transparent" />
             <p className="text-xl font-bold">마이크 여는 중…</p>
             <p className="text-sm text-neutral-500">
               브라우저 권한/장치 연결을 확인하는 중
@@ -336,7 +365,7 @@ const LearnBySpeak = ({
         )}
 
         {listening && (
-          <div className="flex flex-col gap-6 justify-center items-center text-2xl text-blue-500">
+          <div className="flex flex-col items-center justify-center gap-6 text-2xl text-blue-500">
             <p className="text-2xl font-extrabold text-center max-w-fit text-wrap animate-focus">
               듣는 중...
             </p>
@@ -364,7 +393,7 @@ const LearnBySpeak = ({
 
         {message && (
           <Alert variant={type} className="items-center">
-            <AlertDescription className="flex gap-2 items-center">
+            <AlertDescription className="flex items-center gap-2">
               <AlertCircle />
               {message}
             </AlertDescription>

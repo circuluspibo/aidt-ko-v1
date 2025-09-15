@@ -7,6 +7,7 @@ import { Loader2Icon } from "lucide-react";
 import { JOSA } from "@/utils/globals";
 import { fetchWriteOCR } from "@/api/learning";
 import { Toast } from "./Toast";
+import { getAsset } from "@/api";
 
 const TM_INPUT_SIZE = 224;
 const USE_TF_FOR = new Set(["vowel", "consonant"]);
@@ -295,41 +296,37 @@ const LearnByWrite = ({
   const busy = isPending || isPredicting;
 
   return (
-    <div className="grid grid-cols-12 gap-4 h-full">
+    <div className="grid h-full grid-cols-12 gap-4">
       {/* 힌트 영역 */}
       <div className="grid-cols-2 col-span-4 gap-4">
-        <div className="flex justify-center items-center p-4 h-full text-9xl font-extrabold bg-white rounded-lg border shadow-sm">
+        <div className="flex items-center justify-center h-full p-4 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
           {target !== "letter" && (
-            <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold">
-              {target === "word" ? (
-                <img
-                  src={`/images/words/${encodeURI(item.name).replaceAll(
-                    "%",
-                    ""
-                  )}.png`}
-                  alt={item.letter}
-                  className="p-2 aspect-square"
-                />
-              ) : (
-                <img
-                  src={`/images/write/${item.letter.charCodeAt(0)}.png`}
-                  alt={item.letter}
-                />
-              )}
+            <div className="flex items-center justify-center col-span-2 p-4 font-extrabold text-9xl">
+              <img
+                src={getAsset({ content: `${item.letter}`, type: "write" })}
+                alt={item.letter}
+                className={target === "word" && "p-2 aspect-square"}
+              />
             </div>
           )}
           {target === "letter" && (
-            <div className="flex justify-center items-center pr-4 w-full text-6xl font-extrabold">
+            <div className="flex items-center justify-center w-full pr-4 text-6xl font-extrabold">
               <img
-                src={`/images/write/${item.components[0].charCodeAt(0)}.png`}
+                src={getAsset({
+                  content: `${item.components[0]}`,
+                  type: "write",
+                })}
                 alt={item.components[0]}
-                className="object-contain flex-1 w-1/2 h-auto scale-75"
+                className="flex-1 object-contain w-1/2 h-auto scale-75"
               />
               <span>+</span>
               <img
-                src={`/images/write/${item.components[1].charCodeAt(0)}.png`}
+                src={getAsset({
+                  content: `${item.components[1]}`,
+                  type: "write",
+                })}
                 alt={item.components[1]}
-                className="object-contain flex-1 w-auto h-48"
+                className="flex-1 object-contain w-auto h-48"
               />
               <span>=</span>
             </div>
@@ -339,13 +336,13 @@ const LearnByWrite = ({
 
       {/* 문제-보기 영역 */}
       <div className="col-span-8 grid grid-rows-[auto_1fr] gap-4">
-        <div className="row-span-1 p-2 w-full text-2xl font-bold text-center rounded-lg border shadow border-neutral-300 bg-rose-300/80">
+        <div className="w-full row-span-1 p-2 text-2xl font-bold text-center border rounded-lg shadow border-neutral-300 bg-rose-300/80">
           {`"${item.letter}"${JOSA().c(item.letter, "을/를")} 직접 써보세요.`}
         </div>
 
-        <div className="flex flex-col gap-10 justify-center items-center p-2 w-full text-center bg-white rounded-lg border shadow-sm">
+        <div className="flex flex-col items-center justify-center w-full gap-10 p-2 text-center bg-white border rounded-lg shadow-sm">
           <div className="grid grid-cols-[1fr_auto] gap-2 w-full h-full">
-            <div className="relative col-span-1 w-full h-full" ref={parentRef}>
+            <div className="relative w-full h-full col-span-1" ref={parentRef}>
               {hint && (
                 <div
                   className="absolute inset-0 z-0 w-full h-full font-extrabold cursor-default bg-black/10 text-black/20"
@@ -386,7 +383,7 @@ const LearnByWrite = ({
               </Button>
               <Button
                 size="lg"
-                className="p-4 h-full text-6xl bg-white hover:bg-error/20 disabled:grayscale disabled:bg-black/20"
+                className="h-full p-4 text-6xl bg-white hover:bg-error/20 disabled:grayscale disabled:bg-black/20"
                 disabled={busy}
                 onClick={() => clearCanvas(true)}
               >
@@ -394,7 +391,7 @@ const LearnByWrite = ({
               </Button>
               <Button
                 size="lg"
-                className="p-4 h-full text-6xl bg-white hover:bg-success/20 disabled:bg-black/20"
+                className="h-full p-4 text-6xl bg-white hover:bg-success/20 disabled:bg-black/20"
                 disabled={busy}
                 onClick={handleSubmit}
               >

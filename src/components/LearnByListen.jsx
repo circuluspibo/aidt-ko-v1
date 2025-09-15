@@ -1,8 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { JOSA, TARGETS } from "@/utils/globals";
 import Options from "@/features/Options";
 import { Button } from "./ui/button";
+import { getAsset } from "@/api";
 
 const LearnByListen = ({
   data,
@@ -17,6 +18,11 @@ const LearnByListen = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayed, setPlayed] = useState(false);
 
+  // 오디오 엘리먼트 및 상태
+  const audioRef = useRef(null);
+  const repeatRef = useRef(0);
+  const cancelledRef = useRef(false);
+
   const generateChoices = () => {
     const correct = item.letter;
     const pool = data.map((i) => i.letter);
@@ -29,117 +35,127 @@ const LearnByListen = ({
     setOptions(newOne);
   };
 
+  const stopPlayback = () => {
+    cancelledRef.current = true;
+    const audio = audioRef.current;
+    if (audio) {
+      audio.onended = null;
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    setIsPlaying(false);
+    setPlayed(true);
+  };
+
   const handleSelect = (choice) => {
     document.dispatchEvent(new Event("stop-sound"));
     onAnswer(choice, item.letter);
   };
 
-  const playSound = () => {
+  const playSound = async () => {
+    // 중복 클릭 방지
+    if (isPlaying) return;
+
     setIsPlaying(true);
-    window.speechSynthesis.cancel();
+    setPlayed(false);
+    repeatRef.current = 0;
+    cancelledRef.current = false;
 
-    let repeatCount = 0;
-    let cancelled = false;
-
+    // 정지 이벤트 리스너
     const stopHandler = () => {
-      cancelled = true;
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
-      setPlayed(true);
       document.removeEventListener("stop-sound", stopHandler);
+      stopPlayback();
     };
     document.addEventListener("stop-sound", stopHandler);
 
-    const speakName = () => {
-      if (cancelled) return;
-      try {
-        const utterance = new SpeechSynthesisUtterance(item.name);
-        utterance.lang = "ko-KR";
-        utterance.rate = 0.6;
-        utterance.pitch = 1.2;
-        utterance.onend = () => {
-          repeatCount += 1;
-          if (repeatCount < 3 && !cancelled) {
-            setTimeout(() => {
-              speakName();
-            }, 500);
-          } else {
-            setIsPlaying(false);
-            setPlayed(true);
-            document.removeEventListener("stop-sound", stopHandler);
-          }
-        };
-        window.speechSynthesis.speak(utterance);
-      } catch (error) {
-        console.error(error);
-      }
+    // MP3 URL 확보
+    let url;
+    try {
+      url = await getAsset({ content: item.letter, type: "sound" });
+      if (!url) throw new Error("음원 URL을 가져오지 못했습니다.");
+    } catch (err) {
+      console.error(err);
+      stopPlayback();
+      return;
+    }
+
+    // 재생 함수
+    const playOnce = () => {
+      if (cancelledRef.current) return;
+      const audio = new Audio(url);
+      audioRef.current = audio;
+
+      // iOS/모바일 대비: 자동 재생 실패 예외 처리
+      audio.play().catch((e) => {
+        console.error("오디오 재생 실패:", e);
+        stopPlayback();
+      });
+
+      audio.onended = () => {
+        repeatRef.current += 1;
+        if (repeatRef.current < 3 && !cancelledRef.current) {
+          // 반복 간 간격
+          setTimeout(() => playOnce(), 500);
+        } else {
+          // 재생 종료
+          stopPlayback();
+          document.removeEventListener("stop-sound", stopHandler);
+        }
+      };
     };
-    speakName();
+
+    playOnce();
   };
 
   useEffect(() => {
     setPlayed(false);
     document.dispatchEvent(new Event("stop-sound"));
     generateChoices();
+    // 언마운트/문항 변경 시 정리
+    return () => {
+      document.dispatchEvent(new Event("stop-sound"));
+    };
   }, [currentItemIndex, target, currentRepeat, currentLearningCount]);
 
   return (
-    <div className="grid grid-cols-12 gap-4 h-full">
+    <div className="grid h-full grid-cols-12 gap-4">
       <div className="col-span-9 grid grid-rows-[auto_1fr] gap-4">
-        <div className="row-span-1 p-2 w-full text-2xl font-bold text-center rounded-lg border shadow border-neutral-300 bg-teal-300/80">
+        <div className="w-full row-span-1 p-2 text-2xl font-bold text-center border rounded-lg shadow border-neutral-300 bg-teal-300/80">
           {`"소리 듣기"를 선택하여 들리는 소리와 같은 "${
             TARGETS[target]
           }"${JOSA().c(TARGETS[target], "을/를")} 선택하세요.`}
         </div>
-        <div className="grid grid-cols-9 row-span-2 gap-4 w-full h-full">
+        <div className="grid w-full h-full grid-cols-9 row-span-2 gap-4">
           {/* 힌트 영역 */}
-          <div className="flex col-span-4 gap-4 justify-center items-center w-full h-full bg-white rounded-lg border shadow">
+          <div className="flex items-center justify-center w-full h-full col-span-4 gap-4 bg-white border rounded-lg shadow">
             {target !== "letter" && (
-              <div className="flex col-span-2 justify-center items-center p-4 text-9xl font-extrabold">
-                {target === "word" ? (
-                  <img
-                    src={`/images/words/${encodeURI(item.name).replaceAll(
-                      "%",
-                      ""
-                    )}.png`}
-                    alt={item.letter}
-                    className="p-2 aspect-square"
-                  />
-                ) : (
-                  <img
-                    src={`/images/hangul/${item.letter.charCodeAt(0)}.png`}
-                    alt={item.letter}
-                  />
-                )}
+              <div className="flex items-center justify-center col-span-2 p-4 font-extrabold text-9xl">
+                <img
+                  src={getAsset({ content: item.letter })}
+                  alt={item.letter}
+                  className={target === "word" && "p-2 aspect-square"}
+                />
               </div>
             )}
             {target === "letter" && (
-              <div className="flex justify-center items-center pr-4 w-full text-6xl font-extrabold">
-                {/* <LetterConsonant
-                  letter={item.components[0]}
-                  className="py-2 text-9xl"
-                /> */}
+              <div className="flex items-center justify-center w-full pr-4 text-6xl font-extrabold">
                 <img
-                  src={`/images/hangul/${item.components[0].charCodeAt(0)}.png`}
+                  src={getAsset({ content: item.components[0] })}
                   alt={item.components[0]}
-                  className="object-contain flex-1 w-1/3 h-auto scale-75"
+                  className="flex-1 object-contain w-1/3 h-auto scale-75"
                 />
                 <span>+</span>
                 <img
-                  src={`/images/hangul/${item.components[1].charCodeAt(0)}.png`}
+                  src={getAsset({ content: item.components[1] })}
                   alt={item.components[1]}
-                  className="object-contain flex-1 w-1/3 h-auto"
+                  className="flex-1 object-contain w-1/3 h-auto"
                 />
-                {/* <LetterVowel
-                  letter={item.components[1]}
-                  className="py-2 text-9xl"
-                /> */}
                 <span>=</span>
               </div>
             )}
           </div>
           {/* 문제-보기 영역 */}
-          <div className="flex flex-col col-span-5 gap-2 justify-center items-center w-full h-full bg-white rounded-lg border shadow">
+          <div className="flex flex-col items-center justify-center w-full h-full col-span-5 gap-2 bg-white border rounded-lg shadow">
             <Button
               onClick={playSound}
               disabled={isPlaying}

@@ -6,6 +6,7 @@ console.log(
 
 export const API_URL = () => import.meta.env.VITE_API_URL;
 export const VAPI_URL = () => import.meta.env.VITE_VAPI_URL;
+const FILE_URL = import.meta.env.VITE_FILE_URL;
 
 export const encodeGetParams = (p) =>
   Object.entries(p)
@@ -157,4 +158,10 @@ export const userSignIn = async (logindata) => {
   const result = await post("signin", logindata);
   if (result.result) return result.data;
   throw Error(result.error);
+};
+
+export const getAsset = ({ type, content }) => {
+  return type && content
+    ? `${FILE_URL}/asset?${encodeGetParams({ type, content })}`
+    : `${FILE_URL}/asset?${encodeGetParams({ content })}`;
 };
