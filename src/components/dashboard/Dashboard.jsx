@@ -12,6 +12,8 @@ import {
   AreaChart,
   Area,
   ComposedChart,
+  Scatter,
+  LabelList,
 } from "recharts";
 import {
   Users,
@@ -26,6 +28,7 @@ import { useLearningOverview } from "@/hook/useStudentAnalytics";
 import { transformOverview } from "@/utils/dataTransformers";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -42,7 +45,7 @@ export function Dashboard() {
 
   if (isPending) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin" />
         <span className="ml-2">학습 데이터를 불러오는 중...</span>
       </div>
@@ -51,7 +54,7 @@ export function Dashboard() {
 
   if (isError) {
     return (
-      <div className="flex justify-center items-center h-64 text-red-500">
+      <div className="flex items-center justify-center h-64 text-red-500">
         <span>학습 데이터를 불러올 수 없습니다.</span>
       </div>
     );
@@ -60,7 +63,7 @@ export function Dashboard() {
   // 실제 데이터가 없는 경우
   if (!overview) {
     return (
-      <div className="flex flex-col justify-center items-center h-64 text-gray-500">
+      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
         <div className="text-center">
           <h3 className="mb-2 text-lg font-medium">학습 데이터가 없습니다</h3>
           <p className="text-sm">
@@ -113,16 +116,34 @@ export function Dashboard() {
     },
   ];
 
+  // 1) 오늘부터 6일 전까지 날짜 배열 만들기
+  const last7days = Array.from({ length: 7 }, (_, i) =>
+    dayjs()
+      .subtract(6 - i, "day")
+      .format("YYYY-MM-DD")
+  );
+
+  // 2) dailyActivity 데이터를 날짜 기준으로 매핑
+  const activityMap = Object.fromEntries(
+    overview.dailyActivity.map((d) => [d.date, d])
+  );
   // 최근 2주간 일일 활동 데이터 (LegacyDashboard와 동일)
-  const recentActivityData = overview.dailyActivity.slice(-7).map((day) => ({
-    날짜: new Date(day.date).toLocaleDateString("ko-KR", {
-      month: "short",
-      day: "numeric",
-    }),
-    활동학생: day.activeStudents,
-    문제수: Math.round(day.questionsAttempted / 10), // 차트에서 보기 좋게 스케일 조정
-    정답률: Math.round(day.averageAccuracy),
-  }));
+  // 1) 데이터 전처리: 0문제인 날은 정답률을 null로 처리해 급락 오해 방지
+  // dayjs.
+  const recentActivityData = last7days.map((dateStr) => {
+    const activity = activityMap[dateStr] || {};
+    const dt = new Date(dateStr);
+    return {
+      dateRaw: dt, // time scale용
+      dateLabel: dayjs(dt).format("M/D"),
+      activeStudents: activity.activeStudents ?? 0,
+      questions: activity.questionsAttempted ?? 0,
+      accuracy:
+        activity.questionsAttempted > 0
+          ? Math.round(activity.averageAccuracy)
+          : null,
+    };
+  });
 
   // 콘텐츠 타입별 정답률 데이터 (LegacyDashboard와 동일) - 고정 순서
   const contentTypeOrder = ["vowel", "consonant", "letter", "word"];
@@ -187,7 +208,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="mb-2 text-3xl font-bold">한글 학습 관리 시스템</h1>
           <p className="text-muted-foreground">
@@ -225,7 +246,7 @@ export function Dashboard() {
               className="transition-shadow cursor-pointer hover:shadow-md"
               onClick={item.action}
             >
-              <CardHeader className="flex flex-row justify-between items-center pb-2 space-y-0">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium">
                   {item.title}
                 </CardTitle>
@@ -242,42 +263,84 @@ export function Dashboard() {
 
       {/* 차트 섹션 */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* 최근 일주일 학습 활동 */}
+        {/* 최근 일주일 학습 활동 (막대=문제수 / 선=정답률 / 라벨=활동학생) */}
         <Card>
           <CardHeader>
             <CardTitle>최근 일주일 학습 활동</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={recentActivityData}>
+              <ComposedChart
+                data={recentActivityData}
+                margin={{
+                  top: 20,
+                  right: 20,
+                  bottom: 20,
+                  left: 20,
+                }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="날짜" />
-                <YAxis />
+
+                {/* 날짜축: 시간 스케일 */}
+                <XAxis
+                  dataKey="dateRaw"
+                  type="number"
+                  scale="time"
+                  padding="no-gap"
+                  domain={["dataMin", "dataMax"]}
+                  tickFormatter={(v) => dayjs(v).format("M/D")}
+                />
+
+                {/* 좌측축: 문제수 */}
+                <YAxis yAxisId="left" />
+
+                {/* 우측축: 정답률 */}
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  domain={[0, 100]}
+                  tickFormatter={(v) => `${v}%`}
+                />
+
                 <Tooltip
-                  formatter={(value, name) => [
-                    name === "정답률" ? `${value}%` : value,
-                    name === "활동학생"
-                      ? "활동 학생 수"
-                      : name === "문제수"
-                      ? "응시 문제 (×10)"
-                      : name,
-                  ]}
+                  labelFormatter={(v) => dayjs(v).format("M/D")}
+                  formatter={(value, name) => {
+                    if (name === "accuracy") return [`${value}%`, "정답률"];
+                    if (name === "questions") return [value, "응시 문제"];
+                    if (name === "activeStudents")
+                      return [value, "활동 학생 수"];
+                    return [value, name];
+                  }}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="활동학생"
-                  stroke="#3b82f6"
+
+                {/* 막대: 문제수 (파랑) */}
+                <Bar
+                  yAxisId="left"
+                  dataKey="questions"
+                  name="questions"
                   fill="#3b82f6"
-                  fillOpacity={0.3}
-                />
-                <Area
+                  radius={[6, 6, 0, 0]}
+                >
+                  <LabelList
+                    dataKey="activeStudents"
+                    name="activeStudents"
+                    position="top"
+                    formatter={(v) => (v != null ? `👥 ${v}` : "")}
+                  />
+                </Bar>
+
+                {/* 선: 정답률 (초록) */}
+                <Line
+                  yAxisId="right"
                   type="monotone"
-                  dataKey="정답률"
+                  dataKey="accuracy"
+                  name="accuracy"
                   stroke="#10b981"
-                  fill="#10b981"
-                  fillOpacity={0.3}
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
                 />
-              </AreaChart>
+              </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -378,7 +441,7 @@ export function Dashboard() {
       {/* 주요 통계 요약 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex gap-2 items-center">
+          <CardTitle className="flex items-center gap-2">
             <Brain className="w-5 h-5" />
             주요 학습 통계 요약
           </CardTitle>

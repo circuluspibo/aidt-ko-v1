@@ -103,7 +103,7 @@ export function StudentManagement() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold">학습 현황 관리</h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -116,7 +116,7 @@ export function StudentManagement() {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="flex gap-2 items-center text-sm">
+            <CardTitle className="flex items-center gap-2 text-sm">
               <User className="w-4 h-4" />총 학습자
             </CardTitle>
           </CardHeader>
@@ -130,7 +130,7 @@ export function StudentManagement() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="flex gap-2 items-center text-sm">
+            <CardTitle className="flex items-center gap-2 text-sm">
               <TrendingUp className="w-4 h-4" />
               평균 정답률
             </CardTitle>
@@ -150,9 +150,9 @@ export function StudentManagement() {
           <CardContent className="pt-0">
             <div className="flex flex-col gap-2">
               {Object.entries(gradeDistribution).map(([grade, count]) => (
-                <div key={grade} className="flex justify-between items-center">
+                <div key={grade} className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{grade}</span>
-                  <div className="flex gap-2 items-center">
+                  <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{count}명</span>
                     <div className="w-12 h-2 rounded-full bg-muted">
                       <div
@@ -186,7 +186,7 @@ export function StudentManagement() {
         </CardHeader>
         <CardContent>
           {charactersLoading ? (
-            <div className="flex justify-center items-center h-32">
+            <div className="flex items-center justify-center h-32">
               <Loader2 className="w-6 h-6 animate-spin" />
               <span className="ml-2">학생 데이터를 불러오는 중...</span>
             </div>
@@ -211,7 +211,6 @@ export function StudentManagement() {
                     charactersData?.overallStats?.averageAccuracy || 0
                   ); */
                   }
-                  console.log(character);
                   const concentration = getConcentrationLevel(
                     character.totalStudyTimeMinutes
                       ? character.totalConcentrationIssues || 0
@@ -221,8 +220,8 @@ export function StudentManagement() {
                   return (
                     <TableRow key={character._id}>
                       <TableCell className="py-2">
-                        <div className="flex gap-2 items-center">
-                          <div className="flex justify-center items-center w-6 h-6 rounded-full">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center w-6 h-6 rounded-full">
                             <p className="text-2xl rounded-full">
                               {character.icon && !isNaN(character.icon)
                                 ? String.fromCodePoint(character.icon)
@@ -235,7 +234,7 @@ export function StudentManagement() {
                         </div>
                       </TableCell>
                       <TableCell className="py-2">
-                        <div className="flex gap-2 items-center">
+                        <div className="flex items-center gap-2">
                           <span className="text-sm">{character.nickname}</span>
                         </div>
                       </TableCell>
@@ -248,7 +247,7 @@ export function StudentManagement() {
                         {Math.round(character.totalStudyTimeMinutes || 0)}분
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2 items-center">
+                        <div className="flex items-center gap-2">
                           <Progress
                             value={character.averageAccuracy || 0}
                             className="w-16 h-2"
@@ -297,7 +296,7 @@ export function StudentManagement() {
               </TableBody>
             </Table>
           ) : (
-            <div className="flex flex-col justify-center items-center h-64 text-gray-500">
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
               <div className="text-center">
                 <div className="mb-4 text-6xl">👥</div>
                 <h3 className="mb-2 text-lg font-medium">
@@ -316,7 +315,7 @@ export function StudentManagement() {
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <div>
                 <DialogTitle>
                   {selectedStudent?.nickname} 학습 상세 분석
@@ -329,16 +328,16 @@ export function StudentManagement() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsDetailOpen(false)}
-                className="p-0 w-8 h-8"
+                className="w-8 h-8 p-0"
               >
                 <X className="w-4 h-4" />
               </Button>
             </div>
           </DialogHeader>
 
-          {selectedStudent && (
+          {selectedStudent && studentAnalytics && (
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid grid-cols-3 w-full">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="overview">개요</TabsTrigger>
                 <TabsTrigger value="analytics">상세 분석</TabsTrigger>
                 <TabsTrigger value="iep">IEP 보고서</TabsTrigger>
@@ -349,15 +348,15 @@ export function StudentManagement() {
                   {/* 기본 정보 */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex gap-2 items-center">
+                      <CardTitle className="flex items-center gap-2">
                         <User className="w-5 h-5" />
                         기본 정보
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 justify-between">
-                        <div className="flex justify-center items-center">
-                          <p className="p-3 mr-2 text-6xl rounded-full border">
+                      <div className="grid justify-between grid-cols-2">
+                        <div className="flex items-center justify-center">
+                          <p className="p-3 mr-2 text-6xl border rounded-full">
                             {selectedStudent.icon &&
                             !isNaN(selectedStudent.icon)
                               ? String.fromCodePoint(selectedStudent.icon)
@@ -365,19 +364,19 @@ export function StudentManagement() {
                           </p>
                         </div>
                         <div className="flex flex-col justify-between space-y-1">
-                          <div className="flex gap-2 items-center">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">이름:</span>
                             <span className="font-medium">
                               {selectedStudent.nickname}
                             </span>
                           </div>
-                          <div className="flex gap-2 items-center">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">메모:</span>
                             <span className="font-medium">
                               {selectedStudent.memo || "없음"}
                             </span>
                           </div>
-                          <div className="flex gap-2 items-center">
+                          <div className="flex items-center gap-2">
                             <span className="text-sm">상태:</span>
                             <Badge
                               variant={
@@ -395,7 +394,7 @@ export function StudentManagement() {
                   {/* 학습 통계 */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex gap-2 items-center">
+                      <CardTitle className="flex items-center gap-2">
                         <TrendingUp className="w-5 h-5" />
                         학습 통계
                       </CardTitle>
@@ -404,21 +403,20 @@ export function StudentManagement() {
                       <div className="flex justify-between">
                         <span className="text-sm">총 문제 수:</span>
                         <span className="font-medium">
-                          {selectedStudent.stats?.totalQuestions || 0}개
+                          {selectedStudent?.totalQuestionsAttempted || 0}개
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm">정답 수:</span>
                         <span className="font-medium text-green-600">
-                          {selectedStudent.stats?.totalCorrect || 0}개
+                          {selectedStudent?.totalCorrectAnswers || 0}개
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm">학습 시간:</span>
                         <span className="font-medium">
                           {Math.round(
-                            (selectedStudent.stats?.totalStudyTimeMinutes ||
-                              0) / 60
+                            (selectedStudent?.totalStudyTimeMinutes || 0) / 60
                           )}
                           시간
                         </span>
@@ -426,7 +424,7 @@ export function StudentManagement() {
                       <div className="flex justify-between">
                         <span className="text-sm">최대 연속 정답:</span>
                         <span className="font-medium">
-                          {selectedStudent.stats?.maxConsecutiveCorrect || 0}개
+                          {studentAnalytics?.maxConsecutiveCorrect || 0}개
                         </span>
                       </div>
                     </CardContent>
@@ -436,7 +434,7 @@ export function StudentManagement() {
 
               <TabsContent value="analytics" className="space-y-4">
                 {analyticsLoading ? (
-                  <div className="flex justify-center items-center h-32">
+                  <div className="flex items-center justify-center h-32">
                     <Loader2 className="w-6 h-6 animate-spin" />
                     <span className="ml-2">분석 데이터를 불러오는 중...</span>
                   </div>
@@ -536,7 +534,7 @@ export function StudentManagement() {
                     </Card>
                   </div>
                 ) : (
-                  <div className="flex flex-col justify-center items-center h-64 text-gray-500">
+                  <div className="flex flex-col items-center justify-center h-64 text-gray-500">
                     <div className="text-center">
                       <div className="mb-4 text-6xl">📊</div>
                       <h3 className="mb-2 text-lg font-medium">
@@ -565,7 +563,7 @@ export function StudentManagement() {
       <Dialog open={isIEPOpen} onOpenChange={setIsIEPOpen}>
         <DialogContent className="max-w-[1200px] w-[90vw] h-[95vh] flex flex-col p-0">
           <DialogHeader className="p-6 pb-0">
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <div>
                 <DialogTitle>
                   {selectedStudent?.nickname} 개별화 교육 프로그램 보고서
@@ -579,13 +577,13 @@ export function StudentManagement() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsIEPOpen(false)}
-                className="p-0 w-8 h-8"
+                className="w-8 h-8 p-0"
               >
                 <X className="w-4 h-4" />
               </Button>
             </div>
           </DialogHeader>
-          <div className="overflow-y-auto flex-1">
+          <div className="flex-1 overflow-y-auto">
             {selectedStudent && <IEPReport student={selectedStudent} />}
           </div>
         </DialogContent>
