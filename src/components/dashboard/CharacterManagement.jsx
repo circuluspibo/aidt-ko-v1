@@ -61,7 +61,6 @@ export function CharacterManagement() {
   };
 
   const handleCurriculumClick = (characterId) => {
-    console.log(characterId);
     go(`/manage/groups/${groupId}/${characterId}`, [
       ...breadcrumb,
       { id: characterId, name: "커리큘럼 관리" },
@@ -70,11 +69,11 @@ export function CharacterManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex gap-4 items-center">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
           {groupId && (
             <Button variant="outline" size="sm" onClick={handleBackToGroups}>
-              <ArrowLeft className="mr-1 w-4 h-4" />
+              <ArrowLeft className="w-4 h-4 mr-1" />
               그룹 목록으로
             </Button>
           )}
@@ -120,14 +119,13 @@ export function CharacterManagement() {
         {!isPending &&
           !isError &&
           characters.map((character) => {
-            console.log(character);
             return (
               <Card
                 key={character._id}
                 className="transition-shadow hover:shadow-md"
               >
                 <CardHeader className="pb-3">
-                  <div className="flex gap-3 items-center">
+                  <div className="flex items-center gap-3">
                     <p className="mx-auto text-5xl rounded-full">
                       {character.icon && !isNaN(character.icon)
                         ? String.fromCodePoint(character.icon)
@@ -150,7 +148,7 @@ export function CharacterManagement() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <div className="flex gap-2 items-center text-sm">
+                    <div className="flex items-center gap-2 text-sm">
                       <BookOpen className="w-4 h-4 text-muted-foreground" />
                       <span>
                         {character?.curriculum?.length || 0}개 챕터 배정됨
@@ -221,7 +219,7 @@ export function CharacterManagement() {
                 : "등록된 캐릭터가 없습니다."}
             </p>
             <Button className="mt-4" onClick={handleCreateCharacter}>
-              <Plus className="mr-2 w-4 h-4" />첫 번째 캐릭터 추가
+              <Plus className="w-4 h-4 mr-2" />첫 번째 캐릭터 추가
             </Button>
           </CardContent>
         </Card>

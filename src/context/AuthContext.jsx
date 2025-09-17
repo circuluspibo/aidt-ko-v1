@@ -63,10 +63,6 @@ export const AuthProvider = ({ children, user: userData }) => {
     const { token: newToken, ...rest } = userData;
 
     if (newToken && rest.role) {
-      console.log("서버 데이터로 초기화:", {
-        role: rest.role,
-        characterId: rest.characterId,
-      });
       setToken(newToken);
       setUser(rest);
       isInitialized.current = true;

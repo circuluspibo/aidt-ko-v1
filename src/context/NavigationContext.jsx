@@ -127,7 +127,6 @@ export function NavigationProvider({ children }) {
       const m = location.pathname.match(
         /^\/manage\/groups\/([^/]+)(?:\/([^/]+))?\/?$/
       );
-      console.log(m);
       if (!m) {
         setBreadcrumb(base);
         setCurrentReady(true);
