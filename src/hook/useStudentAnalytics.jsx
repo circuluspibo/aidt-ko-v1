@@ -52,7 +52,6 @@ const useLearningOverview = (teacherId, dateRange = {}) => {
       return result;
     },
     select: (response) => {
-      console.log("useLearningOverview 응답:", response);
       if (
         response &&
         "result" in response &&

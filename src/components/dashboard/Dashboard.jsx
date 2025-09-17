@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import {
-  BarChart,
   Bar,
   XAxis,
   YAxis,
@@ -9,11 +8,16 @@ import {
   Tooltip,
   ResponsiveContainer,
   Line,
-  AreaChart,
-  Area,
   ComposedChart,
   Scatter,
   LabelList,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ScatterChart,
+  ZAxis,
 } from "recharts";
 import {
   Users,
@@ -25,23 +29,18 @@ import {
   Loader2,
 } from "lucide-react";
 import { useLearningOverview } from "@/hook/useStudentAnalytics";
-import { transformOverview } from "@/utils/dataTransformers";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import dayjs from "dayjs";
 
 export function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const {
-    data: rawOverview,
+    data: overview,
     isPending,
     isError,
   } = useLearningOverview(user?._id, {});
-
-  // API 응답을 Mock 데이터 구조로 변환 (실제 데이터만 사용)
-  const overview = rawOverview ? transformOverview(rawOverview, "api") : null;
 
   if (isPending) {
     return (
@@ -77,7 +76,7 @@ export function Dashboard() {
   const summaryData = [
     {
       title: "활동 학생",
-      value: overview.totalActiveStudents.toString(),
+      value: overview.stat.student.toString(),
       subtitle: "전체 학습자",
       color: "bg-blue-500",
       icon: GraduationCap,
@@ -85,7 +84,7 @@ export function Dashboard() {
     },
     {
       title: "응시 문제",
-      value: overview.totalQuestionsAttempted.toLocaleString(),
+      value: overview.stat.questions.toString(),
       subtitle: "누적 학습량",
       color: "bg-green-500",
       icon: Target,
@@ -93,7 +92,7 @@ export function Dashboard() {
     },
     {
       title: "평균 정답률",
-      value: `${overview.averageAccuracy.toFixed(1)}%`,
+      value: `${overview.stat.averageAccuracy.toFixed(1)}%`,
       subtitle: "전체 성취도",
       color: "bg-purple-500",
       icon: TrendingUp,
@@ -102,12 +101,10 @@ export function Dashboard() {
     {
       title: "총 학습 시간",
       value:
-        overview.totalStudyMinutes > 0
-          ? overview.totalStudyHours > 0
-            ? `${overview.totalStudyHours}시간 ${
-                overview.totalStudyMinutes % 60
-              }분`
-            : `${overview.totalStudyMinutes}분`
+        overview.minutes > 0
+          ? overview.hours > 0
+            ? `${overview.hours}시간 ${overview.minutes % 60}분`
+            : `${overview.minutes}분`
           : "0분",
       subtitle: "누적 학습량",
       color: "bg-orange-500",
@@ -116,95 +113,75 @@ export function Dashboard() {
     },
   ];
 
-  // 1) 오늘부터 6일 전까지 날짜 배열 만들기
-  const last7days = Array.from({ length: 7 }, (_, i) =>
-    dayjs()
-      .subtract(6 - i, "day")
-      .format("YYYY-MM-DD")
+  const normHours = overview.stat?.hours;
+  const normMins = (overview.stat?.minutes - overview.stat?.hours * 60) % 60;
+
+  // 최근 7일 지표
+  const act = overview.recentActivityData ?? [];
+  // 활동일(문제수>0)
+  const activeDays = act.filter((d) => (d.questions ?? 0) > 0).length;
+  // 최고 활동일
+  const peak = act.reduce(
+    (p, c) => ((c.questions ?? 0) > (p?.questions ?? 0) ? c : p),
+    null
   );
 
-  // 2) dailyActivity 데이터를 날짜 기준으로 매핑
-  const activityMap = Object.fromEntries(
-    overview.dailyActivity.map((d) => [d.date, d])
+  // 연속 활동(최장/현재)
+  const sorted = [...act].sort(
+    (a, b) => new Date(a.dateRaw).valueOf() - new Date(b.dateRaw).valueOf()
   );
-  // 최근 2주간 일일 활동 데이터 (LegacyDashboard와 동일)
-  // 1) 데이터 전처리: 0문제인 날은 정답률을 null로 처리해 급락 오해 방지
-  // dayjs.
-  const recentActivityData = last7days.map((dateStr) => {
-    const activity = activityMap[dateStr] || {};
-    const dt = new Date(dateStr);
-    return {
-      dateRaw: dt, // time scale용
-      dateLabel: dayjs(dt).format("M/D"),
-      activeStudents: activity.activeStudents ?? 0,
-      questions: activity.questionsAttempted ?? 0,
-      accuracy:
-        activity.questionsAttempted > 0
-          ? Math.round(activity.averageAccuracy)
-          : null,
-    };
-  });
+  let longest = 0,
+    current = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    const q = sorted[i].questions ?? 0;
+    if (q > 0) {
+      if (i > 0) {
+        const prev = new Date(sorted[i - 1].dateRaw).valueOf();
+        const cur = new Date(sorted[i].dateRaw).valueOf();
+        const diffDays = Math.round((cur - prev) / (1000 * 60 * 60 * 24));
+        current = diffDays === 1 ? current + 1 : 1;
+      } else current = 1;
+      longest = Math.max(longest, current);
+    } else {
+      // 현재 스트릭은 마지막 날부터 역방향으로만 유효
+      if (i === sorted.length - 1) current = 0;
+    }
+  }
 
-  // 콘텐츠 타입별 정답률 데이터 (LegacyDashboard와 동일) - 고정 순서
-  const contentTypeOrder = ["vowel", "consonant", "letter", "word"];
-  const contentAccuracyData = contentTypeOrder.map((type) => {
-    const item = overview.contentTypeDistribution.find(
-      (c) => c.contentType === type
-    );
-    return {
-      타입:
-        type === "vowel"
-          ? "모음"
-          : type === "consonant"
-          ? "자음"
-          : type === "letter"
-          ? "글자"
-          : "낱말",
-      정답률: item ? Math.round(item.averageAccuracy) : 0,
-      문제수: item ? item.questionsAttempted : 0, // 실제 개수
-    };
-  });
+  // 1인당 평균 문제수
+  const perStudent =
+    (overview.stat?.student ?? 0) > 0
+      ? Math.round((overview.stat.questions ?? 0) / overview.stat.student)
+      : 0;
 
-  // 활동 타입별 데이터 (LegacyDashboard와 동일) - 고정 순서
-  const activityTypeOrder = ["read", "listen", "speak", "write"];
-  const activityTypeData = activityTypeOrder.map((type) => {
-    const item = overview.activityTypeDistribution.find(
-      (a) => a.activityType === type
-    );
-    return {
-      name:
-        type === "read"
-          ? "읽기"
-          : type === "listen"
-          ? "듣기"
-          : type === "speak"
-          ? "말하기"
-          : "쓰기",
-      value: item ? Math.round(item.averageAccuracy) : 0,
-      questions: item ? item.questionsAttempted : 0,
-      color:
-        type === "read"
-          ? "#3b82f6"
-          : type === "listen"
-          ? "#10b981"
-          : type === "speak"
-          ? "#f59e0b"
-          : "#ef4444",
-    };
-  });
+  // 활동 방식 인사이트(읽기/듣기/말하기/쓰기)
+  const methods = overview.methodsAccuracyData ?? [];
+  const bestMethod = methods.reduce(
+    (p, c) => ((c.average ?? 0) > (p?.average ?? 0) ? c : p),
+    null
+  );
+  const mostAttemptMethod = methods.reduce(
+    (p, c) => ((c.attempted ?? 0) > (p?.attempted ?? 0) ? c : p),
+    null
+  );
+  const LOW_SAMPLE = 20;
+  const lowSamples = methods
+    .filter((m) => (m.attempted ?? 0) > 0 && m.attempted < LOW_SAMPLE)
+    .map((m) => m.type);
 
-  // 난이도별 성과 데이터 (LegacyDashboard와 동일) - 고정 순서
-  const difficultyOrder = ["쉬움", "보통", "어려움"];
-  const difficultyData = difficultyOrder.map((difficulty) => {
-    const item = overview.difficultyDistribution.find(
-      (d) => d.difficulty === difficulty
-    );
-    return {
-      난이도: difficulty,
-      정답률: item ? Math.round(item.accuracy) : 0,
-      문제수: item ? item.questionsAttempted : 0, // 실제 개수
-    };
-  });
+  // 콘텐츠 인사이트(모음/자음/글자/낱말)
+  const contents = overview.contentTypeData ?? [];
+  const totalQ = overview.stat?.questions ?? 0;
+  const contentWithRatio = contents.map((c) => ({
+    ...c,
+    ratio: totalQ > 0 ? Math.round((c.attempted / totalQ) * 1000) / 10 : 0, // 소수1자리
+  }));
+  const bestContent = contents
+    .filter((c) => (c.attempted ?? 0) > 0)
+    .reduce((p, c) => ((c.average ?? 0) > (p?.average ?? 0) ? c : p), null);
+  const notEntered = contents
+    .filter((c) => (c.attempted ?? 0) === 0)
+    .map((c) => c.type);
 
   return (
     <div className="space-y-6">
@@ -263,6 +240,74 @@ export function Dashboard() {
 
       {/* 차트 섹션 */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* 활동 타입별 성과 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>학습 방식별 평균 정답률</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <RadarChart data={overview.methodsAccuracyData}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="type" axisLineType="circle" />
+                <PolarRadiusAxis
+                  domain={[0, 100]}
+                  angle={135}
+                  orientation="middle"
+                  tickFormatter={(v) => `${v}%`}
+                />
+                <Tooltip
+                  formatter={(v, n, p) => [
+                    `${p.payload.average}%`,
+                    "평균 정답률",
+                  ]}
+                />
+                <Radar
+                  name="평균 정답률"
+                  dataKey="average"
+                  stroke="#3b82f6"
+                  fill="#3b82f6"
+                  fillOpacity={0.35}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* 콘텐츠 타입별 학습 성과 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>콘텐츠 타입별 학습 성과</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <RadarChart data={overview.contentTypeData}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="type" axisLineType="circle" />
+                <PolarRadiusAxis
+                  domain={[0, 100]}
+                  angle={135}
+                  orientation="middle"
+                  tickFormatter={(v) => `${v}%`}
+                />
+                <Tooltip
+                  formatter={(v, n, p) => [
+                    `${p.payload.average}%`,
+                    "평균 정답률",
+                  ]}
+                />
+                <Radar
+                  name="평균 정답률"
+                  dataKey="average"
+                  stroke="#82ca9d"
+                  fill="#82ca9d"
+                  fillOpacity={0.35}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
         {/* 최근 일주일 학습 활동 (막대=문제수 / 선=정답률 / 라벨=활동학생) */}
         <Card>
           <CardHeader>
@@ -271,7 +316,7 @@ export function Dashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <ComposedChart
-                data={recentActivityData}
+                data={overview.recentActivityData}
                 margin={{
                   top: 20,
                   right: 20,
@@ -282,14 +327,7 @@ export function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" />
 
                 {/* 날짜축: 시간 스케일 */}
-                <XAxis
-                  dataKey="dateRaw"
-                  type="number"
-                  scale="time"
-                  padding="no-gap"
-                  domain={["dataMin", "dataMax"]}
-                  tickFormatter={(v) => dayjs(v).format("M/D")}
-                />
+                <XAxis dataKey="dateLabel" padding="no-gap" />
 
                 {/* 좌측축: 문제수 */}
                 <YAxis yAxisId="left" />
@@ -299,11 +337,10 @@ export function Dashboard() {
                   yAxisId="right"
                   orientation="right"
                   domain={[0, 100]}
-                  tickFormatter={(v) => `${v}%`}
+                  tickFormatter={(v) => `${v || 0}%`}
                 />
 
                 <Tooltip
-                  labelFormatter={(v) => dayjs(v).format("M/D")}
                   formatter={(value, name) => {
                     if (name === "accuracy") return [`${value}%`, "정답률"];
                     if (name === "questions") return [value, "응시 문제"];
@@ -345,61 +382,6 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* 활동 타입별 성과 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>활동 타입별 평균 정답률</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={activityTypeData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip formatter={(value) => [`${value}%`, "평균 정답률"]} />
-                <Bar dataKey="value" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* 콘텐츠 타입별 학습 성과 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>콘텐츠 타입별 학습 성과</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={contentAccuracyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="타입" />
-                <YAxis yAxisId="left" orientation="left" />
-                <YAxis yAxisId="right" orientation="right" domain={[0, 100]} />
-                <Tooltip
-                  formatter={(value, name) => [
-                    name === "정답률" ? `${value}%` : `${value}개`,
-                    name === "정답률" ? "평균 정답률" : "응시 문제 수",
-                  ]}
-                />
-                <Bar
-                  yAxisId="left"
-                  dataKey="문제수"
-                  fill="#3b82f6"
-                  name="응시 문제 수"
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="정답률"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  name="평균 정답률"
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
         {/* 난이도별 성과 분석 */}
         <Card>
           <CardHeader>
@@ -407,32 +389,30 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={difficultyData}>
+              <ScatterChart>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="난이도" />
-                <YAxis yAxisId="left" orientation="left" />
-                <YAxis yAxisId="right" orientation="right" domain={[0, 100]} />
+                <XAxis dataKey="type" type="category" />
+                <YAxis
+                  dataKey="average"
+                  domain={[0, 100]}
+                  tickFormatter={(v) => `${v}%`}
+                />
+                <ZAxis dataKey="attempted" range={[80, 800]} />
+                {/* 버블 크기 범위 */}
                 <Tooltip
-                  formatter={(value, name) => [
-                    name === "정답률" ? `${value}%` : `${value}개`,
-                    name === "정답률" ? "평균 정답률" : "응시 문제 수",
-                  ]}
+                  formatter={(value, name) => {
+                    if (name === "average") return [`${value}%`, "정답률"];
+                    if (name === "attempted") return [value, "응시 문제"];
+                    if (name === "type") return [value, "난이도"];
+                    return [value, name];
+                  }}
                 />
-                <Bar
-                  yAxisId="left"
-                  dataKey="문제수"
+                <Scatter
+                  data={overview.diffycultyData}
+                  name="난이도별 성과"
                   fill="#8b5cf6"
-                  name="응시 문제 수"
                 />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="정답률"
-                  stroke="#ef4444"
-                  strokeWidth={3}
-                  name="평균 정답률"
-                />
-              </ComposedChart>
+              </ScatterChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -448,71 +428,119 @@ export function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {/* 1) 핵심 인사이트 */}
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-muted-foreground">
-                전체 성과
+                핵심 인사이트
               </h4>
-              <div className="space-y-2">
+              <div className="px-2 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm">총 응시 문제</span>
+                  <span className="text-sm">활동일</span>
+                  <span className="font-medium">{activeDays}일 / 최근 7일</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">최고 활동일</span>
                   <span className="font-medium">
-                    {overview.totalQuestionsAttempted.toLocaleString()}개
+                    {peak ? `${peak.dateLabel} · ${peak.questions}문제` : "-"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">평균 정답률</span>
-                  <span className="font-medium text-green-600">
-                    {overview.averageAccuracy.toFixed(1)}%
+                  <span className="text-sm">연속 활동(최장/현재)</span>
+                  <span className="font-medium">
+                    {longest}일 / {current}일
                   </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">1인당 평균 문제</span>
+                  <span className="font-medium">{perStudent}문제</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">총 학습 시간</span>
                   <span className="font-medium">
-                    {overview.totalStudyHours}시간
+                    {normHours}시간 {normMins}분
                   </span>
                 </div>
               </div>
             </div>
 
+            {/* 2) 학습 방식 인사이트 */}
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-muted-foreground">
-                활동별 최고 성과
+                학습 방식 인사이트
               </h4>
-              <div className="space-y-2">
-                {activityTypeData
-                  .sort((a, b) => b.value - a.value)
-                  .map((activity, index) => (
-                    <div key={activity.name} className="flex justify-between">
-                      <span className="text-sm">{activity.name}</span>
-                      <span
-                        className={`font-medium ${
-                          index === 0 ? "text-green-600" : ""
-                        }`}
-                      >
-                        {activity.value}%
+              <div className="px-2 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm">최고 정답률</span>
+                  <span className="font-medium">
+                    {bestMethod
+                      ? `${bestMethod.type} ${bestMethod.average}% (${bestMethod.attempted}문제)`
+                      : "-"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">최다 학습</span>
+                  <span className="font-medium">
+                    {mostAttemptMethod
+                      ? `${mostAttemptMethod.type} ${mostAttemptMethod.attempted}문제`
+                      : "-"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">학습 부족 항목</span>
+                  <span className="font-medium">
+                    {lowSamples.length > 0 ? (
+                      <span className="inline-flex flex-wrap gap-1">
+                        {lowSamples.map((s) => (
+                          <span
+                            key={s}
+                            className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700"
+                          >
+                            {s}
+                          </span>
+                        ))}
                       </span>
-                    </div>
-                  ))}
+                    ) : (
+                      "없음"
+                    )}
+                  </span>
+                </div>
               </div>
             </div>
 
+            {/* 3) 콘텐츠 인사이트 */}
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-muted-foreground">
-                콘텐츠별 진도
+                콘텐츠 인사이트
               </h4>
-              <div className="space-y-2">
-                {contentAccuracyData.map((content) => (
-                  <div key={content.타입} className="flex justify-between">
-                    <span className="text-sm">{content.타입}</span>
-                    <span
-                      className={`font-medium ${
-                        content.정답률 > 0 ? "text-green-600" : "text-gray-400"
-                      }`}
-                    >
-                      {content.정답률}%
-                    </span>
+              <div className="px-2 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm">미진입 영역</span>
+                  <span className="font-medium">
+                    {notEntered.length > 0 ? notEntered.join(", ") : "없음"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">최고 정답률</span>
+                  <span className="font-medium">
+                    {bestContent
+                      ? `${bestContent.type} ${bestContent.average}% (${bestContent.attempted}문제)`
+                      : "-"}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-sm text-muted-foreground">학습 분포</div>
+                  <div className="px-1 space-y-1">
+                    {contentWithRatio.map((c) => (
+                      <div
+                        key={c.type}
+                        className="flex justify-between text-sm"
+                      >
+                        <span>{c.type}</span>
+                        <span className="font-medium">{c.ratio}%</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
           </div>
