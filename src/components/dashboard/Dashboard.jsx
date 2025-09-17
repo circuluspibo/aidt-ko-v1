@@ -73,6 +73,8 @@ export function Dashboard() {
     );
   }
 
+  const normHours = overview.stat?.hours;
+  const normMins = overview.stat?.minutes % 60;
   const summaryData = [
     {
       title: "활동 학생",
@@ -101,10 +103,10 @@ export function Dashboard() {
     {
       title: "총 학습 시간",
       value:
-        overview.minutes > 0
-          ? overview.hours > 0
-            ? `${overview.hours}시간 ${overview.minutes % 60}분`
-            : `${overview.minutes}분`
+        overview.stat.minutes > 0
+          ? overview.stat.hours > 0
+            ? `${overview.stat.hours}시간 ${overview.stat.minutes % 60}분`
+            : `${overview.stat.minutes}분`
           : "0분",
       subtitle: "누적 학습량",
       color: "bg-orange-500",
@@ -112,9 +114,6 @@ export function Dashboard() {
       action: () => navigate("/manage/students"),
     },
   ];
-
-  const normHours = overview.stat?.hours;
-  const normMins = (overview.stat?.minutes - overview.stat?.hours * 60) % 60;
 
   // 최근 7일 지표
   const act = overview.recentActivityData ?? [];
