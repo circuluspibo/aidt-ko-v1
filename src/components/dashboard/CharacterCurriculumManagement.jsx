@@ -20,8 +20,8 @@ import { useDraggableInPortal } from "@/hook/useDraggableInPortal";
 import { useNavigation } from "@/context/NavigationContext";
 import { useEffect, useRef, useState } from "react";
 import reorder from "@/utils/reorder";
-import { del, get, put } from "@/api";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { del, put } from "@/api";
+import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { Label } from "../ui/label";
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { METHODS, TARGETS } from "@/utils/globals";
+import useCharacterQuery from "@/hook/useCharacterQuery";
 
 const ACTIVITY_ICONS = {
   read: Eye,
@@ -51,26 +52,7 @@ const CharacterCurriculumManagement = () => {
     data: selectedCharacter,
     error,
     isPending,
-  } = useQuery({
-    queryKey: ["learning", "groups", "character", "curriculum", characterId],
-    queryFn: async () => {
-      const result = await get(`character/${characterId}`);
-      return result;
-    },
-    select: (response) => {
-      if (
-        response &&
-        "result" in response &&
-        response.result &&
-        response.data
-      ) {
-        return response.data;
-      }
-    },
-    enabled: !!characterId,
-    refetchOnMount: true, // 컴포넌트가 마운트될 때마다 refetch
-    staleTime: 0, // 데이터를 항상 stale로 간주하여 refetch 허용
-  });
+  } = useCharacterQuery({ characterId });
   const {
     mutate: upsertCurriculum,
     isPending: isSaving,
