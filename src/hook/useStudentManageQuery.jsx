@@ -1,6 +1,5 @@
 import { get } from "@/api";
 import { useQuery } from "@tanstack/react-query";
-import { transformStudentList } from "@/utils/dataTransformers";
 
 const useStudentManageQuery = ({ teacherId }) => {
   const { data, error, isPending, refetch } = useQuery({
@@ -16,16 +15,7 @@ const useStudentManageQuery = ({ teacherId }) => {
         response.result &&
         response.data
       ) {
-        // API 응답의 캐릭터 데이터를 통합된 학생 구조로 변환
-        const transformedCharacters = transformStudentList(
-          response.data.items || [],
-          "api"
-        );
-        return {
-          characters: transformedCharacters,
-          total: response.data.total || 0,
-          overallStats: response.data.overallStats || null,
-        };
+        return response.data;
       }
       return { characters: [], total: 0, overallStats: null };
     },

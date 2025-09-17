@@ -1,6 +1,5 @@
 import { get } from "@/api";
 import { useQuery } from "@tanstack/react-query";
-import { transformApiToMock } from "@/utils/dataTransformers";
 
 // 학생별 상세 학습 분석 데이터를 가져오는 훅
 const useStudentAnalytics = (characterId, dateRange = {}) => {
@@ -21,8 +20,7 @@ const useStudentAnalytics = (characterId, dateRange = {}) => {
         response.result &&
         response.data
       ) {
-        // API 응답 데이터를 Mock 데이터 구조로 변환
-        return transformApiToMock(response.data);
+        return response.data;
       }
       return null;
     },
