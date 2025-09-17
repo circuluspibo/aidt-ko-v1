@@ -5,7 +5,6 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Edit, Users, ChevronRight, Trash2 } from "lucide-react";
 import useGroupsQuery from "@/hook/useGroupsQuery";
-import { SpinningText } from "../magicui/spinning-text";
 import GroupAddDialog from "@/features/dashboard/GroupAddDialog";
 import GroupDeleteDialog from "@/features/dashboard/GroupDeleteDialog";
 import { useNavigation } from "@/context/NavigationContext";
@@ -58,7 +57,7 @@ export function GroupManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">학습 그룹 관리</h2>
           <p className="mt-1 text-muted-foreground">
@@ -81,19 +80,19 @@ export function GroupManagement() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="p-4 text-center bg-blue-50 rounded-lg">
+            <div className="p-4 text-center rounded-lg bg-blue-50">
               <div className="text-2xl font-bold text-blue-600">
                 {data?.total || 0}
               </div>
               <div className="text-sm text-blue-700">총 그룹 수</div>
             </div>
-            <div className="p-4 text-center bg-green-50 rounded-lg">
+            <div className="p-4 text-center rounded-lg bg-green-50">
               <div className="text-2xl font-bold text-green-600">
                 {data?.groups.filter((g) => g.status === "활성").length || 0}
               </div>
               <div className="text-sm text-green-700">활성 그룹</div>
             </div>
-            <div className="p-4 text-center bg-purple-50 rounded-lg">
+            <div className="p-4 text-center rounded-lg bg-purple-50">
               <div className="text-2xl font-bold text-purple-600">
                 {data?.groups.reduce(
                   (total, group) => total + group.volume,
@@ -129,7 +128,7 @@ export function GroupManagement() {
               className="transition-shadow cursor-pointer hover:shadow-md"
             >
               <CardHeader className="pb-3">
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{group.name}</CardTitle>
                   <Badge className={statusColors[group.status]}>
                     {group.status}
@@ -141,7 +140,7 @@ export function GroupManagement() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex gap-2 items-center">
+                  <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-muted-foreground" />
                     <span>{group.volume}명</span>
                   </div>
@@ -154,7 +153,7 @@ export function GroupManagement() {
                     수정일: {dayjs(group.updatedAt).format("LLL")}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 items-center">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     className="flex-1 gap-2"
                     onClick={() => handleGroupClick(group)}

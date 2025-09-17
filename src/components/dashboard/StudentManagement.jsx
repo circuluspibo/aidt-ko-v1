@@ -90,16 +90,29 @@ export function StudentManagement() {
     return "개선필요";
   };
 
-  // 전체 평균 정답률을 기반으로 성취도 분포 계산 - 항상 세 가지 항목 표시
-  const overallAccuracy = charactersData?.overallStats?.averageAccuracy || 0;
-  const totalStudents = charactersData?.characters?.length || 0;
-  const currentGrade = getGradeFromAccuracy(overallAccuracy);
+  // 실제 데이터가 없는 경우
+  if (!charactersData) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+        <div className="text-center">
+          <h3 className="mb-2 text-lg font-medium">학습 데이터가 없습니다</h3>
+          <p className="text-sm">
+            학생들이 학습을 시작하면 여기에 통계가 표시됩니다.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  const gradeDistribution = {
-    우수: currentGrade === "우수" ? totalStudents : 0,
-    보통: currentGrade === "보통" ? totalStudents : 0,
-    개선필요: currentGrade === "개선필요" ? totalStudents : 0,
-  };
+  // 전체 평균 정답률을 기반으로 성취도 분포 계산 - 항상 세 가지 항목 표시
+  const gradeDistribution = charactersData?.characters?.reduce(
+    (ac, cu) => {
+      const currentGrade = getGradeFromAccuracy(cu.averageAccuracy);
+      ac[currentGrade] += 1;
+      return ac;
+    },
+    { 우수: 0, 보통: 0, 개선필요: 0 }
+  );
 
   return (
     <div className="space-y-4">
@@ -229,7 +242,7 @@ export function StudentManagement() {
                             </p>
                           </div>
                           <span className="font-mono text-sm">
-                            {character.studentName}
+                            {character.name}
                           </span>
                         </div>
                       </TableCell>

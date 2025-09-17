@@ -243,14 +243,14 @@ const CharacterCurriculumManagement = () => {
     <>
       {selectedCharacter && !isPending && !error && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div className="flex gap-4 items-center">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleBackToCharacterList}
               >
-                <ArrowLeft className="mr-1 w-4 h-4" />
+                <ArrowLeft className="w-4 h-4 mr-1" />
                 캐릭터 목록으로
               </Button>
               <div>
@@ -268,7 +268,7 @@ const CharacterCurriculumManagement = () => {
           {/* 캐릭터 정보 카드 */}
           <Card>
             <CardHeader>
-              <div className="flex gap-4 items-center">
+              <div className="flex items-center gap-4">
                 <p className="mr-2 text-6xl rounded-full">
                   {selectedCharacter.icon && !isNaN(selectedCharacter.icon)
                     ? String.fromCodePoint(selectedCharacter.icon)
@@ -279,23 +279,23 @@ const CharacterCurriculumManagement = () => {
                   <p className="mt-1 text-muted-foreground">
                     {selectedCharacter?.memo} 캐릭터
                   </p>
-                  <div className="flex gap-4 items-center mt-2 text-sm text-muted-foreground">
-                    <div className="flex gap-1 items-center">
+                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
                       <Users className="w-4 h-4" />
                       <span>{currentGroup}</span>
                     </div>
-                    <div className="flex gap-1 items-center">
+                    <div className="flex items-center gap-1">
                       <BookOpen className="w-4 h-4" />
                       <span>{selectedOrder?.length || 0}개 챕터</span>
                     </div>
-                    <div className="flex gap-1 items-center">
+                    <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       <span>
                         등록일:{" "}
                         {dayjs(selectedCharacter?.createdAt).format("LLL")}
                       </span>
                     </div>
-                    <div className="flex gap-1 items-center">
+                    <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       <span>
                         수정일:{" "}
@@ -312,8 +312,8 @@ const CharacterCurriculumManagement = () => {
           {/* 현재 커리큘럼 */}
           <DragDropContext onDragEnd={onDragEnd}>
             <div>
-              <div className="flex justify-between items-center">
-                <div className="flex gap-2 items-center mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 mb-4">
                   <GripVertical className="w-4 h-4 text-muted-foreground" />
                   <h3 className="font-medium">현재 커리큘럼</h3>
                   <Badge variant="secondary" className="text-xs">
@@ -360,7 +360,7 @@ const CharacterCurriculumManagement = () => {
                     }`}
                   >
                     {(!selectedOrder || selectedOrder.length === 0) && (
-                      <div className="flex justify-center items-center w-full text-muted-foreground">
+                      <div className="flex items-center justify-center w-full text-muted-foreground">
                         위의 챕터를 드래그하여 커리큘럼에 추가하세요.
                       </div>
                     )}
@@ -383,9 +383,9 @@ const CharacterCurriculumManagement = () => {
                           >
                             <Card className="relative w-64 transition-shadow cursor-grab hover:shadow-md">
                               <CardHeader className="p-4">
-                                <div className="flex gap-2 justify-between items-start">
+                                <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex gap-2 items-center mb-2">
+                                    <div className="flex items-center gap-2 mb-2">
                                       <Badge
                                         variant="outline"
                                         className="font-mono text-xs"
@@ -401,7 +401,7 @@ const CharacterCurriculumManagement = () => {
                                       e.stopPropagation();
                                       onRemove(curriculumChapter.id);
                                     }}
-                                    className="p-0 w-6 h-6 text-muted-foreground hover:text-destructive"
+                                    className="w-6 h-6 p-0 text-muted-foreground hover:text-destructive"
                                   >
                                     <X className="w-3 h-3" />
                                   </Button>

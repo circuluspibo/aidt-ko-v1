@@ -64,17 +64,18 @@ export function IEPReport({
   };
 
   const handlePrint = () => {
-    window.print();
+    alert("IEP 보고서 프린트 기능을 추후 제공 예정입니다.");
+    // window.print();
   };
 
   const handleDownload = () => {
     // PDF 다운로드 로직 (실제 구현에서는 PDF 라이브러리 사용)
-    alert("IEP 보고서 다운로드 기능입니다. (실제 환경에서는 PDF 생성)");
+    alert("IEP 보고서 pdf 다운로드 기능을 추후 제공 예정입니다.");
   };
 
   if (isPending) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin" />
         <span className="ml-2">학습 데이터를 불러오는 중...</span>
       </div>
@@ -83,7 +84,7 @@ export function IEPReport({
 
   if (isError || !analyticsData) {
     return (
-      <div className="flex justify-center items-center h-64 text-red-500">
+      <div className="flex items-center justify-center h-64 text-red-500">
         <span>학습 데이터를 불러올 수 없습니다.</span>
       </div>
     );
@@ -99,14 +100,14 @@ export function IEPReport({
     return (
       <div className="w-[210mm] max-w-[210mm] min-h-[297mm] mx-auto bg-white p-6 space-y-4 print:border-none border border-gray-200 print:p-4 print:space-y-3">
         {/* 액션 버튼 (인쇄 시 숨김) */}
-        <div className="flex justify-between items-center print:hidden">
+        <div className="flex items-center justify-between print:hidden">
           <div className="space-x-2">
             <Button variant="outline" onClick={handlePrint}>
-              <Printer className="mr-2 w-4 h-4" />
+              <Printer className="w-4 h-4 mr-2" />
               인쇄
             </Button>
             <Button onClick={handleDownload}>
-              <Download className="mr-2 w-4 h-4" />
+              <Download className="w-4 h-4 mr-2" />
               PDF 다운로드
             </Button>
           </div>
@@ -121,7 +122,7 @@ export function IEPReport({
         {/* 학생 기본 정보 */}
         <Card>
           <CardHeader className="bg-gray-50">
-            <CardTitle className="flex gap-2 items-center">
+            <CardTitle className="flex items-center gap-2">
               <User className="w-5 h-5" />
               학생 기본 정보
             </CardTitle>
@@ -151,7 +152,7 @@ export function IEPReport({
         {/* 학습 기록 없음 메시지 */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-col justify-center items-center h-64 text-gray-500">
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
               <div className="text-center">
                 <div className="mb-4 text-6xl">📋</div>
                 <h3 className="mb-2 text-lg font-medium">
@@ -198,14 +199,14 @@ export function IEPReport({
   return (
     <div className="w-[210mm] max-w-[210mm] min-h-[297mm] mx-auto bg-white p-6 space-y-4 border rounded print:p-4 print:space-y-3">
       {/* 액션 버튼 (인쇄 시 숨김) */}
-      <div className="flex justify-between items-center print:hidden">
+      <div className="flex items-center justify-between print:hidden">
         <div className="space-x-2">
           <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 w-4 h-4" />
+            <Printer className="w-4 h-4 mr-2" />
             인쇄
           </Button>
           <Button onClick={handleDownload}>
-            <Download className="mr-2 w-4 h-4" />
+            <Download className="w-4 h-4 mr-2" />
             PDF 다운로드
           </Button>
         </div>
@@ -217,7 +218,7 @@ export function IEPReport({
             onChange={(e) =>
               setDateRange((prev) => ({ ...prev, startDate: e.target.value }))
             }
-            className="px-2 py-1 text-sm rounded border"
+            className="px-2 py-1 text-sm border rounded"
           />
           <span>~</span>
           <input
@@ -226,7 +227,7 @@ export function IEPReport({
             onChange={(e) =>
               setDateRange((prev) => ({ ...prev, endDate: e.target.value }))
             }
-            className="px-2 py-1 text-sm rounded border"
+            className="px-2 py-1 text-sm border rounded"
           />
         </div> */}
       </div>
@@ -240,7 +241,7 @@ export function IEPReport({
       {/* 학생 기본 정보 */}
       <Card>
         <CardHeader className="p-4 bg-gray-50">
-          <CardTitle className="flex gap-2 items-center">
+          <CardTitle className="flex items-center gap-2">
             <User className="w-5 h-5" />
             학생 기본 정보
           </CardTitle>
@@ -248,7 +249,7 @@ export function IEPReport({
         <CardContent className="pt-3">
           <div className="grid grid-cols-[auto_1fr] gap-6 items-center">
             <div className="items-center space-y-2">
-              <p className="flex justify-center items-center w-20 h-20 text-6xl rounded-full border">
+              <p className="flex items-center justify-center w-20 h-20 text-6xl border rounded-full">
                 {icon && !isNaN(icon) ? String.fromCodePoint(icon) : "👤"}
               </p>
             </div>
@@ -273,7 +274,7 @@ export function IEPReport({
       {/* 현재 성취 수준 */}
       <Card>
         <CardHeader className="p-4 bg-gray-50">
-          <CardTitle className="flex gap-2 items-center">
+          <CardTitle className="flex items-center gap-2">
             <Target className="w-5 h-5" />
             현재 성취 수준
           </CardTitle>
@@ -287,9 +288,10 @@ export function IEPReport({
                   (content) => content.contentType === key
                 );
                 const accuracy = contentData?.accuracy || 0;
+
                 return (
                   <div key={key}>
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="font-medium">{label} 인식:</span>
                       <Badge className={performanceLevel.color}>
                         {accuracy}%
@@ -310,7 +312,7 @@ export function IEPReport({
                 const accuracy = activityData?.accuracy || 0;
                 return (
                   <div key={key}>
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="font-medium">{label} 정확도:</span>
                       <Badge className={performanceLevel.color}>
                         {accuracy}%
@@ -328,7 +330,7 @@ export function IEPReport({
       {/* 학습 통계 요약 */}
       <Card>
         <CardHeader className="p-4 bg-gray-50">
-          <CardTitle className="flex gap-2 items-center">
+          <CardTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5" />
             학습 통계 요약
           </CardTitle>
@@ -336,23 +338,23 @@ export function IEPReport({
         <CardContent className="pt-3">
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm">총 응시 문제:</span>
                 <span className="font-medium">{totalQuestionsAttempted}개</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm">총 정답 수:</span>
                 <span className="font-medium text-green-600">
                   {totalCorrectAnswers}개
                 </span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm">총 오답 수:</span>
                 <span className="font-medium text-red-600">
                   {totalIncorrectAnswers}개
                 </span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm">총 학습 시간:</span>
                 <span className="font-medium text-blue-600">
                   {totalStudyTimeMinutes}분
@@ -360,13 +362,13 @@ export function IEPReport({
               </div>
             </div>
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm">평균 정답률:</span>
                 <span className="font-medium text-blue-600">
                   {averageAccuracy}%
                 </span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm">집중력 수준:</span>
                 <Badge
                   className={
@@ -384,11 +386,11 @@ export function IEPReport({
                     : "보통"}
                 </Badge>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm">최대 연속 정답:</span>
                 <span className="font-medium">{maxConsecutiveCorrect}개</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm">현재 연속 정답:</span>
                 <span className="font-medium">
                   {currentConsecutiveCorrect}개
@@ -402,7 +404,7 @@ export function IEPReport({
       {/* 집중도 분석 */}
       <Card>
         <CardHeader className="p-4 bg-gray-50">
-          <CardTitle className="flex gap-2 items-center">
+          <CardTitle className="flex items-center gap-2">
             <Target className="w-5 h-5" />
             집중도 분석
           </CardTitle>
@@ -456,7 +458,7 @@ export function IEPReport({
       {/* 주간 진행률 */}
       <Card>
         <CardHeader className="p-4 bg-gray-50">
-          <CardTitle className="flex gap-2 items-center">
+          <CardTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5" />
             주간 학습 진행률
           </CardTitle>
@@ -466,7 +468,7 @@ export function IEPReport({
             {weeklyProgress.slice(-4).map((week, index) => (
               <div
                 key={index}
-                className="flex justify-between items-center p-2 bg-gray-50 rounded"
+                className="flex items-center justify-between p-2 rounded bg-gray-50"
               >
                 <span className="text-sm font-medium">{week.week}</span>
                 <div className="flex items-center space-x-4">
@@ -485,7 +487,7 @@ export function IEPReport({
       {/* 목표 설정
         <Card>
           <CardHeader className="bg-gray-50">
-            <CardTitle className="flex gap-2 items-center">
+            <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5" />
               교육 목표
             </CardTitle>
@@ -493,7 +495,7 @@ export function IEPReport({
           <CardContent className="pt-3 space-y-3">
             <div>
               <h4 className="mb-2 font-medium text-blue-600">연간 목표:</h4>
-              <p className="p-2 text-sm bg-blue-50 rounded">
+              <p className="p-2 text-sm rounded bg-blue-50">
                 종합적인 읽기 능력에서 {Math.min(95, averageAccuracy + 10)}%
                 정확도를 달성합니다.
               </p>
@@ -501,7 +503,7 @@ export function IEPReport({
 
             <div>
               <h4 className="mb-2 font-medium text-green-600">단기 목표 1:</h4>
-              <p className="p-2 text-sm bg-green-50 rounded">
+              <p className="p-2 text-sm rounded bg-green-50">
                 전체 정확도를 {averageAccuracy}%에서{" "}
                 {Math.min(100, averageAccuracy + 5)}%로 3개월 내에 향상시킵니다.
               </p>
@@ -509,7 +511,7 @@ export function IEPReport({
 
             <div>
               <h4 className="mb-2 font-medium text-green-600">단기 목표 2:</h4>
-              <p className="p-2 text-sm bg-green-50 rounded">
+              <p className="p-2 text-sm rounded bg-green-50">
                 연속 정답 수를 {currentConsecutiveCorrect}개에서{" "}
                 {currentConsecutiveCorrect + 3}개로 3개월 내에 증가시킵니다.
               </p>
@@ -521,30 +523,30 @@ export function IEPReport({
       {/* 교수-학습 방법
         <Card>
           <CardHeader className="bg-gray-50">
-            <CardTitle className="flex gap-2 items-center">
+            <CardTitle className="flex items-center gap-2">
               <BookOpen className="w-5 h-5" />
               교수-학습 방법
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-3">
             <div className="space-y-2">
-              <div className="flex gap-3 items-start">
+              <div className="flex items-start gap-3">
                 <CheckCircle className="flex-shrink-0 mt-0.5 w-5 h-5 text-green-500" />
                 <p>이미지-단어 매칭 게임을 활용한 어휘력 강화</p>
               </div>
-              <div className="flex gap-3 items-start">
+              <div className="flex items-start gap-3">
                 <CheckCircle className="flex-shrink-0 mt-0.5 w-5 h-5 text-green-500" />
                 <p>어려운 단어에 대한 음성 지원을 통한 읽기 연습</p>
               </div>
-              <div className="flex gap-3 items-start">
+              <div className="flex items-start gap-3">
                 <CheckCircle className="flex-shrink-0 mt-0.5 w-5 h-5 text-green-500" />
                 <p>음성 인식 피드백을 활용한 일일 15분 발음 연습</p>
               </div>
-              <div className="flex gap-3 items-start">
+              <div className="flex items-start gap-3">
                 <CheckCircle className="flex-shrink-0 mt-0.5 w-5 h-5 text-green-500" />
                 <p>개별 학습 속도에 맞춘 반복 학습 프로그램</p>
               </div>
-              <div className="flex gap-3 items-start">
+              <div className="flex items-start gap-3">
                 <CheckCircle className="flex-shrink-0 mt-0.5 w-5 h-5 text-green-500" />
                 <p>집중도 모니터링을 통한 맞춤형 학습 조정</p>
               </div>
@@ -556,26 +558,26 @@ export function IEPReport({
       {/* 평가 방법 및 기준
         <Card>
           <CardHeader className="bg-gray-50">
-            <CardTitle className="flex gap-2 items-center">
+            <CardTitle className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
               평가 방법 및 기준
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-3">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="p-3 bg-green-50 rounded">
+              <div className="p-3 rounded bg-green-50">
                 <h4 className="mb-1 text-sm font-medium text-green-700">
                   승급 기준
                 </h4>
                 <p className="text-xs">정확도 ≥ 80%</p>
               </div>
-              <div className="p-3 bg-red-50 rounded">
+              <div className="p-3 rounded bg-red-50">
                 <h4 className="mb-1 text-sm font-medium text-red-700">
                   재학습 필요
                 </h4>
                 <p className="text-xs">정확도 &lt; 60%</p>
               </div>
-              <div className="p-3 bg-blue-50 rounded">
+              <div className="p-3 rounded bg-blue-50">
                 <h4 className="mb-1 text-sm font-medium text-blue-700">
                   진도 추적
                 </h4>
@@ -583,9 +585,9 @@ export function IEPReport({
               </div>
             </div>
 
-            <div className="p-3 mt-3 bg-gray-50 rounded">
+            <div className="p-3 mt-3 rounded bg-gray-50">
               <h4 className="mb-2 text-sm font-medium">현재 평가 결과:</h4>
-              <div className="flex gap-3 items-center">
+              <div className="flex items-center gap-3">
                 <Badge className={performanceLevel.color} variant="outline">
                   {performanceLevel.korean}
                 </Badge>
@@ -601,37 +603,37 @@ export function IEPReport({
       {/* 지원 서비스
         <Card>
           <CardHeader className="bg-gray-50">
-            <CardTitle className="flex gap-2 items-center">
+            <CardTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
               지원 서비스
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-3">
             <div className="space-y-2">
-              <div className="flex gap-3 items-start">
-                <div className="flex-shrink-0 mt-2 w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-2 h-2 mt-2 bg-blue-500 rounded-full"></div>
                 <p className="text-sm">음성 인식 소프트웨어가 탑재된 태블릿</p>
               </div>
-              <div className="flex gap-3 items-start">
-                <div className="flex-shrink-0 mt-2 w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-2 h-2 mt-2 bg-blue-500 rounded-full"></div>
                 <p className="text-sm">
                   오답률이 높은 단어를 위한 맞춤형 플래시카드
                 </p>
               </div>
-              <div className="flex gap-3 items-start">
-                <div className="flex-shrink-0 mt-2 w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-2 h-2 mt-2 bg-blue-500 rounded-full"></div>
                 <p className="text-sm">가정 학습을 위한 학부모 지도 매뉴얼</p>
               </div>
-              <div className="flex gap-3 items-start">
-                <div className="flex-shrink-0 mt-2 w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-2 h-2 mt-2 bg-blue-500 rounded-full"></div>
                 <p className="text-sm">주 2회 개별 학습 지원 세션</p>
               </div>
-              <div className="flex gap-3 items-start">
-                <div className="flex-shrink-0 mt-2 w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-2 h-2 mt-2 bg-blue-500 rounded-full"></div>
                 <p className="text-sm">집중력 향상을 위한 단계별 학습 활동</p>
               </div>
-              <div className="flex gap-3 items-start">
-                <div className="flex-shrink-0 mt-2 w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-2 h-2 mt-2 bg-blue-500 rounded-full"></div>
                 <p className="text-sm">실시간 집중도 모니터링 및 피드백</p>
               </div>
             </div>
@@ -644,15 +646,15 @@ export function IEPReport({
           <CardContent className="pt-4">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               <div className="text-center">
-                <div className="mb-2 h-10 border-b border-gray-300"></div>
+                <div className="h-10 mb-2 border-b border-gray-300"></div>
                 <p className="text-xs font-medium">담당교사 서명</p>
               </div>
               <div className="text-center">
-                <div className="mb-2 h-10 border-b border-gray-300"></div>
+                <div className="h-10 mb-2 border-b border-gray-300"></div>
                 <p className="text-xs font-medium">특수교육코디네이터</p>
               </div>
               <div className="text-center">
-                <div className="mb-2 h-10 border-b border-gray-300"></div>
+                <div className="h-10 mb-2 border-b border-gray-300"></div>
                 <p className="text-xs font-medium">학교장</p>
               </div>
             </div>
