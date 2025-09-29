@@ -6,7 +6,6 @@ export async function startSession(payload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  console.log("**res**", res);
   if (!res.ok || (res.status !== 200 && res.status !== 409))
     throw new Error("startSession failed");
   return res.json(); // { sessionId }
@@ -26,21 +25,13 @@ export async function postAttempt(payload) {
   if (!res.ok) throw new Error("postAttempt failed");
   return res.json(); // { attemptId, session }
 }
-export async function patchProgress(sessionId, payload) {
+export async function patchProgress({ sessionId, ...payload }) {
+  console.log("patchProgress", sessionId, payload);
   const res = await fetch(`${API_URL()}/sessions/${sessionId}/progress`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error("patchProgress failed");
-  return res.json(); // { session }
-}
-export async function endSession(sessionId, payload = {}) {
-  const res = await fetch(`${API_URL()}/sessions/${sessionId}/end`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error("endSession failed");
   return res.json(); // { session }
 }

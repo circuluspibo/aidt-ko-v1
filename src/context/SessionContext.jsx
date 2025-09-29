@@ -16,7 +16,6 @@ import { METHODS, TARGETS } from "@/utils/globals";
 import useContentQuery from "@/hook/useContentQuery";
 import useCurriculumQuery from "@/hook/useCurriculumQuery";
 import {
-  endSession,
   getActiveSession,
   patchProgress,
   postAttempt,
@@ -36,6 +35,7 @@ export const SessionProvider = ({ children }) => {
     data,
     isLoading: isDataLoading,
     isError,
+    refetch: refetchData,
   } = useContentQuery(character, chapter, method);
   const learningDataForTarget = data?.contents;
 
@@ -85,6 +85,21 @@ export const SessionProvider = ({ children }) => {
             setCurrentQuestion(s.currentQuestionNo);
             setCurrentLearningCount(s.currentLearningCount);
           } else {
+            const device = {
+              userAgent: navigator.userAgentData, // 브라우저, OS 등
+              locale: navigator.language,
+              platform: navigator.platform,
+              screen: {
+                width: screen.width,
+                height: screen.height,
+              },
+            };
+            const res = await fetch("https://ipapi.co/json/");
+            const location = await res.json();
+            device.ip = location.ip;
+            const { city, region, country } = location;
+            device.geo = { city, region, country };
+
             const started = await startSession({
               characterId: character,
               chapterId: chapter,
@@ -94,6 +109,7 @@ export const SessionProvider = ({ children }) => {
                 correct: data?.repeat || 1,
                 incorrect: Math.round((data?.repeat || 1) * 1.5) || 2,
               },
+              device,
             });
             setSessionId(started.sessionId);
           }
@@ -164,7 +180,13 @@ export const SessionProvider = ({ children }) => {
   };
 
   const handleContentSelect = (index) => {
-    setCurrentItemIndex(index);
+    // setCurrentItemIndex(index);
+    saveProgressOnly({
+      sessionId,
+      item: learningDataForTarget?.[index],
+      method,
+    });
+    handleContentListClose();
   };
 
   const playFeedbackSound = (isCorrect) => {
@@ -232,11 +254,7 @@ export const SessionProvider = ({ children }) => {
       concentration: answer?.concentration,
     };
     const { session } = await postAttempt(payload);
-    console.log("**payload**", payload);
-    // 화면 동기화
     const onAutoClose = () => {
-      console.log("**session**", session);
-      // setLoading(false);
       if (session.status === "ended") {
         handleNextStep();
       } else {
@@ -280,25 +298,15 @@ export const SessionProvider = ({ children }) => {
   // 자동 이동(비응답): 학습 단계 스킵/튜토리얼 완료 등에서 정답 제출 없이 다음 콘텐츠로 이동
   // 재진입/복원 후 포인터 교정: 서버 세션과 로컬 뷰가 어긋났을 때(새로고침·뒤로가기) Attempt 없이 포인터만 맞춤
   const saveProgressOnly = useCallback(
-    async (nextProgress) => {
-      if (!sessionId) return;
-      const { session } = await patchProgress(sessionId, nextProgress);
+    async (params) => {
+      if (!params?.sessionId) return;
+      const { session } = await patchProgress(params);
       setCurrentItemIndex(session.currentItemIndex);
       setCurrentQuestion(session.currentQuestionNo);
       setCurrentLearningCount(session.currentLearningCount);
     },
     [sessionId]
   );
-
-  // 4) 세션 종료
-  const finishSession = useCallback(async () => {
-    if (!sessionId) return;
-    await endSession(sessionId, {
-      endTime: new Date().toISOString(),
-      recalc: true,
-    });
-    setSessionId(null);
-  }, [sessionId]);
 
   useEffect(() => {
     if (data) {
@@ -315,19 +323,10 @@ export const SessionProvider = ({ children }) => {
     setLoading(sessionId ? false : true);
   }, [sessionId]);
 
-  // 1) 리셋 effect: index 변할 때만
-  // useEffect(() => {
-  //   setTimer(0);
-  //   setCurrentLearningCount(1);
-  //   setCurrentQuestion(1);
-  //   clearInterval(timerRef.current);
-  //   timerRef.current = setInterval(() => setTimer((p) => p + 1), 1000);
-  //   return () => clearInterval(timerRef.current);
-  // }, [currentItemIndex]); // ← data?.contents 등 제거
-
   // 2) 진행률은 별도 effect로 (레퍼런스 말고 길이만)
   const total = learningDataForTarget?.length ?? 0;
   useEffect(() => {
+    refetchData();
     setProgress(
       total
         ? Number(Math.round(((currentItemIndex + 1) / total) * 100).toFixed(0))
@@ -377,7 +376,6 @@ export const SessionProvider = ({ children }) => {
       setTutorMessage,
       setCurrentItemIndex,
       saveProgressOnly,
-      finishSession,
     }),
     [
       character,
