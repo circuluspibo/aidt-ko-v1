@@ -66,21 +66,31 @@ const TopContentList = ({
             className="flex gap-2 px-10 py-4 overflow-auto"
             ref={scrollContainerRef}
           >
-            {data?.map((item, i) => (
-              <button
-                name={`content_${item.letter}`}
-                key={item.name}
-                ref={i === currentIndex ? selectedButtonRef : null}
-                className={`text-lg font-bold ${
-                  i === currentIndex
-                    ? `bg-${color}-400 text-${color}-50`
-                    : `bg-${color}-50 border border-${color}-400 text-${color}-400`
-                }`}
-                onClick={() => onSelect(i)}
-              >
-                {item.letter}
-              </button>
-            ))}
+            {data?.map((item, i) =>
+              !item.complete ? (
+                <button
+                  name={`content_${item.letter}`}
+                  key={item.name}
+                  ref={i === currentIndex ? selectedButtonRef : null}
+                  className={`text-lg font-bold ${
+                    i === currentIndex
+                      ? `bg-${color}-400 text-${color}-50`
+                      : `bg-${color}-50 border border-${color}-400 text-${color}-400`
+                  }`}
+                  onClick={() => onSelect(i)}
+                >
+                  {item.letter}
+                </button>
+              ) : (
+                <button
+                  name={`content_${item.letter}`}
+                  key={item.name}
+                  className="text-lg font-bold text-gray-400 border border-gray-400"
+                >
+                  {item.letter}
+                </button>
+              )
+            )}
           </div>
           <div
             className="absolute top-0 bottom-0 right-0 flex h-full px-2 py-0 cursor-pointer bg-gradient-to-l from-white/95 to-transparent"
