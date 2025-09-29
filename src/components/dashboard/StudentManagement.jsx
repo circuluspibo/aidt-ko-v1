@@ -45,6 +45,7 @@ import { IEPReport } from "./IEPReport";
 import { useStudentAnalytics } from "@/hook/useStudentAnalytics";
 import useStudentManageQuery from "@/hook/useStudentManageQuery";
 import { useAuth } from "@/context/AuthContext";
+import { getTimeText } from "@/utils/globals";
 
 export function StudentManagement() {
   const { getId } = useAuth();
@@ -257,7 +258,7 @@ export function StudentManagement() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        {Math.round(character.totalStudyTimeMinutes || 0)}분
+                        {getTimeText(character.totalStudyTimeMinutes)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -428,10 +429,7 @@ export function StudentManagement() {
                       <div className="flex justify-between">
                         <span className="text-sm">학습 시간:</span>
                         <span className="font-medium">
-                          {Math.round(
-                            (selectedStudent?.totalStudyTimeMinutes || 0) / 60
-                          )}
-                          시간
+                          {getTimeText(selectedStudent?.totalStudyTimeMinutes)}
                         </span>
                       </div>
                       <div className="flex justify-between">

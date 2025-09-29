@@ -31,6 +31,7 @@ import {
 import { useLearningOverview } from "@/hook/useStudentAnalytics";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { getTimeText } from "@/utils/globals";
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -102,12 +103,7 @@ export function Dashboard() {
     },
     {
       title: "총 학습 시간",
-      value:
-        overview.stat.minutes > 0
-          ? overview.stat.hours > 0
-            ? `${overview.stat.hours}시간 ${overview.stat.minutes % 60}분`
-            : `${overview.stat.minutes}분`
-          : "0분",
+      value: getTimeText(overview.stat.minutes),
       subtitle: "누적 학습량",
       color: "bg-orange-500",
       icon: Clock,

@@ -4,7 +4,7 @@ import { Progress } from "../ui/progress";
 import { FileText, Target, BookOpen, Loader2 } from "lucide-react";
 import { useStudentAnalytics } from "@/hook/useStudentAnalytics";
 import { useState } from "react";
-import { METHODS, TARGETS } from "@/utils/globals";
+import { getTimeText, METHODS, TARGETS } from "@/utils/globals";
 import { IEPReportHeader } from "./IEPReportHeader";
 import { StudentInfoCard } from "./StudentInfoCard";
 
@@ -389,7 +389,9 @@ export function IEPReport({
                     문제: {week.questionsAttempted}개
                   </span>
                   <span className="text-sm">정답률: {week.accuracy}%</span>
-                  <span className="text-sm">학습시간: {week.studyTime}분</span>
+                  <span className="text-sm">
+                    학습시간: {getTimeText(week.studyTime)}
+                  </span>
                 </div>
               </div>
             ))}

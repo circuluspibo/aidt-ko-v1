@@ -78,3 +78,11 @@ export const getPrevPath = (pathname, prev = -1) => {
   const parentSegments = segments.slice(0, prev);
   return "/" + parentSegments.join("/");
 };
+
+export const getTimeText = (minutes) => {
+  const hours = Math.round(minutes / 60);
+  const remainingMinutes = Math.round(minutes % 60);
+  const formattedMinutes =
+    remainingMinutes > 9 ? remainingMinutes.toString().padStart(2, "0") : 0;
+  return hours ? `${hours}시간 ${formattedMinutes}분` : `${formattedMinutes}분`;
+};
