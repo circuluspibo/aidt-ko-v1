@@ -1,21 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
-import { Button } from "../ui/button";
-import {
-  FileText,
-  Download,
-  Printer,
-  User,
-  Target,
-  BookOpen,
-  CheckCircle,
-  Settings,
-  Loader2,
-} from "lucide-react";
+import { FileText, Target, BookOpen, Loader2 } from "lucide-react";
 import { useStudentAnalytics } from "@/hook/useStudentAnalytics";
 import { useState } from "react";
 import { METHODS, TARGETS } from "@/utils/globals";
+import { IEPReportHeader } from "./IEPReportHeader";
+import { StudentInfoCard } from "./StudentInfoCard";
 
 export function IEPReport({
   student: { _id: characterId, nickname: studentName, icon },
@@ -99,35 +90,21 @@ export function IEPReport({
   if (!hasLearningData) {
     return (
       <div className="w-[210mm] max-w-[210mm] min-h-[297mm] mx-auto bg-white p-6 space-y-4 print:border-none border border-gray-200 print:p-4 print:space-y-3">
-        {/* 액션 버튼 (인쇄 시 숨김) */}
-        <div className="flex items-center justify-between print:hidden">
-          <div className="space-x-2">
-            <Button variant="outline" onClick={handlePrint}>
-              <Printer className="w-4 h-4 mr-2" />
-              인쇄
-            </Button>
-            <Button onClick={handleDownload}>
-              <Download className="w-4 h-4 mr-2" />
-              PDF 다운로드
-            </Button>
-          </div>
-        </div>
-
-        {/* 헤더 */}
-        <div className="pb-4 text-center border-b-2 border-gray-200">
-          <h1 className="text-xl font-bold">개별화 교육 프로그램 보고서</h1>
-          <p className="mt-1 text-sm text-gray-600">실시간 학습 데이터 기반</p>
-        </div>
+        <IEPReportHeader
+          studentName={studentName}
+          reportPeriod={reportPeriod}
+          onPrint={handlePrint}
+          onDownload={handleDownload}
+        />
 
         {/* 학생 기본 정보 */}
         <Card>
-          <CardHeader className="bg-gray-50">
+          <CardHeader className="p-4 bg-gray-50">
             <CardTitle className="flex items-center gap-2">
-              <User className="w-5 h-5" />
               학생 기본 정보
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-3">
+          <CardContent className="pt-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <div>
@@ -139,12 +116,6 @@ export function IEPReport({
                   <span className="ml-2">{reportPeriod}</span>
                 </div>
               </div>
-              {/* <div className="space-y-2">
-                <div>
-                  <span className="font-medium">작성일:</span>
-                  <span className="ml-2">{currentDate}</span>
-                </div>
-              </div> */}
             </div>
           </CardContent>
         </Card>
@@ -198,78 +169,20 @@ export function IEPReport({
 
   return (
     <div className="w-[210mm] max-w-[210mm] min-h-[297mm] mx-auto bg-white p-6 space-y-4 border rounded print:p-4 print:space-y-3">
-      {/* 액션 버튼 (인쇄 시 숨김) */}
-      <div className="flex items-center justify-between print:hidden">
-        <div className="space-x-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="w-4 h-4 mr-2" />
-            인쇄
-          </Button>
-          <Button onClick={handleDownload}>
-            <Download className="w-4 h-4 mr-2" />
-            PDF 다운로드
-          </Button>
-        </div>
-        {/* <div className="flex items-center space-x-2">
-          <label className="text-sm font-medium">기간:</label>
-          <input
-            type="date"
-            value={dateRange.startDate}
-            onChange={(e) =>
-              setDateRange((prev) => ({ ...prev, startDate: e.target.value }))
-            }
-            className="px-2 py-1 text-sm border rounded"
-          />
-          <span>~</span>
-          <input
-            type="date"
-            value={dateRange.endDate}
-            onChange={(e) =>
-              setDateRange((prev) => ({ ...prev, endDate: e.target.value }))
-            }
-            className="px-2 py-1 text-sm border rounded"
-          />
-        </div> */}
-      </div>
-
-      {/* 헤더 */}
-      <div className="pb-4 text-center border-b-2 border-gray-200">
-        <h1 className="text-xl font-bold">개별화 교육 프로그램 보고서</h1>
-        <p className="mt-1 text-sm text-gray-600">실시간 학습 데이터 기반</p>
-      </div>
+      <IEPReportHeader
+        studentName={studentName}
+        reportPeriod={reportPeriod}
+        onPrint={handlePrint}
+        onDownload={handleDownload}
+      />
 
       {/* 학생 기본 정보 */}
-      <Card>
-        <CardHeader className="p-4 bg-gray-50">
-          <CardTitle className="flex items-center gap-2">
-            <User className="w-5 h-5" />
-            학생 기본 정보
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-3">
-          <div className="grid grid-cols-[auto_1fr] gap-6 items-center">
-            <div className="items-center space-y-2">
-              <p className="flex items-center justify-center w-20 h-20 text-6xl border rounded-full">
-                {icon && !isNaN(icon) ? String.fromCodePoint(icon) : "👤"}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <div>
-                <span className="font-medium">이름:</span>
-                <span className="ml-2">{studentName}</span>
-              </div>
-              <div>
-                <span className="font-medium">학습 기간:</span>
-                <span className="ml-2">{reportPeriod}</span>
-              </div>
-              <div>
-                <span className="font-medium">작성일:</span>
-                <span className="ml-2">{currentDate}</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <StudentInfoCard
+        studentName={studentName}
+        icon={icon}
+        reportPeriod={reportPeriod}
+        currentDate={currentDate}
+      />
 
       {/* 현재 성취 수준 */}
       <Card>
