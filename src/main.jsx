@@ -13,6 +13,8 @@ import advancedFormat from "dayjs/plugin/advancedFormat";
 import relativeTime from "dayjs/plugin/relativeTime";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import objectSupport from "dayjs/plugin/objectSupport";
+import weekOfYear from "dayjs/plugin/weekOfYear";
+import isoWeek from "dayjs/plugin/isoWeek";
 import "dayjs/locale/ko";
 import QueryProvider from "./providers/QueryProvider";
 
@@ -43,6 +45,8 @@ dayjs.extend(objectSupport);
 dayjs.extend(localizedFormat);
 dayjs.extend(advancedFormat);
 dayjs.extend(relativeTime);
+dayjs.extend(weekOfYear);
+dayjs.extend(isoWeek);
 
 async function loader() {
   let user = await getUserData();

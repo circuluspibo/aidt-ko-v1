@@ -79,7 +79,8 @@ export const getPrevPath = (pathname, prev = -1) => {
   return "/" + parentSegments.join("/");
 };
 
-export const getTimeText = (minutes) => {
+export const getTimeText = (m) => {
+  const minutes = Number(m);
   const hours = Math.round(minutes / 60);
   const remainingMinutes = Math.round(minutes % 60);
   const formattedMinutes =
