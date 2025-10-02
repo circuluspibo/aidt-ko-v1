@@ -1,7 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
-import { FileText, Target, BookOpen, Loader2 } from "lucide-react";
+import {
+  FileText,
+  Target,
+  BookOpen,
+  Loader2,
+  ChartBar,
+  NotepadText,
+  ScanEye,
+  Route,
+} from "lucide-react";
 import { useStudentAnalytics } from "@/hook/useStudentAnalytics";
 import { useState } from "react";
 import { getTimeText, METHODS, TARGETS } from "@/utils/globals";
@@ -163,15 +172,16 @@ export function IEPReport({
     activityBreakdown,
     contentTypeProgress,
     concentration,
+    reportDirection,
   } = analyticsData;
   const performanceLevel = getPerformanceLevel(averageAccuracy);
 
   const concentrationLevel =
     totalConcentrationIssues < 10
-      ? "Excellent"
+      ? "우수"
       : totalConcentrationIssues < 20
-      ? "Good"
-      : "Needs Improvement";
+      ? "양호"
+      : "보통";
 
   return (
     <div className="w-[210mm] max-w-[210mm] min-h-[297mm] mx-auto bg-white p-6 space-y-4 border rounded print:p-4 print:space-y-3">
@@ -194,7 +204,7 @@ export function IEPReport({
       <Card>
         <CardHeader className="p-4 bg-gray-50">
           <CardTitle className="flex items-center gap-2">
-            <Target className="w-5 h-5" />
+            <ChartBar className="w-5 h-5" />
             현재 성취 수준
           </CardTitle>
         </CardHeader>
@@ -211,7 +221,7 @@ export function IEPReport({
                 return (
                   <div key={key}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">{label} 인식:</span>
+                      <span className="font-medium">{label} 정답률:</span>
                       <Badge className={performanceLevel.color}>
                         {accuracy}%
                       </Badge>
@@ -232,7 +242,7 @@ export function IEPReport({
                 return (
                   <div key={key}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">{label} 정확도:</span>
+                      <span className="font-medium">{label} 정답률:</span>
                       <Badge className={performanceLevel.color}>
                         {accuracy}%
                       </Badge>
@@ -250,7 +260,7 @@ export function IEPReport({
       <Card>
         <CardHeader className="p-4 bg-gray-50">
           <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
+            <NotepadText className="w-5 h-5" />
             학습 통계 요약
           </CardTitle>
         </CardHeader>
@@ -276,7 +286,7 @@ export function IEPReport({
               <div className="flex items-center justify-between">
                 <span className="text-sm">총 학습 시간:</span>
                 <span className="font-medium text-blue-600">
-                  {totalStudyTimeMinutes}분
+                  {getTimeText(totalStudyTimeMinutes)}
                 </span>
               </div>
             </div>
@@ -291,18 +301,14 @@ export function IEPReport({
                 <span className="text-sm">집중력 수준:</span>
                 <Badge
                   className={
-                    concentrationLevel === "Excellent"
+                    concentrationLevel === "우수"
                       ? "bg-green-100 text-green-800"
-                      : concentrationLevel === "Good"
+                      : concentrationLevel === "양호"
                       ? "bg-blue-100 text-blue-800"
                       : "bg-yellow-100 text-yellow-800"
                   }
                 >
-                  {concentrationLevel === "Excellent"
-                    ? "우수"
-                    : concentrationLevel === "Good"
-                    ? "양호"
-                    : "보통"}
+                  {concentrationLevel}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
@@ -324,7 +330,7 @@ export function IEPReport({
       <Card>
         <CardHeader className="p-4 bg-gray-50">
           <CardTitle className="flex items-center gap-2">
-            <Target className="w-5 h-5" />
+            <ScanEye className="w-5 h-5" />
             집중도 분석
           </CardTitle>
         </CardHeader>
@@ -338,16 +344,16 @@ export function IEPReport({
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">평균 주의력 점수:</span>
-                <span className="font-medium">
-                  {concentration.avgAttentionScore}
-                </span>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-sm">얼굴 미감지 횟수:</span>
                 <span className="font-medium">
                   {concentration.faceLostCount}회
                 </span>
+              </div>
+              <div className="flex justify-between">
+                {/*<span className="text-sm">평균 주의력 점수:</span>
+                <span className="font-medium">
+                  {concentration.avgAttentionScore}
+                </span>*/}
               </div>
             </div>
             <div className="space-y-2">
@@ -402,6 +408,20 @@ export function IEPReport({
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="p-4 bg-gray-50">
+          <CardTitle className="flex items-center gap-2">
+            <Route className="w-5 h-5" />
+            종합 의견 및 지도 방향
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-3 space-y-3">
+          {reportDirection?.map(
+            (line, i) => line && <p key={`line-${characterId}-${i}`}>{line}</p>
+          )}
         </CardContent>
       </Card>
 
