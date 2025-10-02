@@ -7,9 +7,11 @@ import { useState } from "react";
 import { getTimeText, METHODS, TARGETS } from "@/utils/globals";
 import { IEPReportHeader } from "./IEPReportHeader";
 import { StudentInfoCard } from "./StudentInfoCard";
+import { Button } from "../ui/button";
 
 export function IEPReport({
   student: { _id: characterId, nickname: studentName, icon },
+  onClose,
 }) {
   const [dateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
@@ -75,8 +77,12 @@ export function IEPReport({
 
   if (isError || !analyticsData) {
     return (
-      <div className="flex items-center justify-center h-64 text-red-500">
-        <span>학습 데이터를 불러올 수 없습니다.</span>
+      <div className="flex flex-col items-center justify-center h-full gap-2 m-auto">
+        <p className="text-5xl font-extrabold">⚠️ Error</p>
+        <p>학습 데이터 로드 중 오류가 발생했습니다.</p>
+        <Button variant="outline" className="my-4" onClick={onClose}>
+          닫기
+        </Button>
       </div>
     );
   }

@@ -564,7 +564,12 @@ export function StudentManagement() {
               </TabsContent>
 
               <TabsContent value="iep">
-                {selectedStudent && <IEPReport student={selectedStudent} />}
+                {selectedStudent && (
+                  <IEPReport
+                    student={selectedStudent}
+                    onClose={() => setIsDetailOpen(false)}
+                  />
+                )}
               </TabsContent>
             </Tabs>
           )}
@@ -595,7 +600,12 @@ export function StudentManagement() {
             </div>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto">
-            {selectedStudent && <IEPReport student={selectedStudent} />}
+            {selectedStudent && (
+              <IEPReport
+                student={selectedStudent}
+                onClose={() => setIsIEPOpen(false)}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
