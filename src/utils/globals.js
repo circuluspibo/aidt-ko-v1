@@ -84,6 +84,8 @@ export const getTimeText = (m) => {
   const hours = Math.round(minutes / 60);
   const remainingMinutes = Math.round(minutes % 60);
   const formattedMinutes =
-    remainingMinutes > 9 ? remainingMinutes.toString().padStart(2, "0") : 0;
+    remainingMinutes > 9
+      ? remainingMinutes.toString().padStart(2, "0")
+      : remainingMinutes;
   return hours ? `${hours}시간 ${formattedMinutes}분` : `${formattedMinutes}분`;
 };
