@@ -34,6 +34,7 @@ import Main from "./pages/dashboard";
 import CharacterCurriculumManagement from "./components/dashboard/CharacterCurriculumManagement";
 
 import LoginPage from "./pages/Login";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { getUserData } from "./api";
 import AuthLayout from "./layouts/AuthLayout";
 import { LegacyDashboard } from "./components/dashboard/LegacyDashboard";
@@ -60,6 +61,7 @@ const router = createBrowserRouter(
       <Route path="/" element={<Main />} />
       <Route path="/login/teacher" element={<LoginPage target="teacher" />} />
       <Route path="/login/student" element={<LoginPage target="student" />} />
+      <Route path="/policy/privacy" element={<PrivacyPolicy />} />
 
       {/* 교사 전용: /manage */}
       <Route path="manage" element={<DashboardLayout />}>

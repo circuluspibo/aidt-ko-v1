@@ -52,7 +52,7 @@ export const AuthProvider = ({ children, user: userData }) => {
   const getId = () => user?._id || null;
   const getUserId = () => user?.userId || null;
   const getName = () => user?.name || null;
-  const publicPaths = ["/", "/login", "/login/student", "/login/teacher"];
+  const publicPaths = ["/", "/login", "/login/student", "/login/teacher", "/policy/privacy"];
 
   // 1. 서버에서 받은 사용자 데이터로 초기화
   useEffect(() => {
