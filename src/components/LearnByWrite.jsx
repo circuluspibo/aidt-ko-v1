@@ -303,7 +303,11 @@ const LearnByWrite = ({
           {target !== "letter" && (
             <div className="flex items-center justify-center col-span-2 p-4 font-extrabold text-9xl">
               <img
-                src={getAsset({ content: `${item.letter}`, type: "write" })}
+                src={getAsset(
+                  target === "word"
+                    ? { content: `${item.letter}` }
+                    : { content: `${item.letter}`, type: "write" },
+                )}
                 alt={item.letter}
                 className={target === "word" && "p-2 aspect-square"}
               />
