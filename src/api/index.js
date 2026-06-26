@@ -1,7 +1,7 @@
 console.log(
   import.meta.env.MODE,
   import.meta.env.VITE_APP_ENV,
-  import.meta.env.VITE_API_URL
+  import.meta.env.VITE_API_URL,
 );
 
 export const API_URL = () => import.meta.env.VITE_API_URL;
@@ -10,17 +10,17 @@ const FILE_URL = import.meta.env.VITE_FILE_URL;
 
 export const encodeGetParams = (p) =>
   Object.entries(p)
-    .map((kv) => kv.map(encodeURIComponent).join("="))
-    .join("&");
+    .map((kv) => kv.map(encodeURIComponent).join('='))
+    .join('&');
 // src/api/index.js
 // ✅ localStorage 토큰 + 자동 refresh + 시그니처 유지(get/post/put/patch/delete)
 
 export const post = async (route, data, headers = {}) => {
   const res = await fetch(`${API_URL()}/${route}`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      Accept: "application/json, text/plain, */*",
-      "Content-Type": "application/json",
+      Accept: 'application/json, text/plain, */*',
+      'Content-Type': 'application/json',
       ...headers,
     },
     body: JSON.stringify(data),
@@ -37,11 +37,11 @@ export const post = async (route, data, headers = {}) => {
 export const del = async (route, data = {}, headers = {}) => {
   try {
     const res = await fetch(`${API_URL()}/${route}`, {
-      method: "DELETE",
+      method: 'DELETE',
       headers: {
         ...headers,
-        Accept: "application/json, text/plain, */*",
-        "Content-Type": "application/json",
+        Accept: 'application/json, text/plain, */*',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
@@ -55,11 +55,11 @@ export const del = async (route, data = {}, headers = {}) => {
 export const put = async (route, data, headers = {}) => {
   try {
     const res = await fetch(`${API_URL()}/${route}`, {
-      method: "PUT",
+      method: 'PUT',
       headers: {
         ...headers,
-        Accept: "application/json, text/plain, */*",
-        "Content-Type": "application/json",
+        Accept: 'application/json, text/plain, */*',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
@@ -73,11 +73,11 @@ export const put = async (route, data, headers = {}) => {
 export const patch = async (route, data, headers = {}) => {
   try {
     const res = await fetch(`${API_URL()}/${route}`, {
-      method: "PATCH",
+      method: 'PATCH',
       headers: {
         ...headers,
-        Accept: "application/json, text/plain, */*",
-        "Content-Type": "application/json",
+        Accept: 'application/json, text/plain, */*',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
@@ -91,29 +91,29 @@ export const patch = async (route, data, headers = {}) => {
 export const get = async (route, params, headers = {}, signal = false) => {
   try {
     const url = `${API_URL()}/${route}?${
-      params ? encodeGetParams(params) : ""
+      params ? encodeGetParams(params) : ''
     }`;
     console.log(url);
     const res = await fetch(
       url,
       signal
         ? {
-            method: "GET",
+            method: 'GET',
             headers: {
               ...headers,
-              Accept: "application/json, text/plain, */*",
-              "Content-Type": "application/json",
+              Accept: 'application/json, text/plain, */*',
+              'Content-Type': 'application/json',
             },
             signal,
           }
         : {
-            method: "GET",
+            method: 'GET',
             headers: {
               ...headers,
-              Accept: "application/json, text/plain, */*",
-              "Content-Type": "application/json",
+              Accept: 'application/json, text/plain, */*',
+              'Content-Type': 'application/json',
             },
-          }
+          },
     );
     const json = await res.json();
     return json;
@@ -125,12 +125,12 @@ export const get = async (route, params, headers = {}, signal = false) => {
 async function auth({ token }) {
   try {
     const headers = {
-      method: "GET",
-      mode: "cors",
+      method: 'GET',
+      mode: 'cors',
       headers: {
-        Accept: "application/json, text/plain, */*",
-        "Access-Control-Allow-Methods": "GET",
-        "Content-Type": "application/json",
+        Accept: 'application/json, text/plain, */*',
+        'Access-Control-Allow-Methods': 'GET',
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     };
@@ -145,8 +145,8 @@ async function auth({ token }) {
 
 export const getUserData = () =>
   new Promise((resolve) => {
-    if (window.location.pathname === "/sign/out") return resolve(null);
-    let token = window.localStorage.getItem("token");
+    if (window.location.pathname === '/sign/out') return resolve(null);
+    let token = window.localStorage.getItem('token');
     token = token ? JSON.parse(token) : null;
     if (!token) return resolve(null);
     auth({ token }).then(({ result, data }) => {
@@ -155,7 +155,7 @@ export const getUserData = () =>
   });
 
 export const userSignIn = async (logindata) => {
-  const result = await post("signin", logindata);
+  const result = await post('signin', logindata);
   if (result.result) return result.data;
   throw Error(result.error);
 };
