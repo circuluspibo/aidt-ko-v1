@@ -13,7 +13,7 @@
 | 런타임 / 플랫폼 | Node.js / 브라우저 (PWA)                       |
 | 프레임워크     | React 19 + Vite 5                          |
 | 데이터베이스    | 없음 (API 서버에 위임)                            |
-| 로컬 주소     | https://192.168.0.103:5173 (HTTPS, LAN 공유) |
+| 로컬 주소     | http://localhost:5173 (기본). LAN 실기기 테스트 시 http://192.168.x.x:5173 |
 | 기타        | PWA, TensorFlow.js 사용, Pretendard 폰트       |
 
 ---
@@ -53,7 +53,7 @@
 ## 4. 명령어
 
 ```bash
-# 개발 서버 (HTTPS, ops 모드)
+# 개발 서버 (ops 모드, --host로 LAN 노출) → http://localhost:5173 접속
 npm run dev
 
 # 프로덕션 빌드
@@ -157,8 +157,8 @@ circulus-hani/
 
 ## 8. 주요 제약 / 주의사항
 
-- 로컬 개발 서버는 HTTPS 필수 (음성인식 API 등 보안 컨텍스트 요구)
-- mkcert 인증서 파일(`192.168.0.103+3-key.pem`, `192.168.0.103+3.pem`)이 상위 디렉토리(`../`)에 있어야 함
+- 음성인식·카메라는 보안 컨텍스트(secure context) 요구. **`localhost`는 HTTP여도 인정되므로 `http://localhost:5173` 개발에는 HTTPS 불필요.** HTTPS는 LAN IP(`http://192.168.x.x`)로 실기기를 테스트할 때만 필요
+- (실기기 LAN 테스트 시) mkcert로 인증서 발급 후 `vite.config.js`에 `server.https` 추가 필요. 과거 메모의 `192.168.0.103+3-key.pem`/`192.168.0.103+3.pem`(상위 `../`)은 특정 개발자가 수동 구성했던 흔적이며 현재 레포에는 반영돼 있지 않음(`vite.config.js`에 `server.https` 없음)
 - 빌드 모드: dev → `ops`, 배포 → `prod` (환경변수 파일 분리)
 - TensorFlow.js 모델 관련 파일은 캐시 용량이 크므로 PWA workbox 설정에서 5MB 제한 적용 중
 
@@ -167,5 +167,5 @@ circulus-hani/
 ## 9. 운영 시 주의사항
 
 - 운영 API: `https://hani-api.circul.us/v1` — BE 레포(`circulus-hani-api`) 별도 배포 필요
-- `pub.sh` 스크립트로 빌드 후 배포 (내용 확인 후 실행)
+- 공통 배포 스크립트 `~/Documents/DEV/pub-front.sh`로 빌드 후 배포 (`pub-front.sh circulus-hani OPS|STG`, SSH 키 `circulus.pem` 필요, 내용 확인 후 실행)
 - PWA `registerType: "autoUpdate"` 설정으로 서비스워커 자동 갱신됨 — 정적 자산 캐시 주의
