@@ -43,8 +43,8 @@
 
 **🧒 학생**
 
-- 선생님이 알려준 **학습 코드**만 입력하면 바로 학습을 시작합니다 (아이디·비밀번호 없음).
-- 자기 캐릭터(친구)를 고르고, 배울 한글과 방법(읽기·듣기·말하기·쓰기)을 선택해 학습합니다.
+- 선생님이 알려준 **학습 코드**만 입력하면 바로 학습을 시작합니다 (아이디·비밀번호 없음). 학생 계정은 자기 캐릭터(친구)에 미리 연결돼 있어, 로그인하면 그 캐릭터의 학습 화면으로 곧장 들어갑니다.
+- 배울 한글과 방법(읽기·듣기·말하기·쓰기)을 선택해 학습합니다.
 - 카메라·마이크로 집중도와 발음을 확인하고, 손글씨를 직접 써서 채점받습니다.
 
 ### 기술적 특징
@@ -71,14 +71,14 @@
 
 > 📸 **스크린샷 자리** — 실제 화면 이미지를 캡처해 아래 자리에 넣어주세요. 비개발자가 가장 빠르게 이해하는 자료입니다.
 
-| 화면               | 설명                                                     | 이미지                                           |
-| ------------------ | -------------------------------------------------------- | ------------------------------------------------ |
-| 로그인 (교사/학생) | 교사는 아이디·비밀번호, 학생은 "학습 코드"로 로그인      | `![로그인](docs/images/login.png)` _(추가 예정)_ |
-| 교사 대시보드      | 활동 학생 수·평균 정답률 등 핵심 지표와 학습 통계 그래프 | _(추가 예정)_                                    |
-| 커리큘럼 관리      | 학생/그룹별로 배울 한글을 정하고 순서를 조정             | _(추가 예정)_                                    |
-| IEP 리포트         | 학생 한 명의 개별 학습 성취 보고서                       | _(추가 예정)_                                    |
-| 학생 캐릭터 선택   | "나는 누구일까요?" 친구 캐릭터 고르기                    | _(추가 예정)_                                    |
-| 학습 화면          | 읽기·듣기·말하기·쓰기 중 한 방식으로 한글 연습           | _(추가 예정)_                                    |
+| 화면                | 설명                                                                    | 이미지                                           |
+| ------------------- | ----------------------------------------------------------------------- | ------------------------------------------------ |
+| 로그인 (교사/학생)  | 교사는 아이디·비밀번호, 학생은 "학습 코드"로 로그인                     | `![로그인](docs/images/login.png)` _(추가 예정)_ |
+| 교사 대시보드       | 활동 학생 수·평균 정답률 등 핵심 지표와 학습 통계 그래프                | _(추가 예정)_                                    |
+| 커리큘럼 관리       | 학생/그룹별로 배울 한글을 정하고 순서를 조정                            | _(추가 예정)_                                    |
+| IEP 리포트          | 학생 한 명의 개별 학습 성취 보고서                                      | _(추가 예정)_                                    |
+| 학습 대상/방식 선택 | 무엇을(모음·자음·글자·낱말)·어떻게(읽기·듣기·말하기·쓰기) 배울지 고르기 | _(추가 예정)_                                    |
+| 학습 화면           | 읽기·듣기·말하기·쓰기 중 한 방식으로 한글 연습                          | _(추가 예정)_                                    |
 
 ---
 
@@ -94,11 +94,10 @@
 
 ### 🧒 학생이 한글을 배우는 흐름
 
-1. 선생님께 받은 **학습 코드**를 입력해 로그인합니다.
-2. 마음에 드는 **친구 캐릭터**(뚜디·루루·포니 등)를 고릅니다.
-3. **무엇을 배울지**(모음·자음·글자·낱말)와 **어떻게 배울지**(읽기·듣기·말하기·쓰기)를 차례로 고릅니다.
-4. 문제를 풀며 한글을 익힙니다. 정답이면 칭찬 효과음과 함께 다음으로, 틀리면 다시 도전합니다.
-5. 한 단계를 끝내면 자동으로 다음 학습으로 넘어가고, 모두 끝나면 축하 메시지가 나옵니다.
+1. 선생님께 받은 **학습 코드**를 입력해 로그인하면, 자신의 캐릭터 학습 화면으로 바로 들어갑니다. (학생 계정은 캐릭터 하나에 연결돼 있어 따로 고르지 않습니다.)
+2. **무엇을 배울지**(모음·자음·글자·낱말)와 **어떻게 배울지**(읽기·듣기·말하기·쓰기)를 차례로 고릅니다.
+3. 문제를 풀며 한글을 익힙니다. 정답이면 칭찬 효과음과 함께 다음으로, 틀리면 다시 도전합니다.
+4. 한 단계를 끝내면 자동으로 다음 학습으로 넘어가고, 모두 끝나면 축하 메시지가 나옵니다.
 
 > 💡 학습 도중 화면은 **카메라로 집중도를, 마이크로 발음을, 손글씨를 인식**해 학생이 제대로 따라오고 있는지 확인합니다. (마이크·카메라 기능은 보안상 HTTPS 환경에서만 동작)
 
@@ -212,22 +211,22 @@ HTTPS가 필요한 경우는 태블릿이나 다른 PC 같은 실기기를 같�
 
 소스는 `src/` 아래에 역할별로 나뉘어 있습니다.
 
-| 경로             | 역할                                                                                  |
-| ---------------- | ------------------------------------------------------------------------------------- |
-| `src/main.jsx`   | 앱 진입점. 라우터 정의·`loader` 인증·프로바이더 구성                                   |
-| `src/api/`       | API 호출. `index.js`(fetch 래퍼), `learning.js`·`session.js`(도메인별 호출)           |
-| `src/pages/`     | 라우트 단위 페이지. 학생 학습 흐름(`Character`·`Target`·`Method`·`Learn`)과 로그인 등  |
-| `src/components/`| 재사용 컴포넌트. 학습 방식 실행 컴포넌트(`LearnByRead`·`LearnByListen`·`LearnBySpeak`·`LearnByWrite`), 로그인 폼, 다이얼로그 등 |
-| `src/components/ui/` | shadcn/ui 기반 UI 부품(버튼·다이얼로그 등)                                          |
-| `src/features/`  | 학습/대시보드 화면 요소. `dashboard/`(교사 대시보드), `ConcentrationAlert`·`Options`·`TopContentList` |
-| `src/context/`   | 전역 상태. `AuthContext`(인증), `SessionContext`(학습 세션)                           |
-| `src/hook/`      | 커스텀 훅. 집중도 모니터링·분석 데이터 조회 등                                         |
-| `src/layouts/`   | 레이아웃. `AuthLayout`·`DashboardLayout`·`LearnLayout`·`ProgressLayout`               |
-| `src/providers/` | `QueryProvider`(TanStack Query 설정)                                                   |
-| `src/data/`      | 정적 JSON 데이터(`learningData.json`·`dict.json` 등)                                   |
-| `src/lib/`       | `utils.js`(shadcn `cn()` 등 공통 유틸)                                                 |
-| `src/utils/`     | 기타 유틸. `globals.js`(`TARGETS`/`METHODS` 매핑), `reorder.js`(드래그앤드롭 순서)     |
-| `src/styles/`    | 글로벌 CSS, Pretendard 폰트                                                            |
+| 경로                 | 역할                                                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `src/main.jsx`       | 앱 진입점. 라우터 정의·`loader` 인증·프로바이더 구성                                                                            |
+| `src/api/`           | API 호출. `index.js`(fetch 래퍼), `learning.js`·`session.js`(도메인별 호출)                                                     |
+| `src/pages/`         | 라우트 단위 페이지. 학생 학습 흐름(`Character`·`Target`·`Method`·`Learn`)과 로그인 등                                           |
+| `src/components/`    | 재사용 컴포넌트. 학습 방식 실행 컴포넌트(`LearnByRead`·`LearnByListen`·`LearnBySpeak`·`LearnByWrite`), 로그인 폼, 다이얼로그 등 |
+| `src/components/ui/` | shadcn/ui 기반 UI 부품(버튼·다이얼로그 등)                                                                                      |
+| `src/features/`      | 학습/대시보드 화면 요소. `dashboard/`(교사 대시보드), `ConcentrationAlert`·`Options`·`TopContentList`                           |
+| `src/context/`       | 전역 상태. `AuthContext`(인증), `SessionContext`(학습 세션)                                                                     |
+| `src/hook/`          | 커스텀 훅. 집중도 모니터링·분석 데이터 조회 등                                                                                  |
+| `src/layouts/`       | 레이아웃. `AuthLayout`·`DashboardLayout`·`LearnLayout`·`ProgressLayout`                                                         |
+| `src/providers/`     | `QueryProvider`(TanStack Query 설정)                                                                                            |
+| `src/data/`          | 정적 JSON 데이터(`learningData.json`·`dict.json` 등)                                                                            |
+| `src/lib/`           | `utils.js`(shadcn `cn()` 등 공통 유틸)                                                                                          |
+| `src/utils/`         | 기타 유틸. `globals.js`(`TARGETS`/`METHODS` 매핑), `reorder.js`(드래그앤드롭 순서)                                              |
+| `src/styles/`        | 글로벌 CSS, Pretendard 폰트                                                                                                     |
 
 **경로 별칭**: `vite.config.js`에서 `@`를 `src/`로 매핑합니다. 따라서 `@/components/...`는 `src/components/...`를 가리킵니다(코드 전반에서 이 형식을 사용).
 
@@ -279,31 +278,28 @@ HTTPS가 필요한 경우는 태블릿이나 다른 PC 같은 실기기를 같�
 
 `main.jsx`의 `createRoutesFromElements` 기준:
 
-| 경로                                        | 컴포넌트                        | 대상   |
-| ------------------------------------------- | ------------------------------- | ------ |
-| `/`                                         | `pages/dashboard` (Main)        | 공개   |
-| `/login/teacher`, `/login/student`          | `pages/Login`                   | 미인증 |
-| `/policy/privacy`                           | `pages/PrivacyPolicy`           | 공개   |
-| `/manage`                                   | `DashboardLayout` + `Dashboard` | 교사   |
-| `/manage/groups`, `/manage/groups/:groupId` | 그룹·캐릭터 관리                | 교사   |
-| `/manage/groups/:groupId/:characterId`      | `CharacterCurriculumManagement` | 교사   |
-| `/manage/students`                          | `StudentManagement`             | 교사   |
-| `/learn`                                    | `LearnLayout` + `Character`     | 학생   |
-| `/learn/:character`                         | `ProgressLayout` + `Target`     | 학생   |
-| `/learn/:character/:chapter`                | `Method`                        | 학생   |
-| `/learn/:character/:chapter/:method`        | `Learn`                         | 학생   |
-| `/legacy`, `/legacy/students`               | 레거시 대시보드                 | (구)   |
+| 경로                                        | 컴포넌트                        | 대상                                              |
+| ------------------------------------------- | ------------------------------- | ------------------------------------------------- | --- |
+| `/`                                         | `pages/dashboard` (Main)        | 공개                                              |
+| `/login/teacher`, `/login/student`          | `pages/Login`                   | 미인증                                            |
+| `/policy/privacy`                           | `pages/PrivacyPolicy`           | 공개                                              |
+| `/manage`                                   | `DashboardLayout` + `Dashboard` | 교사                                              |
+| `/manage/groups`, `/manage/groups/:groupId` | 그룹·캐릭터 관리                | 교사                                              |
+| `/manage/groups/:groupId/:characterId`      | `CharacterCurriculumManagement` | 교사                                              |
+| `/manage/students`                          | `StudentManagement`             | 교사                                              |
+| `/learn/:character`                         | `ProgressLayout` + `Target`     | 학생 (로그인 후 진입점, `:character`=characterId) |
+| `/learn/:character/:chapter`                | `Method`                        | 학생                                              |
+| `/learn/:character/:chapter/:method`        | `Learn`                         | 학생                                              |     |
 
 ### 7-3. 학생 학습 흐름 (핵심)
 
-학생 학습은 **3단계 선택 → 실제 학습**으로 진행됩니다. URL 깊이가 곧 선택 단계입니다.
+학생 계정은 캐릭터 하나에 연결돼 있어, 로그인하면 `AuthContext`가 `/learn/{characterId}`로 직접 보냅니다(7-1 참고). 즉 **캐릭터 선택 없이** 곧장 자기 학습 화면에서 시작하며, 학습은 **2단계 선택(학습 대상 → 학습 방식) → 실제 학습**으로 진행됩니다. URL 깊이가 곧 선택 단계입니다.
 
 **관련 파일**
 
-- `src/pages/Character.jsx` — ① 캐릭터(친구) 선택
-- `src/pages/Target.jsx` — ② 무엇을 배울지(학습 대상) 선택
-- `src/pages/Method.jsx` — ③ 어떻게 배울지(학습 방식) 선택
-- `src/pages/Learn.jsx` — ④ 실제 학습 화면 (방식별 컴포넌트 분기)
+- `src/pages/Target.jsx` — ① 무엇을 배울지(학습 대상) 선택 — 로그인 후 진입점
+- `src/pages/Method.jsx` — ② 어떻게 배울지(학습 방식) 선택
+- `src/pages/Learn.jsx` — ③ 실제 학습 화면 (방식별 컴포넌트 분기)
 - `src/layouts/ProgressLayout.jsx` — `SessionProvider`로 학습 세션 감싸기 + 이어하기 모달
 - `src/context/SessionContext.jsx` — 학습 세션 상태·서버 동기화 (가장 중요)
 - `src/utils/globals.js` — `TARGETS`/`METHODS`/`COLORS` 매핑, 한글 조사(`JOSA`) 유틸
@@ -317,10 +313,9 @@ HTTPS가 필요한 경우는 태블릿이나 다른 PC 같은 실기기를 같�
 
 **흐름 설명**
 
-1. **`/learn` (`Character`)** — "나는 누구일까요?" 캐릭터(뚜디·루루·포니·밀리·네코·쿠쿠·핑핑·찌니·옥토 9종)를 고른다. 진입 시 `getDefaultProgress()`로 이어할 캐릭터가 있으면 `/learn/{character}`로 자동 이동.
-2. **`/learn/:character` (`Target`)** — "무엇을 배울까요?" `useCurriculumQuery`로 받은 커리큘럼(`curriculumData`)에서 학습 대상(모음/자음/글자/낱말)을 고른다. 선택 시 `/learn/{character}/{chapterId}?target={name}`로 이동.
-3. **`/learn/:character/:chapter` (`Method`)** — "어떻게 배울까요?" 해당 챕터의 학습 방식(읽기/듣기/말하기/쓰기)을 고른다. 이미 끝난(`session.status === "ended"`) 방식은 비활성화. 선택 시 `/learn/{character}/{chapter}/{method}`로 이동.
-4. **`/learn/:character/:chapter/:method` (`Learn`)** — `SessionContext`가 콘텐츠를 로드하고, `method` 값에 따라 `LearnByRead`/`LearnByListen`/`LearnBySpeak`/`LearnByWrite` 중 하나를 렌더링한다.
+1. **`/learn/:character` (`Target`)** — "무엇을 배울까요?" `:character`는 로그인 시 받은 characterId입니다. `useCurriculumQuery(characterId)`로 받은 커리큘럼(`curriculumData`)에서 학습 대상(모음/자음/글자/낱말)을 고른다. 선택 시 `/learn/{character}/{chapterId}?target={name}`로 이동.
+2. **`/learn/:character/:chapter` (`Method`)** — "어떻게 배울까요?" 해당 챕터의 학습 방식(읽기/듣기/말하기/쓰기)을 고른다. 이미 끝난(`session.status === "ended"`) 방식은 비활성화. 선택 시 `/learn/{character}/{chapter}/{method}`로 이동.
+3. **`/learn/:character/:chapter/:method` (`Learn`)** — `SessionContext`가 콘텐츠를 로드하고, `method` 값에 따라 `LearnByRead`/`LearnByListen`/`LearnBySpeak`/`LearnByWrite` 중 하나를 렌더링한다.
 
 > 💡 `ProgressLayout`이 `/learn/:character` 하위 전체를 `SessionProvider`로 감싸므로, Target·Method·Learn은 같은 세션 컨텍스트를 공유합니다. 이어하기 모달(`ResumeLearningModal`)도 이 레이아웃에서 단계별로 자동 노출됩니다.
 
@@ -472,7 +467,6 @@ npm run lint     # eslint .
 
 - **Prettier**: 포맷 규칙은 `.prettierrc`에 정의되어 있습니다(작은따옴표, 세미콜론, 들여쓰기 2칸, `trailingComma: all`, `printWidth: 80`, Tailwind 클래스 정렬 플러그인). 별도 npm 스크립트는 없으므로, 에디터의 "저장 시 포맷"을 켜거나 `npx prettier --write .`로 적용하세요. 포맷이 안 맞으면 커밋 diff가 불필요하게 커집니다.
 - **ESLint**: `npm run lint`로 검사합니다.
-- 브랜치/커밋/PR 컨벤션은 팀 규칙을 따르세요. *(팀에서 정한 규칙이 있으면 여기에 채워주세요.)*
 
 ### 배포
 
