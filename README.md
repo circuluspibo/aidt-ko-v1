@@ -31,7 +31,7 @@
 **또박한글**은 발달장애·느린 학습자 등 **특수교육이 필요한 학생을 위한 한글 학습 앱**입니다.
 일반 학습지로는 따라가기 어려운 학생들이, 자기 속도에 맞춰 자음·모음부터 낱말까지 반복하며 익힐 수 있도록 만들어졌습니다. 학생은 게임처럼 재미있게 학습하고, 선생님은 학생이 무엇을 얼마나 잘하는지 한눈에 확인할 수 있습니다.
 
-이 저장소는 그중 **화면(웹앱) 부분**이며, 학습 데이터는 별도의 서버([연관 레포](#2-연관-레포) 참고)가 담당합니다.
+이 저장소는 그중 **화면(웹앱) 부분**이며, 학습 데이터는 별도의 서버([연관 레포](#연관-레포) 참고)가 담당합니다.
 
 ### 이런 걸 할 수 있어요
 
@@ -69,16 +69,14 @@
 
 ## 2. 주요 화면
 
-> 📸 **스크린샷 자리** — 실제 화면 이미지를 캡처해 아래 자리에 넣어주세요. 비개발자가 가장 빠르게 이해하는 자료입니다.
-
-| 화면                | 설명                                                                    | 이미지                                           |
-| ------------------- | ----------------------------------------------------------------------- | ------------------------------------------------ |
-| 로그인 (교사/학생)  | 교사는 아이디·비밀번호, 학생은 "학습 코드"로 로그인                     | `![로그인](docs/images/login.png)` _(추가 예정)_ |
-| 교사 대시보드       | 활동 학생 수·평균 정답률 등 핵심 지표와 학습 통계 그래프                | _(추가 예정)_                                    |
-| 커리큘럼 관리       | 학생/그룹별로 배울 한글을 정하고 순서를 조정                            | _(추가 예정)_                                    |
-| IEP 리포트          | 학생 한 명의 개별 학습 성취 보고서                                      | _(추가 예정)_                                    |
-| 학습 대상/방식 선택 | 무엇을(모음·자음·글자·낱말)·어떻게(읽기·듣기·말하기·쓰기) 배울지 고르기 | _(추가 예정)_                                    |
-| 학습 화면           | 읽기·듣기·말하기·쓰기 중 한 방식으로 한글 연습                          | _(추가 예정)_                                    |
+| 화면                | 설명                                                                    | 이미지                                                                                            |
+| ------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| 로그인 (교사/학생)  | 교사는 아이디·비밀번호, 학생은 "학습 코드"로 로그인                     | ![교사 로그인](doc/00hani_login_teacher.png) ![학생 로그인](doc/00hani_login_student.png)         |
+| 교사 대시보드       | 활동 학생 수·평균 정답률 등 핵심 지표와 학습 통계 그래프                | ![교사 대시보드](doc/01hani_home_teacher.png)                                                     |
+| 커리큘럼 관리       | 학생/그룹별로 배울 한글을 정하고 순서를 조정                            | ![커리큘럼 관리](doc/02hani_curriculum_teacher.png)                                               |
+| IEP 리포트          | 학생 한 명의 개별 학습 성취 보고서                                      | ![IEP 리포트](doc/03hani_report_teacher.png)                                                      |
+| 학습 대상/방식 선택 | 무엇을(모음·자음·글자·낱말)·어떻게(읽기·듣기·말하기·쓰기) 배울지 고르기 | ![학습 대상 선택](doc/04hani_target_student.png) ![학습 방식 선택](doc/04hani_method_student.png) |
+| 학습 화면           | 읽기·듣기·말하기·쓰기 중 한 방식으로 한글 연습                          | ![학습 화면](doc/05hani_speak_student.png)                                                        |
 
 ---
 
@@ -230,9 +228,9 @@ HTTPS가 필요한 경우는 태블릿이나 다른 PC 같은 실기기를 같�
 
 **경로 별칭**: `vite.config.js`에서 `@`를 `src/`로 매핑합니다. 따라서 `@/components/...`는 `src/components/...`를 가리킵니다(코드 전반에서 이 형식을 사용).
 
-**주의 — `components/`와 `features/` 구분이 깔끔하지 않습니다.** 실제로 사용하는 학습 방식 컴포넌트는 `src/components/LearnBy*`(이며 `pages/Learn.jsx`가 `method` 값으로 골라 렌더링)입니다. 반면 `src/features/`의 `VowelView`·`ConsonantView`·`SyllableView`·`WordView`는 현재 **어디서도 import되지 않는 미사용(레거시) 파일**로 보입니다. 학습 화면 코드를 찾을 때는 `features/`의 `*View`가 아니라 `components/LearnBy*`를 보세요.
+**주의 — `components/`와 `features/` 구분이 깔끔하지 않습니다.** 실제로 사용하는 학습 방식 컴포넌트는 `src/components/LearnBy*`(이며 `pages/Learn.jsx`가 `method` 값으로 골라 렌더링)입니다. 반면 `src/features/`의 `VowelView`·`ConsonantView`·`SyllableView`·`WordView`는 **어디서도 import되지 않는 미사용(레거시) 파일**입니다(전체 검색으로 확인). 학습 화면 코드를 찾을 때는 `features/`의 `*View`가 아니라 `components/LearnBy*`를 보세요.
 
-**주의 — `src/data/`의 JSON과 `src/routes/`.** `src/data/`의 `learningData.json`·`dict.json` 등은 현재 코드에서 정적으로 import되지 않습니다(실제 학습 콘텐츠는 서버 응답 `data.contents`에서 옵니다). 참고용/레거시로 추정되며, 실제 사용 여부는 정리 시 확인이 필요합니다. `src/routes/`는 현재 빈 폴더입니다.
+**주의 — `src/data/`의 JSON과 `src/routes/`.** `src/data/`의 `dict.json`·`learningData.json`·`learningData.converted.json`은 코드에서 import되지 않는 미사용 파일입니다(전체 검색으로 확인. 실제 학습 콘텐츠는 서버 응답 `data.contents`에서 옵니다). 단 같은 폴더의 `privacy-policy.md`는 `pages/PrivacyPolicy.jsx`가 `?raw`로 사용하므로 예외입니다. `src/routes/`는 빈 폴더입니다.
 
 ### 7-1. 인증 및 로그인 (교사 / 학생)
 
@@ -279,7 +277,7 @@ HTTPS가 필요한 경우는 태블릿이나 다른 PC 같은 실기기를 같�
 `main.jsx`의 `createRoutesFromElements` 기준:
 
 | 경로                                        | 컴포넌트                        | 대상                                              |
-| ------------------------------------------- | ------------------------------- | ------------------------------------------------- | --- |
+| ------------------------------------------- | ------------------------------- | ------------------------------------------------- |
 | `/`                                         | `pages/dashboard` (Main)        | 공개                                              |
 | `/login/teacher`, `/login/student`          | `pages/Login`                   | 미인증                                            |
 | `/policy/privacy`                           | `pages/PrivacyPolicy`           | 공개                                              |
@@ -289,7 +287,7 @@ HTTPS가 필요한 경우는 태블릿이나 다른 PC 같은 실기기를 같�
 | `/manage/students`                          | `StudentManagement`             | 교사                                              |
 | `/learn/:character`                         | `ProgressLayout` + `Target`     | 학생 (로그인 후 진입점, `:character`=characterId) |
 | `/learn/:character/:chapter`                | `Method`                        | 학생                                              |
-| `/learn/:character/:chapter/:method`        | `Learn`                         | 학생                                              |     |
+| `/learn/:character/:chapter/:method`        | `Learn`                         | 학생                                              |
 
 ### 7-3. 학생 학습 흐름 (핵심)
 
@@ -491,7 +489,7 @@ npm run lint     # eslint .
 
 ### Q. 음성 인식 / 카메라 기능이 동작하지 않아요.
 
-> 음성·카메라는 보안 컨텍스트(secure context)에서만 동작합니다. **`http://localhost:5173`으로 접속하면 됩니다** — `localhost`는 HTTP여도 secure context로 인정되므로 별도 설정이 필요 없습니다. 단, `http://192.168.x.x`(LAN IP)로 접속하면 secure context가 아니라 막힙니다. 실기기를 LAN IP로 테스트해야 한다면 HTTPS가 필요하며, 구성 방법은 6장 "HTTPS는 언제 필요한가"를 참고하세요.
+> 음성·카메라는 보안 컨텍스트(secure context)에서만 동작합니다. **`http://localhost:5173`으로 접속하면 됩니다** — `localhost`는 HTTP여도 secure context로 인정되므로 별도 설정이 필요 없습니다. 단, `http://192.168.x.x`(LAN IP)로 접속하면 secure context가 아니라 막힙니다. 실기기를 LAN IP로 테스트해야 한다면 HTTPS가 필요하며, 구성 방법은 6장 "HTTPS 관련 안내"를 참고하세요.
 
 ### Q. 쓰기(손글씨) 채점이 안 돼요.
 
@@ -513,5 +511,5 @@ npm run lint     # eslint .
 - **토큰 자동 refresh 미구현** — 토큰 만료 시 재로그인이 필요합니다. 갱신 로직은 주석으로만 존재합니다. (7-1 참고)
 - **API 래퍼의 에러 처리 불일치** — `src/api/index.js`에서 `post`는 HTTP 에러 시 `throw`하지만, `get/put/patch/del`은 `catch`에서 `{ result: false, error }`를 반환합니다. 호출부에서 에러 처리 방식이 달라질 수 있으니 주의하세요. (8장 참고)
 - **`session.js`는 공통 래퍼를 우회** — `src/api/session.js`는 `get/post` 래퍼를 거치지 않고 `fetch`를 직접 사용합니다. 인증 헤더 등 공통 처리가 자동 적용되지 않으니 수정 시 유의하세요. (8장 참고)
-- **미사용(레거시) 추정 파일** — `src/features/`의 `VowelView`·`ConsonantView`·`SyllableView`·`WordView`, `src/data/`의 JSON 데이터, 빈 `src/routes/` 폴더는 현재 코드에서 참조되지 않습니다. 정리 시 실제 사용 여부 확인이 필요합니다. (7-0 참고)
+- **미사용(레거시) 파일** — `src/features/`의 `VowelView`·`ConsonantView`·`SyllableView`·`WordView`, `src/data/`의 JSON 3종(`dict.json`·`learningData.json`·`learningData.converted.json`), 빈 `src/routes/` 폴더는 코드에서 참조되지 않음을 전체 검색으로 확인했습니다. 삭제 가능하나 정리 시점은 팀 판단에 맡깁니다. (같은 `src/data/`의 `privacy-policy.md`는 사용 중이므로 제외.) (7-0 참고)
 - **자동화 테스트 없음** — 현재 테스트 코드가 없어 변경 검증은 수동으로 합니다.
