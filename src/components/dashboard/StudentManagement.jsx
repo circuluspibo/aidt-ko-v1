@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
 import {
   Table,
   TableBody,
@@ -8,17 +8,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
+} from '../ui/table';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "../ui/dialog";
-import { Progress } from "../ui/progress";
-import { Badge } from "../ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+} from '../ui/dialog';
+import { Progress } from '../ui/progress';
+import { Badge } from '../ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import {
   Eye,
   MessageSquare,
@@ -29,7 +29,7 @@ import {
   FileText,
   Loader2,
   X,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -40,12 +40,12 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-} from "recharts";
-import { IEPReport } from "./IEPReport";
-import { useStudentAnalytics } from "@/hook/useStudentAnalytics";
-import useStudentManageQuery from "@/hook/useStudentManageQuery";
-import { useAuth } from "@/context/AuthContext";
-import { getTimeText } from "@/utils/globals";
+} from 'recharts';
+import { IEPReport } from './IEPReport';
+import { useStudentAnalytics } from '@/hook/useStudentAnalytics';
+import useStudentManageQuery from '@/hook/useStudentManageQuery';
+import { useAuth } from '@/context/AuthContext';
+import { getTimeText } from '@/utils/globals';
 
 export function StudentManagement() {
   const { getId } = useAuth();
@@ -61,8 +61,8 @@ export function StudentManagement() {
     useStudentAnalytics(selectedStudent?._id, {
       startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
         .toISOString()
-        .split("T")[0],
-      endDate: new Date().toISOString().split("T")[0],
+        .split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
     });
 
   const handleStudentSelect = (student) => {
@@ -76,25 +76,25 @@ export function StudentManagement() {
 
   const getConcentrationLevel = (issues) => {
     if (issues === null)
-      return { level: "미측정", color: "bg-gray-100 text-gray-800" };
+      return { level: '미측정', color: 'bg-gray-100 text-gray-800' };
     if (issues < 10)
-      return { level: "우수", color: "bg-green-100 text-green-800" };
+      return { level: '우수', color: 'bg-green-100 text-green-800' };
     if (issues < 20)
-      return { level: "양호", color: "bg-blue-100 text-blue-800" };
-    return { level: "관심필요", color: "bg-yellow-100 text-yellow-800" };
+      return { level: '양호', color: 'bg-blue-100 text-blue-800' };
+    return { level: '관심필요', color: 'bg-yellow-100 text-yellow-800' };
   };
 
   // 성취도 분포 계산
   const getGradeFromAccuracy = (accuracy) => {
-    if (accuracy >= 85) return "우수";
-    if (accuracy >= 70) return "보통";
-    return "개선필요";
+    if (accuracy >= 85) return '우수';
+    if (accuracy >= 70) return '보통';
+    return '개선필요';
   };
 
   // 실제 데이터가 없는 경우
   if (!charactersData) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+      <div className="flex h-64 flex-col items-center justify-center text-gray-500">
         <div className="text-center">
           <h3 className="mb-2 text-lg font-medium">학습 데이터가 없습니다</h3>
           <p className="text-sm">
@@ -112,7 +112,7 @@ export function StudentManagement() {
       ac[currentGrade] += 1;
       return ac;
     },
-    { 우수: 0, 보통: 0, 개선필요: 0 }
+    { 우수: 0, 보통: 0, 개선필요: 0 },
   );
 
   return (
@@ -131,7 +131,7 @@ export function StudentManagement() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <User className="w-4 h-4" />총 학습자
+              <User className="h-4 w-4" />총 학습자
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
@@ -145,7 +145,7 @@ export function StudentManagement() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <TrendingUp className="w-4 h-4" />
+              <TrendingUp className="h-4 w-4" />
               평균 정답률
             </CardTitle>
           </CardHeader>
@@ -168,14 +168,14 @@ export function StudentManagement() {
                   <span className="text-sm text-muted-foreground">{grade}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{count}명</span>
-                    <div className="w-12 h-2 rounded-full bg-muted">
+                    <div className="h-2 w-12 rounded-full bg-muted">
                       <div
                         className={`h-2 rounded-full ${
-                          grade === "우수"
-                            ? "bg-green-500"
-                            : grade === "보통"
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
+                          grade === '우수'
+                            ? 'bg-green-500'
+                            : grade === '보통'
+                              ? 'bg-yellow-500'
+                              : 'bg-red-500'
                         }`}
                         style={{
                           width: `${
@@ -200,8 +200,8 @@ export function StudentManagement() {
         </CardHeader>
         <CardContent>
           {charactersLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="w-6 h-6 animate-spin" />
+            <div className="flex h-32 items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin" />
               <span className="ml-2">학생 데이터를 불러오는 중...</span>
             </div>
           ) : charactersData?.characters?.length > 0 ? (
@@ -210,7 +210,7 @@ export function StudentManagement() {
                 <TableRow className="h-9">
                   <TableHead className="py-2 text-sm">학습자 ID</TableHead>
                   <TableHead className="py-2 text-sm">캐릭터</TableHead>
-                  <TableHead className="py-2 text-sm">총 문제수</TableHead>
+                  <TableHead className="py-2 text-sm">총 시도 횟수</TableHead>
                   <TableHead className="py-2 text-sm">학습 시간</TableHead>
                   <TableHead className="py-2 text-sm">정답률</TableHead>
                   <TableHead className="py-2 text-sm">집중도</TableHead>
@@ -228,18 +228,18 @@ export function StudentManagement() {
                   const concentration = getConcentrationLevel(
                     character.totalStudyTimeMinutes
                       ? character.totalConcentrationIssues || 0
-                      : null
+                      : null,
                   );
 
                   return (
                     <TableRow key={character._id}>
                       <TableCell className="py-2">
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center justify-center w-6 h-6 rounded-full">
-                            <p className="text-2xl rounded-full">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full">
+                            <p className="rounded-full text-2xl">
                               {character.icon && !isNaN(character.icon)
                                 ? String.fromCodePoint(character.icon)
-                                : "👤"}
+                                : '👤'}
                             </p>
                           </div>
                           <span className="font-mono text-sm">
@@ -254,7 +254,7 @@ export function StudentManagement() {
                       </TableCell>
                       <TableCell>
                         <span className="text-sm font-medium">
-                          {character.totalQuestionsAttempted || 0}개
+                          {character.totalQuestionsAttempted || 0}회
                         </span>
                       </TableCell>
                       <TableCell>
@@ -264,7 +264,7 @@ export function StudentManagement() {
                         <div className="flex items-center gap-2">
                           <Progress
                             value={character.averageAccuracy || 0}
-                            className="w-16 h-2"
+                            className="h-2 w-16"
                           />
                           <span className="text-sm">
                             {Math.round(character.averageAccuracy || 0)}%
@@ -278,9 +278,9 @@ export function StudentManagement() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={character.use ? "default" : "secondary"}
+                          variant={character.use ? 'default' : 'secondary'}
                         >
-                          {character.use ? "활성" : "비활성"}
+                          {character.use ? '활성' : '비활성'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -290,7 +290,7 @@ export function StudentManagement() {
                             variant="outline"
                             onClick={() => handleStudentSelect(character)}
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="h-4 w-4" />
                           </Button>
                           <Button
                             size="sm"
@@ -300,7 +300,7 @@ export function StudentManagement() {
                               handleIEPOpen();
                             }}
                           >
-                            <FileText className="w-4 h-4" />
+                            <FileText className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -310,7 +310,7 @@ export function StudentManagement() {
               </TableBody>
             </Table>
           ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+            <div className="flex h-64 flex-col items-center justify-center text-gray-500">
               <div className="text-center">
                 <div className="mb-4 text-6xl">👥</div>
                 <h3 className="mb-2 text-lg font-medium">
@@ -327,7 +327,7 @@ export function StudentManagement() {
       </Card>
       {/* 학생 상세 정보 다이얼로그 */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -342,9 +342,9 @@ export function StudentManagement() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsDetailOpen(false)}
-                className="w-8 h-8 p-0"
+                className="h-8 w-8 p-0"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </DialogHeader>
@@ -363,18 +363,18 @@ export function StudentManagement() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <User className="w-5 h-5" />
+                        <User className="h-5 w-5" />
                         기본 정보
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid justify-between grid-cols-2">
+                      <div className="grid grid-cols-2 justify-between">
                         <div className="flex items-center justify-center">
-                          <p className="p-3 mr-2 text-6xl border rounded-full">
+                          <p className="mr-2 rounded-full border p-3 text-6xl">
                             {selectedStudent.icon &&
                             !isNaN(selectedStudent.icon)
                               ? String.fromCodePoint(selectedStudent.icon)
-                              : "👤"}
+                              : '👤'}
                           </p>
                         </div>
                         <div className="flex flex-col justify-between space-y-1">
@@ -387,17 +387,17 @@ export function StudentManagement() {
                           <div className="flex items-center gap-2">
                             <span className="text-sm">메모:</span>
                             <span className="font-medium">
-                              {selectedStudent.memo || "없음"}
+                              {selectedStudent.memo || '없음'}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm">상태:</span>
                             <Badge
                               variant={
-                                selectedStudent.use ? "default" : "secondary"
+                                selectedStudent.use ? 'default' : 'secondary'
                               }
                             >
-                              {selectedStudent.use ? "활성" : "비활성"}
+                              {selectedStudent.use ? '활성' : '비활성'}
                             </Badge>
                           </div>
                         </div>
@@ -409,15 +409,15 @@ export function StudentManagement() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5" />
+                        <TrendingUp className="h-5 w-5" />
                         학습 통계
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-sm">총 문제 수:</span>
+                        <span className="text-sm">총 시도 횟수:</span>
                         <span className="font-medium">
-                          {selectedStudent?.totalQuestionsAttempted || 0}개
+                          {selectedStudent?.totalQuestionsAttempted || 0}회
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -445,8 +445,8 @@ export function StudentManagement() {
 
               <TabsContent value="analytics" className="space-y-4">
                 {analyticsLoading ? (
-                  <div className="flex items-center justify-center h-32">
-                    <Loader2 className="w-6 h-6 animate-spin" />
+                  <div className="flex h-32 items-center justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin" />
                     <span className="ml-2">분석 데이터를 불러오는 중...</span>
                   </div>
                 ) : studentAnalytics &&
@@ -467,8 +467,8 @@ export function StudentManagement() {
                             <Tooltip
                               formatter={(value, name) => {
                                 const nameMap = {
-                                  accuracy: "정답률",
-                                  questionsAttempted: "문제 수",
+                                  accuracy: '정답률',
+                                  questionsAttempted: '문제 수',
                                 };
                                 return [value, nameMap[name] || name];
                               }}
@@ -503,10 +503,10 @@ export function StudentManagement() {
                             data={(() => {
                               // 활동 타입을 고정된 순서로 정의
                               const activityTypes = [
-                                { activityType: "read", label: "읽기" },
-                                { activityType: "listen", label: "듣기" },
-                                { activityType: "speak", label: "말하기" },
-                                { activityType: "write", label: "쓰기" },
+                                { activityType: 'read', label: '읽기' },
+                                { activityType: 'listen', label: '듣기' },
+                                { activityType: 'speak', label: '말하기' },
+                                { activityType: 'write', label: '쓰기' },
                               ];
 
                               // API 데이터에서 각 활동 타입의 정답률을 찾아서 매핑
@@ -514,7 +514,7 @@ export function StudentManagement() {
                                 const apiData =
                                   studentAnalytics.activityBreakdown?.find(
                                     (item) =>
-                                      item.activityType === type.activityType
+                                      item.activityType === type.activityType,
                                   );
                                 return {
                                   activityType: type.label,
@@ -529,7 +529,7 @@ export function StudentManagement() {
                             <Tooltip
                               formatter={(value, name) => {
                                 const nameMap = {
-                                  accuracy: "정답률",
+                                  accuracy: '정답률',
                                 };
                                 return [value, nameMap[name] || name];
                               }}
@@ -545,7 +545,7 @@ export function StudentManagement() {
                     </Card>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                  <div className="flex h-64 flex-col items-center justify-center text-gray-500">
                     <div className="text-center">
                       <div className="mb-4 text-6xl">📊</div>
                       <h3 className="mb-2 text-lg font-medium">
@@ -577,7 +577,7 @@ export function StudentManagement() {
       </Dialog>
       {/* 독립적인 IEP 보고서 다이얼로그 */}
       <Dialog open={isIEPOpen} onOpenChange={setIsIEPOpen}>
-        <DialogContent className="max-w-[1200px] w-[90vw] h-[95vh] flex flex-col p-0">
+        <DialogContent className="flex h-[95vh] w-[90vw] max-w-[1200px] flex-col p-0">
           <DialogHeader className="p-6 pb-0">
             <div className="flex items-center justify-between">
               <div>
@@ -593,9 +593,9 @@ export function StudentManagement() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsIEPOpen(false)}
-                className="w-8 h-8 p-0"
+                className="h-8 w-8 p-0"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </DialogHeader>
