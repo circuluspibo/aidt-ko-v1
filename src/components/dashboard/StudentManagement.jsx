@@ -84,7 +84,7 @@ export function StudentManagement() {
     return { level: '관심필요', color: 'bg-yellow-100 text-yellow-800' };
   };
 
-  // 성취도 분포 계산
+  // 정답률 분포 계산
   const getGradeFromAccuracy = (accuracy) => {
     if (accuracy >= 85) return '우수';
     if (accuracy >= 70) return '보통';
@@ -105,7 +105,7 @@ export function StudentManagement() {
     );
   }
 
-  // 전체 평균 정답률을 기반으로 성취도 분포 계산 - 항상 세 가지 항목 표시
+  // 전체 평균 정답률을 기반으로 정답률 분포 계산 - 항상 세 가지 항목 표시
   const gradeDistribution = charactersData?.characters?.reduce(
     (ac, cu) => {
       const currentGrade = getGradeFromAccuracy(cu.averageAccuracy);
@@ -153,13 +153,13 @@ export function StudentManagement() {
             <div className="text-xl font-bold text-green-600">
               {charactersData?.overallStats?.averageAccuracy?.toFixed(1) || 0}%
             </div>
-            <p className="text-sm text-muted-foreground">전체 성취도</p>
+            <p className="text-sm text-muted-foreground">전체 평균 정답률</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">성취도 분포</CardTitle>
+            <CardTitle className="text-sm">정답률 분포</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="flex flex-col gap-2">

@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
 import {
   Bar,
   XAxis,
@@ -18,7 +18,7 @@ import {
   Radar,
   ScatterChart,
   ZAxis,
-} from "recharts";
+} from 'recharts';
 import {
   Users,
   GraduationCap,
@@ -27,11 +27,11 @@ import {
   Target,
   Brain,
   Loader2,
-} from "lucide-react";
-import { useLearningOverview } from "@/hook/useStudentAnalytics";
-import { useAuth } from "@/context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { getTimeText } from "@/utils/globals";
+} from 'lucide-react';
+import { useLearningOverview } from '@/hook/useStudentAnalytics';
+import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { getTimeText } from '@/utils/globals';
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -45,8 +45,8 @@ export function Dashboard() {
 
   if (isPending) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin" />
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
         <span className="ml-2">학습 데이터를 불러오는 중...</span>
       </div>
     );
@@ -54,7 +54,7 @@ export function Dashboard() {
 
   if (isError) {
     return (
-      <div className="flex items-center justify-center h-64 text-red-500">
+      <div className="flex h-64 items-center justify-center text-red-500">
         <span>학습 데이터를 불러올 수 없습니다.</span>
       </div>
     );
@@ -63,7 +63,7 @@ export function Dashboard() {
   // 실제 데이터가 없는 경우
   if (!overview) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+      <div className="flex h-64 flex-col items-center justify-center text-gray-500">
         <div className="text-center">
           <h3 className="mb-2 text-lg font-medium">학습 데이터가 없습니다</h3>
           <p className="text-sm">
@@ -78,36 +78,36 @@ export function Dashboard() {
   const normMins = overview.stat?.minutes % 60;
   const summaryData = [
     {
-      title: "활동 학생",
+      title: '활동 학생',
       value: overview.stat.student.toString(),
-      subtitle: "전체 학습자",
-      color: "bg-blue-500",
+      subtitle: '전체 학습자',
+      color: 'bg-blue-500',
       icon: GraduationCap,
-      action: () => navigate("/manage/students"),
+      action: () => navigate('/manage/students'),
     },
     {
-      title: "응시 문제",
+      title: '응시 문제',
       value: overview.stat.questions.toString(),
-      subtitle: "누적 학습량",
-      color: "bg-green-500",
+      subtitle: '누적 학습량',
+      color: 'bg-green-500',
       icon: Target,
-      action: () => navigate("/manage/students"),
+      action: () => navigate('/manage/students'),
     },
     {
-      title: "평균 정답률",
+      title: '평균 정답률',
       value: `${overview.stat.averageAccuracy.toFixed(1)}%`,
-      subtitle: "전체 성취도",
-      color: "bg-purple-500",
+      subtitle: '전체 평균 정답률',
+      color: 'bg-purple-500',
       icon: TrendingUp,
-      action: () => navigate("/manage/students"),
+      action: () => navigate('/manage/students'),
     },
     {
-      title: "총 학습 시간",
+      title: '총 학습 시간',
       value: getTimeText(overview.stat.minutes),
-      subtitle: "누적 학습량",
-      color: "bg-orange-500",
+      subtitle: '누적 학습량',
+      color: 'bg-orange-500',
       icon: Clock,
-      action: () => navigate("/manage/students"),
+      action: () => navigate('/manage/students'),
     },
   ];
 
@@ -118,12 +118,12 @@ export function Dashboard() {
   // 최고 활동일
   const peak = act.reduce(
     (p, c) => ((c.questions ?? 0) > (p?.questions ?? 0) ? c : p),
-    null
+    null,
   );
 
   // 연속 활동(최장/현재)
   const sorted = [...act].sort(
-    (a, b) => new Date(a.dateRaw).valueOf() - new Date(b.dateRaw).valueOf()
+    (a, b) => new Date(a.dateRaw).valueOf() - new Date(b.dateRaw).valueOf(),
   );
   let longest = 0,
     current = 0;
@@ -153,11 +153,11 @@ export function Dashboard() {
   const methods = overview.methodsAccuracyData ?? [];
   const bestMethod = methods.reduce(
     (p, c) => ((c.average ?? 0) > (p?.average ?? 0) ? c : p),
-    null
+    null,
   );
   const mostAttemptMethod = methods.reduce(
     (p, c) => ((c.attempted ?? 0) > (p?.attempted ?? 0) ? c : p),
-    null
+    null,
   );
   const LOW_SAMPLE = 20;
   const lowSamples = methods
@@ -189,20 +189,20 @@ export function Dashboard() {
         </div>
         <div className="flex gap-3">
           <Button
-            onClick={() => navigate("/manage/groups")}
+            onClick={() => navigate('/manage/groups')}
             className="gap-2"
             size="lg"
           >
-            <Users className="w-4 h-4" />
+            <Users className="h-4 w-4" />
             그룹 관리 시작
           </Button>
           <Button
-            onClick={() => navigate("/manage/students")}
+            onClick={() => navigate('/manage/students')}
             variant="outline"
             className="gap-2"
             size="lg"
           >
-            <GraduationCap className="w-4 h-4" />
+            <GraduationCap className="h-4 w-4" />
             학습 현황 보기
           </Button>
         </div>
@@ -215,14 +215,14 @@ export function Dashboard() {
           return (
             <Card
               key={index}
-              className="transition-shadow cursor-pointer hover:shadow-md"
+              className="cursor-pointer transition-shadow hover:shadow-md"
               onClick={item.action}
             >
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {item.title}
                 </CardTitle>
-                <Icon className="w-4 h-4 text-muted-foreground" />
+                <Icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="mb-1 text-2xl font-bold">{item.value}</div>
@@ -254,7 +254,7 @@ export function Dashboard() {
                 <Tooltip
                   formatter={(v, n, p) => [
                     `${p.payload.average}%`,
-                    "평균 정답률",
+                    '평균 정답률',
                   ]}
                 />
                 <Radar
@@ -288,7 +288,7 @@ export function Dashboard() {
                 <Tooltip
                   formatter={(v, n, p) => [
                     `${p.payload.average}%`,
-                    "평균 정답률",
+                    '평균 정답률',
                   ]}
                 />
                 <Radar
@@ -337,10 +337,10 @@ export function Dashboard() {
 
                 <Tooltip
                   formatter={(value, name) => {
-                    if (name === "accuracy") return [`${value}%`, "정답률"];
-                    if (name === "questions") return [value, "응시 문제"];
-                    if (name === "activeStudents")
-                      return [value, "활동 학생 수"];
+                    if (name === 'accuracy') return [`${value}%`, '정답률'];
+                    if (name === 'questions') return [value, '응시 문제'];
+                    if (name === 'activeStudents')
+                      return [value, '활동 학생 수'];
                     return [value, name];
                   }}
                 />
@@ -357,7 +357,7 @@ export function Dashboard() {
                     dataKey="activeStudents"
                     name="activeStudents"
                     position="top"
-                    formatter={(v) => (v != null ? `👥 ${v}` : "")}
+                    formatter={(v) => (v != null ? `👥 ${v}` : '')}
                   />
                 </Bar>
 
@@ -396,9 +396,9 @@ export function Dashboard() {
                 {/* 버블 크기 범위 */}
                 <Tooltip
                   formatter={(value, name) => {
-                    if (name === "average") return [`${value}%`, "정답률"];
-                    if (name === "attempted") return [value, "응시 문제"];
-                    if (name === "type") return [value, "난이도"];
+                    if (name === 'average') return [`${value}%`, '정답률'];
+                    if (name === 'attempted') return [value, '응시 문제'];
+                    if (name === 'type') return [value, '난이도'];
                     return [value, name];
                   }}
                 />
@@ -417,7 +417,7 @@ export function Dashboard() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Brain className="w-5 h-5" />
+            <Brain className="h-5 w-5" />
             주요 학습 통계 요약
           </CardTitle>
         </CardHeader>
@@ -428,7 +428,7 @@ export function Dashboard() {
               <h4 className="text-sm font-medium text-muted-foreground">
                 핵심 인사이트
               </h4>
-              <div className="px-2 space-y-2">
+              <div className="space-y-2 px-2">
                 <div className="flex justify-between">
                   <span className="text-sm">활동일</span>
                   <span className="font-medium">{activeDays}일 / 최근 7일</span>
@@ -436,7 +436,7 @@ export function Dashboard() {
                 <div className="flex justify-between">
                   <span className="text-sm">최고 활동일</span>
                   <span className="font-medium">
-                    {peak ? `${peak.dateLabel} · ${peak.questions}문제` : "-"}
+                    {peak ? `${peak.dateLabel} · ${peak.questions}문제` : '-'}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -463,13 +463,13 @@ export function Dashboard() {
               <h4 className="text-sm font-medium text-muted-foreground">
                 학습 방식 인사이트
               </h4>
-              <div className="px-2 space-y-2">
+              <div className="space-y-2 px-2">
                 <div className="flex justify-between">
                   <span className="text-sm">최고 정답률</span>
                   <span className="font-medium">
                     {bestMethod
                       ? `${bestMethod.type} ${bestMethod.average}% (${bestMethod.attempted}문제)`
-                      : "-"}
+                      : '-'}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -477,7 +477,7 @@ export function Dashboard() {
                   <span className="font-medium">
                     {mostAttemptMethod
                       ? `${mostAttemptMethod.type} ${mostAttemptMethod.attempted}문제`
-                      : "-"}
+                      : '-'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -488,14 +488,14 @@ export function Dashboard() {
                         {lowSamples.map((s) => (
                           <span
                             key={s}
-                            className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700"
+                            className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700"
                           >
                             {s}
                           </span>
                         ))}
                       </span>
                     ) : (
-                      "없음"
+                      '없음'
                     )}
                   </span>
                 </div>
@@ -507,11 +507,11 @@ export function Dashboard() {
               <h4 className="text-sm font-medium text-muted-foreground">
                 콘텐츠 인사이트
               </h4>
-              <div className="px-2 space-y-2">
+              <div className="space-y-2 px-2">
                 <div className="flex justify-between">
                   <span className="text-sm">미진입 영역</span>
                   <span className="font-medium">
-                    {notEntered.length > 0 ? notEntered.join(", ") : "없음"}
+                    {notEntered.length > 0 ? notEntered.join(', ') : '없음'}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -519,12 +519,12 @@ export function Dashboard() {
                   <span className="font-medium">
                     {bestContent
                       ? `${bestContent.type} ${bestContent.average}% (${bestContent.attempted}문제)`
-                      : "-"}
+                      : '-'}
                   </span>
                 </div>
                 <div className="space-y-1">
                   <div className="text-sm text-muted-foreground">학습 분포</div>
-                  <div className="px-1 space-y-1">
+                  <div className="space-y-1 px-1">
                     {contentWithRatio.map((c) => (
                       <div
                         key={c.type}
