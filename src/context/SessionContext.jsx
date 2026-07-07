@@ -8,20 +8,20 @@ import React, {
   useState,
   useRef,
   useMemo,
-} from "react";
-import { useParams, useNavigate } from "react-router";
-import { toast } from "sonner";
-import { Toast } from "@/components/Toast";
-import { METHODS, TARGETS } from "@/utils/globals";
-import useContentQuery from "@/hook/useContentQuery";
-import useCurriculumQuery from "@/hook/useCurriculumQuery";
+} from 'react';
+import { useParams, useNavigate } from 'react-router';
+import { toast } from 'sonner';
+import { Toast } from '@/components/Toast';
+import { METHODS, TARGETS } from '@/utils/globals';
+import useContentQuery from '@/hook/useContentQuery';
+import useCurriculumQuery from '@/hook/useCurriculumQuery';
 import {
   getActiveSession,
   patchProgress,
   postAttempt,
   startSession,
-} from "@/api/session";
-import useCurriculumListQuery from "@/hook/useCurriculumListQuery";
+} from '@/api/session';
+import useCurriculumListQuery from '@/hook/useCurriculumListQuery';
 // 1. 컨텍스트 생성
 const LearningSessionContext = createContext(null);
 
@@ -43,6 +43,14 @@ export const SessionProvider = ({ children }) => {
   const { curriculumData, isCurriculumLoading, isCurriculumError } =
     useCurriculumQuery(character); // Curriculum API 호출
   const { listData } = useCurriculumListQuery(character);
+
+  // 삭제된 챕터 진입 가드:
+  // 커리큘럼 목록이 로드되기 전(listData undefined)에는 허용(true)으로 두어 오탐 리다이렉트를 막고,
+  // 로드 후 현재 chapter 가 목록에 없으면(삭제됨) 세션을 시작하지 않고 Target 으로 돌려보낸다.
+  const chapterExists =
+    !chapter || !listData
+      ? true
+      : listData.some((it) => it.chapterId === chapter);
   const [repeatSettings, setRepeatSettings] = useState({
     correct: data?.repeat || 1,
     incorrect: Math.round(data?.repeat * 1.5) || 2,
@@ -53,7 +61,7 @@ export const SessionProvider = ({ children }) => {
   const [currentLearningCount, setCurrentLearningCount] = useState(1); // 현재 콘텐츠를 학습한 총 횟수 (정답/오답 모두 포함)
   const [timer, setTimer] = useState(0);
   const [sessionId, setSessionId] = useState(null);
-  const [tutorMessage, setTutorMessage] = useState("학습을 시작해 주세요.");
+  const [tutorMessage, setTutorMessage] = useState('학습을 시작해 주세요.');
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(sessionId ? false : true);
   const [curriculum, setCurriculum] = useState(null);
@@ -67,7 +75,7 @@ export const SessionProvider = ({ children }) => {
     if (isInitializing.current) return; // 이미 실행 중이면 무시
 
     (async () => {
-      if (chapter && method && data && !sessionId) {
+      if (chapter && method && data && !sessionId && chapterExists) {
         isInitializing.current = true; // 실행 시작 표시
 
         try {
@@ -94,7 +102,7 @@ export const SessionProvider = ({ children }) => {
                 height: screen.height,
               },
             };
-            const res = await fetch("https://ipapi.co/json/");
+            const res = await fetch('https://ipapi.co/json/');
             const location = await res.json();
             device.ip = location.ip;
             const { city, region, country } = location;
@@ -118,7 +126,14 @@ export const SessionProvider = ({ children }) => {
         }
       }
     })();
-  }, [chapter, method, data?.target, data?.repeat, sessionId]);
+  }, [chapter, method, data?.target, data?.repeat, sessionId, chapterExists]);
+
+  // 삭제된 챕터로 직접 진입한 경우 Target 화면으로 되돌린다.
+  useEffect(() => {
+    if (character && chapter && listData && !chapterExists) {
+      navigate(`/learn/${character}`, { replace: true });
+    }
+  }, [character, chapter, listData, chapterExists]);
 
   const item = learningDataForTarget?.[currentItemIndex];
 
@@ -128,13 +143,13 @@ export const SessionProvider = ({ children }) => {
 
     let currentListItemIndex = listData.findIndex(
       ({ target: t, method: m, chapterId }) =>
-        chapterId === chapter && t === data.target && m === method
+        chapterId === chapter && t === data.target && m === method,
     );
     let nextListItem = listData[currentListItemIndex + 1];
     while (
       nextListItem &&
       nextListItem.session &&
-      nextListItem.session.status === "ended"
+      nextListItem.session.status === 'ended'
     ) {
       currentListItemIndex += 1;
       nextListItem = listData[currentListItemIndex + 1];
@@ -142,7 +157,7 @@ export const SessionProvider = ({ children }) => {
     let next = `/learn/${character}`;
     let title = `축하합니다!`;
     let description = [
-      `${TARGETS[data?.target || "unknown"]} ${
+      `${TARGETS[data?.target || 'unknown']} ${
         METHODS[method]
       } 학습을 완료했습니다!`,
     ];
@@ -151,10 +166,10 @@ export const SessionProvider = ({ children }) => {
       description.push(
         `다음으로 ${TARGETS[nextListItem.target]} ${
           METHODS[nextListItem.method]
-        } 학습을 시작합니다.`
+        } 학습을 시작합니다.`,
       );
     } else {
-      title = "축하합니다🎉🎉🎉";
+      title = '축하합니다🎉🎉🎉';
       description.push(`모든 학습을 완료했습니다!`);
     }
     return { title, description, next };
@@ -165,7 +180,7 @@ export const SessionProvider = ({ children }) => {
     if (!curriculumData) return null;
 
     const chapterData = curriculumData.find(
-      (item) => item.chapterId === targetChapter
+      (item) => item.chapterId === targetChapter,
     );
     return chapterData?.methods || null;
   };
@@ -191,7 +206,7 @@ export const SessionProvider = ({ children }) => {
 
   const playFeedbackSound = (isCorrect) => {
     const sound = document.getElementById(
-      isCorrect ? "correct-audio" : "wrong-audio"
+      isCorrect ? 'correct-audio' : 'wrong-audio',
     );
     if (sound) {
       sound.currentTime = 0;
@@ -210,13 +225,13 @@ export const SessionProvider = ({ children }) => {
     }
 
     const { title, description, next } = nextStep;
-    const sound = document.getElementById("complete-audio");
+    const sound = document.getElementById('complete-audio');
     sound.currentTime = 0;
     sound.play();
     toast.custom(
       () => <Toast title={title} description={description} type="info" />,
       {
-        position: "top-center",
+        position: 'top-center',
         duration: 5000,
         onAutoClose: () => {
           clearInterval(timerRef.current);
@@ -224,12 +239,12 @@ export const SessionProvider = ({ children }) => {
           // setCurrentQuestion(1);
           // setCurrentLearningCount(1);
           setTimer(0);
-          setTutorMessage("학습을 시작해 주세요.");
+          setTutorMessage('학습을 시작해 주세요.');
           setProgress(0);
           navigate(next);
           setLoading(false);
         },
-      }
+      },
     );
   };
 
@@ -255,7 +270,7 @@ export const SessionProvider = ({ children }) => {
     };
     const { session } = await postAttempt(payload);
     const onAutoClose = () => {
-      if (session.status === "ended") {
+      if (session.status === 'ended') {
         handleNextStep();
       } else {
         setCurrentItemIndex(session.currentItemIndex);
@@ -271,10 +286,10 @@ export const SessionProvider = ({ children }) => {
           <Toast title="정답입니다!" description="잘했어요." type="success" />
         ),
         {
-          position: "top-center",
+          position: 'top-center',
           duration: 1500,
           onAutoClose,
-        }
+        },
       );
     } else {
       toast.custom(
@@ -286,10 +301,10 @@ export const SessionProvider = ({ children }) => {
           />
         ),
         {
-          position: "top-center",
+          position: 'top-center',
           duration: 1500,
           onAutoClose,
-        }
+        },
       );
     }
   };
@@ -305,7 +320,7 @@ export const SessionProvider = ({ children }) => {
       setCurrentQuestion(session.currentQuestionNo);
       setCurrentLearningCount(session.currentLearningCount);
     },
-    [sessionId]
+    [sessionId],
   );
 
   useEffect(() => {
@@ -330,7 +345,7 @@ export const SessionProvider = ({ children }) => {
     setProgress(
       total
         ? Number(Math.round(((currentItemIndex + 1) / total) * 100).toFixed(0))
-        : 0
+        : 0,
     );
   }, [currentItemIndex, total]);
 
@@ -401,7 +416,7 @@ export const SessionProvider = ({ children }) => {
       progress,
       loading,
       item,
-    ]
+    ],
   );
   return (
     <LearningSessionContext.Provider value={value}>
@@ -414,7 +429,7 @@ export const SessionProvider = ({ children }) => {
 export const useSessionContext = () => {
   const ctx = useContext(LearningSessionContext);
   if (!ctx) {
-    throw new Error("useSessionContext must be used within a SessionProvider");
+    throw new Error('useSessionContext must be used within a SessionProvider');
   }
   return ctx;
 };
