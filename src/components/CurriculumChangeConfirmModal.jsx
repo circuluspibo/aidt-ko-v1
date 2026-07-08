@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, X } from 'lucide-react';
-import { TARGETS } from '@/utils/globals';
+import { METHODS, TARGETS } from '@/utils/globals';
 
 // 커리큘럼 설정 변경/삭제처럼 학생의 진행 정보·학습 기록에 영향을 주는 작업 전
 // 교사에게 경고하는 확인 모달. 문구는 상황별로 props 로 주입한다.
@@ -46,12 +46,21 @@ const CurriculumChangeConfirmModal = ({
                 key={chapter.chapterId}
                 className="flex items-center justify-between gap-2 px-4 py-2 text-sm"
               >
-                <div className="flex min-w-0 items-center gap-2">
+                <div className="flex min-w-0 flex-col gap-0.5">
                   <span className="truncate font-medium">
                     {TARGETS[chapter.target]
                       ? `${TARGETS[chapter.target]} 학습`
                       : '학습 챕터'}
                   </span>
+                  {Array.isArray(chapter.methods) &&
+                    chapter.methods.length > 0 && (
+                      <span className="truncate text-xs text-muted-foreground">
+                        제거되는 활동:{' '}
+                        {chapter.methods
+                          .map((method) => METHODS[method] || method)
+                          .join(', ')}
+                      </span>
+                    )}
                 </div>
                 {typeof chapter.sessionCount === 'number' && (
                   <span className="shrink-0 text-xs text-muted-foreground">
