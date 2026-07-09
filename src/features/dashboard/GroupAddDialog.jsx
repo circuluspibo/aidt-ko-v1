@@ -135,8 +135,7 @@ const GroupAddDialog = ({ open, group, onOpenChange, onAction, onClose }) => {
                       message: '최대 300글자 입력이 가능합니다.',
                     },
                     pattern: {
-                      value:
-                        /^[가-힣a-zA-Z][가-힣a-zA-Z0-9\s.,!?'"“”‘’\-():;·…]*$/g,
+                      value: /^[가-힣a-zA-Z0-9][가-힣a-zA-Z0-9\s()\-·]*$/,
                       message: '입력 양식에 적합하지 않습니다.',
                     },
                   }}
