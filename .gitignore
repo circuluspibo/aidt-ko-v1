@@ -25,3 +25,6 @@ package-lock.json
 *.njsproj
 *.sln
 *.sw?
+
+# 로컬 mkcert 인증서
+certs/
