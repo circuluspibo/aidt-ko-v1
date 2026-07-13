@@ -319,16 +319,42 @@ HTTPS가 필요한 경우는 태블릿이나 다른 PC 같은 실기기를 같�
 
 ### 7-4. 학습 세션 동작 (`SessionContext`)
 
-학습의 상태 머신에 해당하는 부분으로, **서버가 진행 포인터의 source of truth(원본·기준)**입니다.
+학습의 상태 머신에 해당하는 부분으로, **서버가 진행 포인터의 source of truth(원본·기준)**입니다. 프론트는 서버가 알려준 현재 인덱스의 글자를 보여줄 뿐이고, **다음에 무엇을 풀지는 항상 `POST /attempts` 응답이 결정**합니다.
+
+**진행 포인터 (서버가 관리)**
+
+| 필드                                   | 의미                                                       |
+| -------------------------------------- | ---------------------------------------------------------- |
+| `currentItemIndex`                     | 챕터 콘텐츠 배열에서 몇 번째 글자인지 (0부터)              |
+| `currentQuestionNo`                    | 같은 글자를 몇 번째 반복 중인지                            |
+| `currentLearningCount`                 | 누적 학습 횟수                                             |
+| `repeatSettings.correct` / `incorrect` | 정답/오답 시 반복 횟수 (`incorrect = correct × 1.5`, 올림) |
 
 **흐름 설명**
 
-1. `Learn` 진입 시 `useContentQuery(character, chapter, method)`로 콘텐츠를 불러온다. (`data.contents` 배열, `data.repeat` 반복 횟수, `data.target`)
+1. `Learn` 진입 시 `useContentQuery(character, chapter, method)`로 콘텐츠를 불러온다. 서버(`GET /content`, `getContentsData.js`)는 `characterId`·`chapterId`·`method`로 `CharacterChapterConfig`를 조회하고, `Chapter`와 그동안의 `Attempt`를 비교해 각 글자에 **이미 맞췄는지(`complete`)** 플래그를 붙인 `contents` 배열을 돌려준다. (`data.contents`, `data.repeat`, `data.target`)
 2. 세션 초기화: `getActiveSession()`으로 진행 중 세션을 찾고, 있으면 인덱스/반복 횟수를 복원, 없으면 `startSession()`으로 새로 시작한다. 이때 `device` 정보(브라우저·화면)와 `ipapi.co`로 조회한 IP/지역을 함께 전송한다.
-3. 각 콘텐츠는 `repeatSettings.correct`회 반복 학습하며, 오답 시 `incorrect`(= `correct × 1.5`, 올림)가 적용된다.
-4. 학생이 답하면 `onAnswer(attempt)` → `postAttempt()`로 답안과 집중도 데이터를 서버에 보낸다. **서버 응답의 `session`이 다음 `currentItemIndex`/`currentQuestionNo`/`currentLearningCount`를 결정**한다(클라이언트가 직접 증가시키지 않음).
+3. 지금 보여줄 글자는 프론트가 `contents[currentItemIndex]`로 고른다(`SessionContext.jsx`). 읽기·듣기의 3지선다 보기는 정답 1개 + 나머지 글자 중 무작위 2개를 섞어 **프론트에서 생성**한다(`LearnByRead.jsx`).
+4. 학생이 답하면 `onAnswer(attempt)` → `postAttempt()`로 답안(집중도 데이터 포함)을 서버에 보낸다. **서버 응답의 `session`이 다음 `currentItemIndex`/`currentQuestionNo`/`currentLearningCount`를 결정**한다(클라이언트가 직접 증가시키지 않음).
 5. 정답/오답에 따라 토스트(`sonner`)와 효과음(`/sounds/correct.mp3`·`wrong.mp3`·`completed.mp3`, `LearnLayout`의 `<audio>` 요소)을 재생한다.
 6. 한 학습이 끝나면(`session.status === "ended"`) `getNextStep()`이 `useCurriculumListQuery`의 순서를 보고 다음 커리큘럼 항목으로 자동 이동시킨다. 남은 항목이 없으면 "모든 학습을 완료했습니다" 안내.
+
+**정답 판정 — 프론트가 채점, 서버는 재채점하지 않음**
+
+정답 판정은 각 `LearnBy*` 컴포넌트가 브라우저에서 수행해 `isCorrect`를 만들고 `POST /attempts`로 보냅니다. **서버는 받은 `isCorrect`를 그대로 저장하고 진행에 사용할 뿐, 다시 채점하지 않습니다.** (판정 로직은 7-5 참고)
+
+```
+문제 시작 → 사용자 답안 입력 → 프론트에서 정답 판정 → isCorrect 생성
+→ POST /attempts → 서버는 isCorrect를 그대로 저장하고 세션 진행
+```
+
+**다음 문제 / 챕터 완료 판정 (서버 `updateSession`, `Session.js`)**
+
+- **정답이면** `currentQuestionNo < repeatSettings.correct`인 동안 같은 글자를 반복하고, 도달하면 `currentItemIndex += 1`로 다음 글자로 넘어간다.
+- **오답이면** `repeatSettings.incorrect`만큼 더 반복시킨다.
+- 각 글자의 마지막 attempt에 `lastAttempt` 플래그를 찍어 **"이 글자 최종 완료"**를 표시한다.
+- 챕터 완료는 `Chapter.contents.length === (lastAttempt=true인 글자 수)`일 때 `session.status = 'ended'`로 판정한다(`sessionService.js`). **프론트가 보낸 개수가 아니라 서버 DB 기준**이다.
+- 프론트는 서버가 돌려준 `session`을 그대로 반영한다 — `status === 'ended'`면 `handleNextStep`으로 다음 단계, 아니면 `setCurrentItemIndex(session.currentItemIndex)` 등으로 다음 문제를 표시한다.
 
 > 💡 콘텐츠 리스트 점프, 새로고침/뒤로가기 후 포인터 보정 등 "응답 없는 이동"은 `postAttempt`가 아니라 `saveProgressOnly()`(→ `patchProgress`)로 처리해 Attempt 기록을 남기지 않습니다. 진행 포인터를 클라이언트에서 임의로 바꾸지 말고 항상 서버 응답으로 갱신하는 구조임에 주의하세요.
 
@@ -343,7 +369,35 @@ HTTPS가 필요한 경우는 태블릿이나 다른 PC 같은 실기기를 같�
 | 말하기 `speak` | `LearnBySpeak`  | **Web Speech API**(`window.SpeechRecognition`, `ko-KR`)로 발음을 인식해 정답과 비교. 예시 발음은 `getAsset({type:"sound"})` TTS 재생. **HTTPS(secure context) 필수.**                                                                    |
 | 쓰기 `write`   | `LearnByWrite`  | 캔버스 손글씨를 판별. **자음·모음**(`vowel`/`consonant`)은 로컬 **Teachable Machine 모델**(`/tm-vowel`·`/tm-cons`, TensorFlow.js)로 Top-3 예측, **글자·낱말**(`letter`/`word`)은 **서버 OCR**(`fetchWriteOCR` → `VITE_VAPI_URL`)로 판별. |
 
-> 💡 `write`에서 자모와 글자/낱말의 판별 경로가 다릅니다(`USE_TF_FOR = {vowel, consonant}`). 자모는 클라이언트 모델이라 `/tm-*/model.json`·`metadata.json`이 `public/`에 있어야 하고(없으면 "모델을 불러오지 못했습니다"), 글자/낱말은 서버 OCR이라 `VITE_VAPI_URL`이 비어 있으면 채점이 실패합니다. `speak`/`write`의 정답 판정은 후보 배열에 정답이 포함되는지(`includes`)로 처리됩니다(완전 일치가 아님).
+> 💡 `write`에서 자모와 글자/낱말의 판별 경로가 다릅니다(`USE_TF_FOR = {vowel, consonant}`). 자모는 클라이언트 모델이라 `/tm-*/model.json`·`metadata.json`이 `public/`에 있어야 하고(없으면 "모델을 불러오지 못했습니다"), 글자/낱말은 서버 OCR이라 `VITE_VAPI_URL`이 비어 있으면 채점이 실패합니다.
+
+**전달 값·정답 기준 상세**
+
+모든 컴포넌트가 `onAnswer(userAnswer, correctAnswer)`를 호출하지만, `userAnswer`의 타입과 정답 기준·비교 방식이 방식마다 다릅니다.
+
+| 항목              | 읽기 `read`   | 듣기 `listen` | 쓰기 `write`(자모)     | 쓰기 `write`(글자/낱말) | 말하기 `speak`          |
+| ----------------- | ------------- | ------------- | ---------------------- | ----------------------- | ----------------------- |
+| 인식 주체         | —             | —             | 브라우저 TensorFlow.js | Vision API 서버(OCR)    | 브라우저 Web Speech API |
+| `userAnswer` 타입 | 문자열        | 문자열        | Top-3 후보 **배열**    | OCR **문자열**          | 음성 인식 **문자열**    |
+| 정답 기준         | `item.letter` | `item.letter` | `item.letter`          | `item.letter`           | `item.name`(발음 이름)  |
+| 비교              | `===`         | `===`         | `.includes()`          | `.includes()`           | `.includes()`           |
+| 서버 경유         | ❌            | ❌            | ❌                     | ✅ (인식만)             | ❌                      |
+
+> 💡 `speak`의 정답 기준만 `item.letter`(자모 "ㅏ")가 아니라 `item.name`(발음 이름 "아")입니다. 음성 인식은 자모가 아니라 소리 나는 이름을 반환하기 때문입니다.
+>
+> 💡 `write`(자모)·`write`(OCR)·`speak`는 모두 `.includes()`로 판정하지만 `userAnswer` 타입이 달라 동작이 다릅니다. **자모는 배열**이라 `배열.includes(정답)` = Top-3 예측 중 하나만 정확히 일치하면 정답(부분 일치 아님)이고, **OCR·음성은 문자열**이라 `문자열.includes(정답)` = 부분 문자열 일치(예: `"아야".includes("아")` → true)입니다.
+
+**쓰기(`write`) 손글씨 처리 상세** (`LearnByWrite.jsx`)
+
+- 캔버스 드로잉 UI는 공통이며 배경은 투명하게 유지합니다(밑에 글자 힌트를 깔기 위해). "제출" 순간 학습 대상에 따라 경로가 갈립니다.
+- **자음·모음 → 로컬 TensorFlow**: 모델에 넣기 전 전처리가 정확도의 핵심입니다 — 투명 배경을 흰색으로 합성 → 밝기 기준 이진화(글자=검정) → 바운딩박스로 여백 제거 → 정사각형 패딩 후 224×224 리사이즈. (Teachable Machine 모델이 224×224 흰 바탕으로 학습됐기 때문) 이후 `softmax` 상위 3개 라벨을 `onAnswer`에 배열로 넘깁니다.
+- **글자·낱말 → 서버 OCR**: 전처리 없이 캔버스를 흰 바탕 PNG로 만들어 `fetchWriteOCR`(FormData)로 Vision OCR 서버(`VITE_VAPI_URL`)에 보내고, 인식된 문자열을 받습니다. (Vision API 서버는 백엔드 레포에 없는 별도 서비스입니다.)
+
+**말하기(`speak`) 음성 인식 상세** (`LearnBySpeak.jsx`)
+
+- `window.SpeechRecognition`/`webkitSpeechRecognition`를 `ko-KR`·`interimResults`·`continuous`로 사용해 제출/정지 전까지 계속 청취합니다.
+- Chrome이 인식을 임의로 끊으면 `onend`에서 자동 재시작(`rec.start()`)해 "계속 듣기"를 유지합니다.
+- "소리 듣기"는 `getAsset`으로 받은 발음 예시 MP3를 반복 재생하는 학습 보조 기능으로 채점과 무관합니다.
 
 ### 7-6. 집중도 모니터링
 
@@ -358,10 +412,12 @@ HTTPS가 필요한 경우는 태블릿이나 다른 PC 같은 실기기를 같�
 
 **흐름 설명**
 
-1. `Learn.jsx`가 숨겨진 `<video ref={videoRef}>`를 두고 `useIntegratedConcentrationMonitor(sessionId, studentId, method)`를 초기화한다.
-2. 문제가 바뀔 때 `startQuestion()`, 답을 낼 때 `submitAnswer()`가 호출되어 응답 시간·정답 여부·시선/얼굴 감지 결과를 모은다.
-3. 너무 빠른/느린 응답, 연속 오답, 비활성 시간, 시선 이탈, 얼굴 미감지 등을 점수화해 `concentrationLevel`(`high`/`medium`/`low`)과 `sessionQuality`(0~100)를 만든다.
-4. 산출된 집중도(`concentration`)는 `handleAnswer`에서 attempt에 포함되어 `postAttempt`로 백엔드에 전송된다.
+1. `Learn.jsx`가 학습 화면(숨겨진 `<video ref={videoRef}>` 포함)을 먼저 노출한 뒤 `useIntegratedConcentrationMonitor(sessionId, studentId, method)`를 초기화합니다. 카메라가 붙으려면 `<video>` 요소가 먼저 존재해야 하므로 순서가 중요합니다.
+2. 문제가 바뀔 때 `startQuestion()`, 답을 낼 때 `submitAnswer()`가 호출되어 응답 시간·정답 여부·시선/얼굴 감지 결과를 수집합니다. 풀이 시간 측정은 카메라와 무관하게 문제(item)가 로드되면 시작됩니다.
+3. 너무 빠른/느린 응답, 연속 오답, 비활성 시간, 시선 이탈, 얼굴 미감지 등을 점수화해 `concentrationLevel`(`high`/`medium`/`low`)과 `sessionQuality`(0~100)를 계산합니다.
+4. 산출된 집중도(`concentration`)는 `handleAnswer`에서 attempt에 포함되어 `postAttempt`로 백엔드로 전송됩니다.
+
+> 💡 권한이 거부되거나 카메라가 없어도 `getUserMedia` 실패를 `catch`해 학습은 정상 진행되며, 이 경우 얼굴 미감지 페널티만 적용됩니다. 카메라·음성 모니터링은 어디까지나 보조 지표이고, Learn 화면 자체는 카메라 없이도 동작합니다.
 
 > 💡 `Learn.jsx`의 `studentId`는 `"student_1"`로 하드코딩되어 있으나, 현재 서버 전송·저장 데이터 어디에도 포함되지 않아 실제 동작에는 영향이 없습니다(집중도 모니터링 훅 내부까지만 전달되고 쓰이지 않음). 향후 집중도를 학생별로 저장·구분하는 기능을 추가할 때 실제 사용자 ID로 교체가 필요합니다. (12장 참고)
 
