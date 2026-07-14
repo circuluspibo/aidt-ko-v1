@@ -349,7 +349,7 @@ export function StudentManagement() {
             </div>
           </DialogHeader>
 
-          {selectedStudent && studentAnalytics && (
+          {selectedStudent && (
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="overview">개요</TabsTrigger>

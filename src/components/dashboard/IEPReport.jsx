@@ -29,11 +29,12 @@ export function IEPReport({
     endDate: new Date().toISOString().split('T')[0],
   });
 
+  // report=1: IEP 보고서 화면에서만 AI 보고서(reportDirection) 생성을 요청한다.
   const {
     data: analyticsData,
     isPending,
     isError,
-  } = useStudentAnalytics(characterId, dateRange);
+  } = useStudentAnalytics(characterId, { ...dateRange, report: 1 });
 
   const currentDate = new Date().toLocaleDateString('ko-KR');
   const reportPeriod = `${dateRange.startDate} ~ ${dateRange.endDate}`;
