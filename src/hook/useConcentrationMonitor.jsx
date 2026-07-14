@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // 시간 기반 + 카메라 기반 집중도 감지
-import { useState, useEffect, useRef } from "react";
-import { FACE_BASE, getCameraCtor, getFaceMeshCtor } from "@/utils/mediapipe";
+import { useState, useEffect, useRef } from 'react';
+import { FACE_BASE, getCameraCtor, getFaceMeshCtor } from '@/utils/mediapipe';
 
 // 비활성 기록 발생 기준(실측): 현재는 2분. 주석/코멘트와 일치 필요.
 export const FAST_ANSWER_SECONDS = 2; // 2초 미만 = 너무 빠름
@@ -35,7 +35,7 @@ export function computeRecentResponseStats(
   times = [],
   windowSize,
   fastSec,
-  slowSec
+  slowSec,
 ) {
   const recent = times.slice(-windowSize);
   const fast = recent.filter((t) => t < fastSec).length;
@@ -73,6 +73,7 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
   // 카메라 관련 refs (videoRef는 외부에서 받음)
   const cameraRef = useRef(null);
   const faceMeshRef = useRef(null);
+  const initializingRef = useRef(false); // 카메라 초기화 중복 실행 방지
   const focusLogRef = useRef([]);
   const noFaceFrameCount = useRef(0);
   const LOW = 60; // 낮음 트리거 임계 (%)
@@ -82,7 +83,7 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
 
   const belowStreakRef = useRef(0);
   const aboveStreakRef = useRef(0);
-  const alertRef = useRef("normal"); // "normal" | "low"
+  const alertRef = useRef('normal'); // "normal" | "low"
   const lastFlipAtRef = useRef(0);
 
   // 비활성 시간 감지
@@ -136,11 +137,11 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
         : prev.consecutiveWrongAnswers + 1;
       let newMaxConsecutiveWrong = Math.max(
         prev.maxConsecutiveWrong,
-        newConsecutiveWrong
+        newConsecutiveWrong,
       );
 
       if (!isCorrect && newConsecutiveWrong > 3) {
-        console.log("❌ 연속 오답:", newConsecutiveWrong + "회");
+        console.log('❌ 연속 오답:', newConsecutiveWrong + '회');
       }
 
       return {
@@ -263,22 +264,48 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
     }
   };
 
+  // 카메라 완전 종료 - MediaPipe 루프 정지 + 실제 스트림 트랙(LED) 종료
+  const stopCamera = () => {
+    // 1) MediaPipe Camera 프레임 루프 정지
+    try {
+      cameraRef.current?.stop?.();
+    } catch (e) {
+      console.warn('카메라 정지 중 오류:', e);
+    }
+    cameraRef.current = null;
+
+    // 2) video.srcObject에 물려있는 실제 getUserMedia 트랙 종료 (카메라 LED off)
+    //    MediaPipe camera.stop()은 프레임 루프만 멈추고 트랙을 항상 끄지는 않으므로 직접 종료한다.
+    const video = videoRef?.current;
+    const stream = video?.srcObject;
+    if (stream && typeof stream.getTracks === 'function') {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+    if (video) video.srcObject = null;
+
+    // 3) FaceMesh 리소스 정리
+    try {
+      faceMeshRef.current?.close?.();
+    } catch (e) {
+      console.warn('FaceMesh 정리 중 오류:', e);
+    }
+    faceMeshRef.current = null;
+  };
+
   // 카메라 초기화
   const initializeCamera = async () => {
     if (!videoRef?.current) {
-      console.error("❌ videoRef가 없습니다");
+      console.error('❌ videoRef가 없습니다');
       return;
     }
 
+    // 이미 초기화 중이거나 실행 중이면 중복 실행 방지 (orphan 스트림 생성 차단)
+    if (initializingRef.current || cameraRef.current) return;
+    initializingRef.current = true;
+
     try {
-      // 기존 카메라 정리
-      if (cameraRef.current) {
-        cameraRef.current.stop();
-        cameraRef.current = null;
-      }
-      if (faceMeshRef.current) {
-        faceMeshRef.current = null;
-      }
+      // 기존 카메라/스트림 완전 정리
+      stopCamera();
 
       // FaceMesh 초기화
       const FaceMeshCtor = await getFaceMeshCtor();
@@ -295,7 +322,7 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
 
       faceMesh.onResults(onFaceMeshResults);
       faceMeshRef.current = faceMesh;
-      console.log("✅ FaceMesh 초기화 완료");
+      console.log('✅ FaceMesh 초기화 완료');
 
       // 카메라 초기화
       const CameraCtor = await getCameraCtor();
@@ -308,16 +335,18 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
       });
       await camera.start();
       cameraRef.current = camera;
-      console.log("✅ 카메라 시작 완료");
+      console.log('✅ 카메라 시작 완료');
 
       // 카메라 권한 확인
       if (videoRef.current && videoRef.current.readyState >= 2) {
-        console.log("✅ 비디오 스트림 활성화됨");
+        console.log('✅ 비디오 스트림 활성화됨');
       } else {
-        console.log("❌ 비디오 스트림이 활성화되지 않음");
+        console.log('❌ 비디오 스트림이 활성화되지 않음');
       }
     } catch (error) {
-      console.error("❌ 카메라 초기화 실패:", error);
+      console.error('❌ 카메라 초기화 실패:', error);
+    } finally {
+      initializingRef.current = false;
     }
   };
 
@@ -337,7 +366,7 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
       concentrationData.questionSolvingTimes || [],
       RECENT_RESP_WINDOW,
       FAST_ANSWER_SECONDS,
-      SLOW_ANSWER_SECONDS
+      SLOW_ANSWER_SECONDS,
     );
 
     // 초과분만 페널티 (허용치 FAST_RECENT_TOLERANCE 초과한 개수 × 가중치)
@@ -362,7 +391,7 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
       const focusRate = recent.filter(Boolean).length / FOCUS_WINDOW_FRAMES;
       if (focusRate < FOCUS_LOW_THRESHOLD) {
         issues += Math.floor(
-          (FOCUS_LOW_THRESHOLD - focusRate) * FOCUS_PENALTY_MULTIPLIER
+          (FOCUS_LOW_THRESHOLD - focusRate) * FOCUS_PENALTY_MULTIPLIER,
         );
       }
     }
@@ -400,20 +429,20 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
       let flipped = false;
 
       if (
-        alertRef.current === "normal" &&
+        alertRef.current === 'normal' &&
         belowStreakRef.current >= CONSEC &&
         canFlip
       ) {
-        alertRef.current = "low";
+        alertRef.current = 'low';
         lastFlipAtRef.current = now;
         issues = issues + 1; // 정책에 맞게 조정
         flipped = true;
       } else if (
-        alertRef.current === "low" &&
+        alertRef.current === 'low' &&
         aboveStreakRef.current >= CONSEC &&
         canFlip
       ) {
-        alertRef.current = "normal";
+        alertRef.current = 'normal';
         lastFlipAtRef.current = now;
         issues = Math.max(0, issues - 0.3);
         flipped = true;
@@ -440,12 +469,12 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
 
     // 사용자 활동 이벤트 리스너 (태블릿 환경 고려)
     const events = [
-      "mousemove",
-      "click",
-      "keydown",
-      "scroll",
-      "touchstart",
-      "touchmove",
+      'mousemove',
+      'click',
+      'keydown',
+      'scroll',
+      'touchstart',
+      'touchmove',
     ];
     events.forEach((event) => {
       document.addEventListener(event, updateActivity);
@@ -454,15 +483,15 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
     // 카메라 권한 요청 및 초기화
     const requestCameraPermission = async () => {
       try {
-        console.log("📹 카메라 권한 요청 중...");
+        console.log('📹 카메라 권한 요청 중...');
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             width: 640,
             height: 480,
-            facingMode: "user", // 전면 카메라 사용
+            facingMode: 'user', // 전면 카메라 사용
           },
         });
-        console.log("✅ 카메라 권한 획득");
+        console.log('✅ 카메라 권한 획득');
         stream.getTracks().forEach((track) => track.stop()); // 임시 스트림 정리
 
         // 권한 획득 후 카메라 초기화
@@ -470,7 +499,7 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
           initializeCamera();
         }, 500);
       } catch (error) {
-        console.error("❌ 카메라 권한 거부:", error);
+        console.error('❌ 카메라 권한 거부:', error);
         // console.log("💡 브라우저 설정에서 카메라 권한을 허용해주세요");
       }
     };
@@ -491,10 +520,8 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
         document.removeEventListener(event, updateActivity);
       });
 
-      // 카메라 정리
-      if (cameraRef.current) {
-        cameraRef.current.stop();
-      }
+      // 카메라 완전 종료 (프레임 루프 + 실제 스트림 트랙 + FaceMesh)
+      stopCamera();
     };
   }, []);
 
