@@ -1,16 +1,16 @@
-import React, { useRef, useState, useEffect } from "react";
-import * as tf from "@tensorflow/tfjs";
-import { toast } from "sonner";
-import { Button } from "./ui/button";
-import { useMutation } from "@tanstack/react-query";
-import { Loader2Icon } from "lucide-react";
-import { JOSA } from "@/utils/globals";
-import { fetchWriteOCR } from "@/api/learning";
-import { Toast } from "./Toast";
-import { getAsset } from "@/api";
+import React, { useRef, useState, useEffect } from 'react';
+import * as tf from '@tensorflow/tfjs';
+import { toast } from 'sonner';
+import { Button } from './ui/button';
+import { useMutation } from '@tanstack/react-query';
+import { Loader2Icon } from 'lucide-react';
+import { JOSA } from '@/utils/globals';
+import { fetchWriteOCR } from '@/api/learning';
+import { Toast } from './Toast';
+import { getAsset } from '@/api';
 
 const TM_INPUT_SIZE = 224;
-const USE_TF_FOR = new Set(["vowel", "consonant"]);
+const USE_TF_FOR = new Set(['vowel', 'consonant']);
 
 const LearnByWrite = ({
   item,
@@ -32,23 +32,26 @@ const LearnByWrite = ({
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const parentRef = useRef(null);
+  // 제출 중복 방지: state는 비동기라 동기 연타를 막지 못하므로 ref로 즉시 잠금
+  const submittingRef = useRef(false);
 
   // ===== 서버 OCR (word/letter 등) =====
   const { mutate: checkAnswer, isPending } = useMutation({
     mutationFn: async (blob) => {
       const formData = new FormData();
-      formData.append("uploadFile", blob, "test.png");
+      formData.append('uploadFile', blob, 'test.png');
       try {
-        const data = await fetchWriteOCR(target === "word", formData);
+        const data = await fetchWriteOCR(target === 'word', formData);
         if (data) return [data.text, item.letter];
       } catch (error) {
-        console.error("채점 요청 오류:", error);
+        console.error('채점 요청 오류:', error);
       }
       return false;
     },
     onSuccess: ([userAnswer, correctAnswer]) =>
       onAnswer(userAnswer, correctAnswer),
     onError: () => {
+      submittingRef.current = false;
       toast.custom(() => (
         <Toast
           description="채점 중 오류가 발생했습니다. 다시 시도해 주세요."
@@ -108,11 +111,11 @@ const LearnByWrite = ({
       sh = src.height;
 
     // 1) 투명 배경을 흰색으로 플래튼
-    const flat = document.createElement("canvas");
+    const flat = document.createElement('canvas');
     flat.width = sw;
     flat.height = sh;
-    const fctx = flat.getContext("2d");
-    fctx.fillStyle = "#ffffff";
+    const fctx = flat.getContext('2d');
+    fctx.fillStyle = '#ffffff';
     fctx.fillRect(0, 0, sw, sh);
     fctx.drawImage(src, 0, 0); // 투명 위에 그리기 → 흰색 합성
 
@@ -151,24 +154,24 @@ const LearnByWrite = ({
     const pad = 32;
     const side = Math.max(cw, ch) + pad * 2;
 
-    const box = document.createElement("canvas");
+    const box = document.createElement('canvas');
     box.width = side;
     box.height = side;
-    const bctx = box.getContext("2d");
-    bctx.fillStyle = "#ffffff";
+    const bctx = box.getContext('2d');
+    bctx.fillStyle = '#ffffff';
     bctx.fillRect(0, 0, side, side);
 
     const crop = fctx.getImageData(found ? minX : 0, found ? minY : 0, cw, ch);
-    const tmp = document.createElement("canvas");
+    const tmp = document.createElement('canvas');
     tmp.width = cw;
     tmp.height = ch;
-    tmp.getContext("2d").putImageData(crop, 0, 0);
+    tmp.getContext('2d').putImageData(crop, 0, 0);
     bctx.drawImage(tmp, (side - cw) / 2, (side - ch) / 2);
 
-    const out = document.createElement("canvas");
+    const out = document.createElement('canvas');
     out.width = TM_INPUT_SIZE;
     out.height = TM_INPUT_SIZE;
-    out.getContext("2d").drawImage(box, 0, 0, TM_INPUT_SIZE, TM_INPUT_SIZE);
+    out.getContext('2d').drawImage(box, 0, 0, TM_INPUT_SIZE, TM_INPUT_SIZE);
     return out; // 흰 배경으로 정규화된 입력
   };
 
@@ -182,8 +185,8 @@ const LearnByWrite = ({
       }
       try {
         await tf.ready();
-        await tf.setBackend("webgl");
-        const base = target === "vowel" ? "/tm-vowel" : "/tm-cons";
+        await tf.setBackend('webgl');
+        const base = target === 'vowel' ? '/tm-vowel' : '/tm-cons';
         const m = await tf.loadLayersModel(`${base}/model.json`);
         const meta = await fetch(`${base}/metadata.json`).then((r) => r.json());
         if (!mounted) return;
@@ -191,7 +194,7 @@ const LearnByWrite = ({
         setTmLabels(meta.labels || []);
         setTmReady(true);
       } catch (e) {
-        console.error("TM 모델 로드 실패:", e);
+        console.error('TM 모델 로드 실패:', e);
         setTmReady(false);
         toast.custom(() => (
           <Toast
@@ -208,6 +211,9 @@ const LearnByWrite = ({
 
   // ===== 제출: 자모 → TM 로컬, 그 외 → 서버 OCR =====
   const handleSubmit = async () => {
+    // 이미 제출 처리 중이면 무시 (연타 방지). 잠금은 문제가 바뀔 때(리셋 effect) 해제
+    if (submittingRef.current) return;
+
     if (USE_TF_FOR.has(target)) {
       if (!tmReady || !tmModel || tmLabels.length === 0) {
         toast.custom(() => (
@@ -218,6 +224,7 @@ const LearnByWrite = ({
         ));
         return;
       }
+      submittingRef.current = true;
       try {
         setIsPredicting(true);
         const proc = getProcessedCanvas(); // 흰 배경 합성된 캔버스
@@ -240,10 +247,11 @@ const LearnByWrite = ({
           .map(({ i }) => tmLabels[i] ?? `class_${i}`);
 
         // (디버그) 콘솔에서 Top-K 확인
-        console.log("Write Answer:", top, top.includes(item.letter));
+        console.log('Write Answer:', top, top.includes(item.letter));
         onAnswer(top, item.letter);
       } catch (e) {
-        console.error("로컬 자모 예측 실패:", e);
+        console.error('로컬 자모 예측 실패:', e);
+        submittingRef.current = false;
         toast.custom(() => (
           <Toast
             description="인식 중 오류가 발생했습니다. 다시 시도해 주세요."
@@ -257,16 +265,17 @@ const LearnByWrite = ({
     }
 
     // 서버 OCR: 전송 직전에만 흰 배경으로 합성
-    const temp = document.createElement("canvas");
+    submittingRef.current = true;
+    const temp = document.createElement('canvas');
     temp.width = canvasRef.current.width;
     temp.height = canvasRef.current.height;
-    const tctx = temp.getContext("2d");
-    tctx.fillStyle = "#ffffff";
+    const tctx = temp.getContext('2d');
+    tctx.fillStyle = '#ffffff';
     tctx.fillRect(0, 0, temp.width, temp.height);
     tctx.drawImage(canvasRef.current, 0, 0);
 
     const blob = await new Promise((resolve) => {
-      temp.toBlob((b) => resolve(b), "image/png");
+      temp.toBlob((b) => resolve(b), 'image/png');
     });
     checkAnswer(blob);
   };
@@ -277,6 +286,8 @@ const LearnByWrite = ({
       clearCanvas(false);
       setHint(true);
     }
+    // 문제/반복 인덱스가 실제로 바뀌면 제출 잠금 해제
+    submittingRef.current = false;
   }, [currentItemIndex, target, currentRepeat, currentLearningCount]);
 
   // ===== 캔버스 준비 (투명) =====
@@ -284,10 +295,10 @@ const LearnByWrite = ({
     const canvas = canvasRef.current;
     canvas.width = parentRef?.current?.clientWidth;
     canvas.height = parentRef?.current?.clientHeight;
-    const ctx = canvas.getContext("2d");
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = "#000";
+    const ctx = canvas.getContext('2d');
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#000';
     ctx.lineWidth = 25;
     ctxRef.current = ctx;
     clearCanvas(false);
@@ -298,39 +309,39 @@ const LearnByWrite = ({
   return (
     <div className="grid h-full grid-cols-12 gap-4">
       {/* 힌트 영역 */}
-      <div className="grid-cols-2 col-span-4 gap-4">
-        <div className="flex items-center justify-center h-full p-4 font-extrabold bg-white border rounded-lg shadow-sm text-9xl">
-          {target !== "letter" && (
-            <div className="flex items-center justify-center col-span-2 p-4 font-extrabold text-9xl">
+      <div className="col-span-4 grid-cols-2 gap-4">
+        <div className="flex h-full items-center justify-center rounded-lg border bg-white p-4 text-9xl font-extrabold shadow-sm">
+          {target !== 'letter' && (
+            <div className="col-span-2 flex items-center justify-center p-4 text-9xl font-extrabold">
               <img
                 src={getAsset(
-                  target === "word"
+                  target === 'word'
                     ? { content: `${item.letter}` }
-                    : { content: `${item.letter}`, type: "write" },
+                    : { content: `${item.letter}`, type: 'write' },
                 )}
                 alt={item.letter}
-                className={target === "word" && "p-2 aspect-square"}
+                className={target === 'word' && 'aspect-square p-2'}
               />
             </div>
           )}
-          {target === "letter" && (
-            <div className="flex items-center justify-center w-full pr-4 text-6xl font-extrabold">
+          {target === 'letter' && (
+            <div className="flex w-full items-center justify-center pr-4 text-6xl font-extrabold">
               <img
                 src={getAsset({
                   content: `${item.components[0]}`,
-                  type: "write",
+                  type: 'write',
                 })}
                 alt={item.components[0]}
-                className="flex-1 object-contain w-1/2 h-auto scale-75"
+                className="h-auto w-1/2 flex-1 scale-75 object-contain"
               />
               <span>+</span>
               <img
                 src={getAsset({
                   content: `${item.components[1]}`,
-                  type: "write",
+                  type: 'write',
                 })}
                 alt={item.components[1]}
-                className="flex-1 object-contain w-auto h-48"
+                className="h-48 w-auto flex-1 object-contain"
               />
               <span>=</span>
             </div>
@@ -340,22 +351,22 @@ const LearnByWrite = ({
 
       {/* 문제-보기 영역 */}
       <div className="col-span-8 grid grid-rows-[auto_1fr] gap-4">
-        <div className="w-full row-span-1 p-2 text-2xl font-bold text-center border rounded-lg shadow border-neutral-300 bg-rose-300/80">
-          {`"${item.letter}"${JOSA().c(item.letter, "을/를")} 직접 써보세요.`}
+        <div className="row-span-1 w-full rounded-lg border border-neutral-300 bg-rose-300/80 p-2 text-center text-2xl font-bold shadow">
+          {`"${item.letter}"${JOSA().c(item.letter, '을/를')} 직접 써보세요.`}
         </div>
 
-        <div className="flex flex-col items-center justify-center w-full gap-10 p-2 text-center bg-white border rounded-lg shadow-sm">
-          <div className="grid grid-cols-[1fr_auto] gap-2 w-full h-full">
-            <div className="relative w-full h-full col-span-1" ref={parentRef}>
+        <div className="flex w-full flex-col items-center justify-center gap-10 rounded-lg border bg-white p-2 text-center shadow-sm">
+          <div className="grid h-full w-full grid-cols-[1fr_auto] gap-2">
+            <div className="relative col-span-1 h-full w-full" ref={parentRef}>
               {hint && (
                 <div
-                  className="absolute inset-0 z-0 w-full h-full font-extrabold cursor-default bg-black/10 text-black/20"
-                  style={{ userSelect: "none" }}
+                  className="absolute inset-0 z-0 h-full w-full cursor-default bg-black/10 font-extrabold text-black/20"
+                  style={{ userSelect: 'none' }}
                   tabIndex={-1}
                   aria-hidden="true"
                 >
                   <p
-                    className={`flex items-center justify-center h-full select-none text-8xl nanum-gothic-extrabold write-letter-${target}-${item.letter.length}`}
+                    className={`nanum-gothic-extrabold flex h-full select-none items-center justify-center text-8xl write-letter-${target}-${item.letter.length}`}
                   >
                     {item.letter}
                   </p>
@@ -363,7 +374,7 @@ const LearnByWrite = ({
               )}
               <canvas
                 ref={canvasRef}
-                className="absolute z-50 w-full h-full"
+                className="absolute z-50 h-full w-full"
                 onMouseDown={startDraw}
                 onMouseMove={draw}
                 onMouseUp={endDraw}
@@ -374,11 +385,11 @@ const LearnByWrite = ({
               />
             </div>
 
-            <div className="grid grid-rows-[1fr_1fr_1fr] col-span-1 gap-2">
+            <div className="col-span-1 grid grid-rows-[1fr_1fr_1fr] gap-2">
               <Button
                 size="lg"
-                className={`p-4 h-full text-6xl bg-white hover:bg-warning/20 disabled:bg-black/20 ${
-                  hint && "grayscale"
+                className={`h-full bg-white p-4 text-6xl hover:bg-warning/20 disabled:bg-black/20 ${
+                  hint && 'grayscale'
                 }`}
                 disabled={busy}
                 onClick={() => setHint(!hint)}
@@ -387,7 +398,7 @@ const LearnByWrite = ({
               </Button>
               <Button
                 size="lg"
-                className="h-full p-4 text-6xl bg-white hover:bg-error/20 disabled:grayscale disabled:bg-black/20"
+                className="h-full bg-white p-4 text-6xl hover:bg-error/20 disabled:bg-black/20 disabled:grayscale"
                 disabled={busy}
                 onClick={() => clearCanvas(true)}
               >
@@ -395,14 +406,14 @@ const LearnByWrite = ({
               </Button>
               <Button
                 size="lg"
-                className="h-full p-4 text-6xl bg-white hover:bg-success/20 disabled:bg-black/20"
+                className="h-full bg-white p-4 text-6xl hover:bg-success/20 disabled:bg-black/20"
                 disabled={busy}
                 onClick={handleSubmit}
               >
                 {busy ? (
-                  <Loader2Icon className="!w-10 !h-10 text-rose-500/50 animate-spin" />
+                  <Loader2Icon className="!h-10 !w-10 animate-spin text-rose-500/50" />
                 ) : (
-                  "✅"
+                  '✅'
                 )}
               </Button>
             </div>
