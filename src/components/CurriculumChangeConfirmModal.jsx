@@ -5,7 +5,6 @@ import {
   DialogFooter,
   DialogTitle,
   DialogDescription,
-  DialogOverlay,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, X } from 'lucide-react';
@@ -27,7 +26,6 @@ const CurriculumChangeConfirmModal = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogOverlay className="bg-black/40 backdrop-blur" />
       <DialogContent className="max-w-lg rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-bold text-destructive">
