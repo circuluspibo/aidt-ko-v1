@@ -106,8 +106,10 @@ const CharacterCurriculumManagement = () => {
         refreshCurriculum();
       }
     },
-    onSettled: (data, error) => {
-      console.log('upsert onSettled', data, error);
+    onError: (error) => {
+      // 모달을 닫아야 화면의 "(저장 실패)" 표시가 교사에게 보인다.
+      setConfirmOpen(false);
+      console.error('커리큘럼 저장 실패', error);
     },
   });
   const { mutate: deleteCurriculum, isPending: isDeleting } = useMutation({
@@ -128,8 +130,9 @@ const CharacterCurriculumManagement = () => {
       // 서버가 챕터/설정 + 관련 세션·기록을 자동 정리하므로 목록만 갱신
       refreshCurriculum();
     },
-    onSettled: (data, error) => {
-      console.log('delete onSettled', data, error);
+    onError: (error) => {
+      setDeleteTarget(null);
+      console.error('챕터 삭제 실패', error);
     },
   });
   const renderInPortal = useDraggableInPortal();
