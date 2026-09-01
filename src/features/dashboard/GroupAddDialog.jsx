@@ -15,6 +15,9 @@ import { useMutation } from '@tanstack/react-query';
 import { patch, post } from '@/api';
 import { useEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
+
+// 첫 글자는 한글·영문·숫자, 이후 공백과 일반 문장부호 허용 (마침표 등을 막지 않도록)
+const NAME_PATTERN = /^[가-힣a-zA-Z0-9][가-힣a-zA-Z0-9\s.,!?'"“”‘’\-():;·…]*$/;
 import {
   Form,
   FormControl,
@@ -106,7 +109,7 @@ const GroupAddDialog = ({ open, group, onOpenChange, onAction, onClose }) => {
                       message: '최소 3글자 이상 입력해야 합니다.',
                     },
                     pattern: {
-                      value: /^[가-힣a-zA-Z0-9][가-힣a-zA-Z0-9\s()\-·]*$/,
+                      value: NAME_PATTERN,
                       message: '입력 양식에 적합하지 않습니다.',
                     },
                   }}
@@ -135,7 +138,7 @@ const GroupAddDialog = ({ open, group, onOpenChange, onAction, onClose }) => {
                       message: '최대 300글자 입력이 가능합니다.',
                     },
                     pattern: {
-                      value: /^[가-힣a-zA-Z0-9][가-힣a-zA-Z0-9\s()\-·]*$/,
+                      value: NAME_PATTERN,
                       message: '입력 양식에 적합하지 않습니다.',
                     },
                   }}
