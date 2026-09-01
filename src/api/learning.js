@@ -19,21 +19,17 @@ export const fetchLearningDataByTarget = async (type) => {
 };
 
 export const fetchWriteOCR = async (isWord, body) => {
-  try {
-    const resp = await fetch(VAPI_URL(isWord), {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-      },
-      body,
-    });
-    const res = await resp.json();
-    console.log("res", res);
-    if (res.result && res.data.length) {
-      return res.data[0];
-    }
-  } catch (error) {
-    console.error(error);
-    return null;
+  const resp = await fetch(VAPI_URL(isWord), {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+    },
+    body,
+  });
+  const res = await resp.json();
+  // 실패를 null/undefined로 삼키면 호출부가 성공으로 오인한다. 항상 throw.
+  if (!res?.result || !res?.data?.[0]?.text) {
+    throw new Error("채점 결과를 받지 못했습니다.");
   }
+  return res.data[0];
 };

@@ -40,13 +40,8 @@ const LearnByWrite = ({
     mutationFn: async (blob) => {
       const formData = new FormData();
       formData.append('uploadFile', blob, 'test.png');
-      try {
-        const data = await fetchWriteOCR(target === 'word', formData);
-        if (data) return [data.text, item.letter];
-      } catch (error) {
-        console.error('채점 요청 오류:', error);
-      }
-      return false;
+      const data = await fetchWriteOCR(target === 'word', formData);
+      return [data.text, item.letter];
     },
     onSuccess: ([userAnswer, correctAnswer]) =>
       onAnswer(userAnswer, correctAnswer),
