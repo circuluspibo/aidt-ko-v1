@@ -74,6 +74,7 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
   const cameraRef = useRef(null);
   const faceMeshRef = useRef(null);
   const initializingRef = useRef(false); // 카메라 초기화 중복 실행 방지
+  const unmountedRef = useRef(false); // 언마운트 후 도착한 스트림 정리용
   const focusLogRef = useRef([]);
   const noFaceFrameCount = useRef(0);
   const LOW = 60; // 낮음 트리거 임계 (%)
@@ -335,6 +336,8 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
       });
       await camera.start();
       cameraRef.current = camera;
+      // start()는 1~2초 걸린다. 그 사이 화면을 벗어났으면 방금 열린 스트림을 즉시 종료한다.
+      if (unmountedRef.current) return stopCamera();
       console.log('✅ 카메라 시작 완료');
 
       // 카메라 권한 확인
@@ -495,7 +498,7 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
         stream.getTracks().forEach((track) => track.stop()); // 임시 스트림 정리
 
         // 권한 획득 후 카메라 초기화
-        setTimeout(() => {
+        cameraInitTimer = setTimeout(() => {
           initializeCamera();
         }, 500);
       } catch (error) {
@@ -504,6 +507,7 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
       }
     };
 
+    let cameraInitTimer = null;
     requestCameraPermission();
 
     // 1초마다 집중도 체크 (더 빠른 반응)
@@ -521,6 +525,8 @@ export const useConcentrationMonitor = (sessionId, studentId) => {
       });
 
       // 카메라 완전 종료 (프레임 루프 + 실제 스트림 트랙 + FaceMesh)
+      unmountedRef.current = true;
+      clearTimeout(cameraInitTimer);
       stopCamera();
     };
   }, []);
