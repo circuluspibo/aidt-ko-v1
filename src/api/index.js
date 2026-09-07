@@ -12,6 +12,9 @@ export const encodeGetParams = (p) =>
   Object.entries(p)
     .map((kv) => kv.map(encodeURIComponent).join('='))
     .join('&');
+// IAPI 의 서비스 격리용 식별자. 이 값과 계정 소속(users.services)이 다르면 로그인이 거부된다.
+const CLIENT_ID = 'hani';
+
 // src/api/index.js
 // ✅ localStorage 토큰 + 자동 refresh + 시그니처 유지(get/post/put/patch/delete)
 
@@ -21,6 +24,7 @@ export const post = async (route, data, headers = {}) => {
     headers: {
       Accept: 'application/json, text/plain, */*',
       'Content-Type': 'application/json',
+      'x-client-id': CLIENT_ID,
       ...headers,
     },
     body: JSON.stringify(data),
@@ -131,6 +135,7 @@ async function auth({ token }) {
         Accept: 'application/json, text/plain, */*',
         'Access-Control-Allow-Methods': 'GET',
         'Content-Type': 'application/json',
+        'x-client-id': CLIENT_ID,
         Authorization: `Bearer ${token}`,
       },
     };
